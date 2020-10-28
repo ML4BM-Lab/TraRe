@@ -12,7 +12,6 @@ NET_run(
   lognorm_est_counts,
   target_filtered_idx,
   regulator_filtered_idx,
-  Gene_set_Collections,
   graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
   FDR = 0.05,
   NrCores = 30
@@ -42,8 +41,6 @@ NET_compute_graph_all_VBSR(Data, regulators_idx, target_idx)
 \item{target_filtered_idx}{Index of the target genes on the lognorm_est_counts matrix.}
 
 \item{regulator_filtered_idx}{Index of the regulatory genes on the lognorm_est_counts matrix.}
-
-\item{Gene_set_Collections}{Known collection of gene sets for enrichment tests.}
 
 \item{graph_mode}{Chosen method(s) to generate the edges in the bipartite graph. The available options are "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
 

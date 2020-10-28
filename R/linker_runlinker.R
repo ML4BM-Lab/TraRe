@@ -5,7 +5,6 @@
 #' @param lognorm_est_counts Matrix of log-normalized estimated counts of the gene expression data (Nr Genes x Nr samples)
 #' @param target_filtered_idx Index of the target genes on the lognorm_est_counts matrix.
 #' @param regulator_filtered_idx Index of the regulatory genes on the lognorm_est_counts matrix.
-#' @param Gene_set_Collections Known collection of gene sets for enrichment tests.
 #' @param link_mode Chosen method(s) to link module eigengenes to regulators. The available options are "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.
 #' @param graph_mode Chosen method(s) to generate the edges in the bipartite graph. The available options are "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.
 #' @param module_rep Method selected for use. Default set to LINKER.
@@ -35,7 +34,7 @@
 #'                       target_filtered_idx,Gene_set_collections)
 #'    }
 #' @export
-LINKER_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, Gene_set_Collections,
+LINKER_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx,
                      link_mode=c("VBSR", "LASSOmin", "LASSO1se", "LM"),
                      graph_mode=c("VBSR", "LASSOmin", "LASSO1se", "LM"),
                      module_rep="MEAN",

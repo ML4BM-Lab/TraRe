@@ -8,7 +8,6 @@ LINKER_run(
   lognorm_est_counts,
   target_filtered_idx,
   regulator_filtered_idx,
-  Gene_set_Collections,
   link_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
   graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
   module_rep = "MEAN",
@@ -25,8 +24,6 @@ LINKER_run(
 \item{target_filtered_idx}{Index of the target genes on the lognorm_est_counts matrix.}
 
 \item{regulator_filtered_idx}{Index of the regulatory genes on the lognorm_est_counts matrix.}
-
-\item{Gene_set_Collections}{Known collection of gene sets for enrichment tests.}
 
 \item{link_mode}{Chosen method(s) to link module eigengenes to regulators. The available options are "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
 

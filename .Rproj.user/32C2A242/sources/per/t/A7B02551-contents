@@ -8,12 +8,11 @@
 #'
 #'  \item `generatecliques`: Cliques generation and plot displaying of the selected method.
 #'
-#'   \item `LINKER_run`: Cliques generation and plot displaying of the selected method
+#'   \item `LINKER_run`: GRN generation method.
 #'
-#'   \item `NET_run`: Method selection in order to remove duplicities generated from
-#'   the igraph::max_cliques method. Four possibilities are available.
+#'   \item `NET_run`: Generate networks in order to plot them.
 #'
-#'   \item `runrewiring`:
+#'   \item `runrewiring`: run rewiring method.
 #'
 #' }
 #' @docType package

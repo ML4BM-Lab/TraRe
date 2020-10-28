@@ -15,14 +15,13 @@ The following functions are defined, in use order:
 
 \itemize{
 
-\item \code{preparedata}: Prepare the correlation matrix and the hash table for future uses.
-
-\item \code{generategraph}: Cliques generation and plot displaying of the selected method
-
-\item \code{selectmethod}: Method selection in order to remove duplicities generated from
-the igraph::max_cliques method. Four possibilities are available.
-
 \item \code{generatecliques}: Cliques generation and plot displaying of the selected method.
+
+\item \code{LINKER_run}: GRN generation method.
+
+\item \code{NET_run}: Generate networks in order to plot them.
+
+\item \code{runrewiring}: run rewiring method.
 
 }
 }
