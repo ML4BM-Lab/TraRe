@@ -54,7 +54,7 @@ preparerewiring<- function(name,linker_saved_file,
 
     # read in linker output
     rundata <- readRDS(linker_saved_file[i]); #used outside
-    #print('RDS done')
+    methods::show('RDS done')
 
     # read in expression matrix
     input_expr_mat <- as.matrix(utils::read.table(expr_matrix_file[i], header = T,
@@ -111,7 +111,7 @@ preparerewiring<- function(name,linker_saved_file,
     rewobject$'keepsamps'<-keepsamps
     rewobject$'keeplabels'<-keeplabels
     rewobject$'class_counts'<-class_counts
-    rewobjects$'final_signif_thresh'<-final_signif_thresh
+    rewobject$'final_signif_thresh'<-final_signif_thresh
     rewobject$'outdir'<-outdir
 
     rewobjects[[i]]<-rewobject

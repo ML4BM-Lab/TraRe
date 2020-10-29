@@ -26,8 +26,6 @@ runrewiring<- function(ObjectList,orig_test_perms=100,retest_thresh=0.08,retest_
   codedir <- paste0(system.file("extdata",package="TraRe"),"/")
   methods::show(codedir)
 
-  #Here we can start the new method.----
-
   # set up output html page, we use the first argv.
   indexpageinfo <- create_index_page(outdir = ObjectList[[1]]$outdir, runtag = "",
                                      codedir = codedir)

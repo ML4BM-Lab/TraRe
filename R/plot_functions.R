@@ -31,7 +31,7 @@ plot_igraph <- function(mygraph, mytitle, titlecol, mylayout){
   shape <- c("circle", "square")
   edge_cscale <- grDevices::colorRamp(c("darkred", "lightgrey", "darkgreen"))
 
-  igraph::E(g)$weight <- rep(1,length(igraph::E(g))) #assign weight 1.
+  igraph::E(mygraph)$weight <- rep(1,length(igraph::E(mygraph))) #assign weight 1.
   maxw=max(abs(igraph::E(mygraph)$weight))
   tweight = (igraph::E(mygraph)$weight+maxw)/(2*maxw)
   #tweight <- rep(1, length(E(mygraph)))
