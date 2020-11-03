@@ -1,22 +1,33 @@
-#' GRN modules Rewiring method.
+#' GRN Modules Rewiring Method.
 #'
-#' Gene Regulatory Network modules Rewiring method.
+#' Gene Regulatory Network modules Rewiring method. It performs a permutation test,
+#' (what we call rewiring test) and generates an html report containing a correlation matrix
+#' with the higher scores obtained from the rewiring test. This matrix is shown in the way of a
+#' heatmap, and its sorted by a hierarchical clustering for better interpretation.
 #'
-#' @param ObjectList Output from preparerewiring function.
+#' @param ObjectList Output from `preparerewiring()`containing some required parameters.
 #' @param orig_test_perms Initial permutations for first test (default: 100) .
 #' @param retest_thresh Threshold if a second test is performed (default: 1000) .
 #' @param retest_perms Permutations if a second test is performed (default: 0.08) .
 #'
-#' @return None. Generate an html report containing a hierarchical clustering of the rewired modules,
-#' a correlation matrix containing the rewiring scores of the modules as aheatmap and all the rewired
-#' modules drivers and targets statistical information about the rewiring process.
+#' @return It creates a folder (in the working directory) containing the files explained above.
 #'
 #' @examples
+#'
+#' ## Lets assume that we have already generated the ObjectList, we will load it from
+#' ## the folder containing the examples files. After this, it is all straight forward.
+#' ## For this example, we will use the default parameters (`orig_test_perms`,`retest_thresh`,
+#' ## `retest_perms`)
+#'
+#'
+#' objectlist <- readRDS(file=paste0(system.file("extdata",package="TraRe"),
+#'                       '/prepared_rewiring_example.rds'))
+#'
 #' \dontrun{
-#' rewiringinput<-preparerewiring(name="example",linker_rds_v,expr_mat_v,gene_info_v,
-#'                                phenotype_file_v,final_signif_thresh)
-#' runrewiring(rewiringinput)
-#' }
+#'  runrewiring(ObjectList = objectlist)
+#'  }
+#'
+#'
 #'
 #' @export
 runrewiring<- function(ObjectList,orig_test_perms=100,retest_thresh=0.08,retest_perms=1000){
@@ -31,7 +42,8 @@ runrewiring<- function(ObjectList,orig_test_perms=100,retest_thresh=0.08,retest_
                                      codedir = codedir)
   imgdir <- paste0(indexpageinfo$htmldir, indexpageinfo$imgstr)
 
-  set.seed(1)
+  #set.seed(1)
+  dqrng::dqset.seed(1)
   module_membership_list <- hash::hash()
 
   #we create rundata and combine the modules of both parsers.
@@ -43,7 +55,8 @@ runrewiring<- function(ObjectList,orig_test_perms=100,retest_thresh=0.08,retest_
                        "revised-pvalue", "num-targets", "num-regulators",
                        "regulator-names","target-names", "num-samples", "num-genes",
                        "num-class1", "num-class2")
-      for (i in 1:length(ObjectList)){ #1:3 if extramodule stablished.
+
+      for (i in seq_along(ObjectList)){
 
         modmeth_i<-paste(modmeth,i)
         methods::show(paste('VBSR:',i))
@@ -54,32 +67,31 @@ runrewiring<- function(ObjectList,orig_test_perms=100,retest_thresh=0.08,retest_
         class_counts<-ObjectList[[i]]$class_counts
         final_signif_thresh<-ObjectList[[i]]$final_signif_thresh
 
-        for (mymod in 1:length(rundata$modules[[modmeth]])) {
+        for (mymod in seq_along(rundata$modules[[modmeth]])) {
 
             modregs <- unique(rundata$modules[[modmeth]][[mymod]]$regulators)
             modtargs <- unique(rundata$modules[[modmeth]][[mymod]]$target_genes)
             regnames <- paste(collapse = ", ", modregs)
             targnames <- paste(collapse = ", ", modtargs)
             keepfeats <- unique(c(modregs, modtargs))
-            modmat <- t(norm_expr_mat_keep[keepfeats, keepsamps]) #this has to be modified.
+            modmat <- t(norm_expr_mat_keep[keepfeats, keepsamps])
 
-            orig_pval <- dave_test(modmat, keeplabels + 1, perm = orig_test_perms) #this too
+            orig_pval <- rewiring_test(modmat, keeplabels + 1, perm = orig_test_perms)$pval
             new_pval <- orig_pval
             stats <- c(modmeth_i, mymod, signif(orig_pval, 3), signif(new_pval, 3),
                        length(modtargs), length(modregs), regnames,targnames, dim(modmat),
                        class_counts)
             if (orig_pval < retest_thresh | orig_pval == 1 | mymod %% 300 == 0) {
                 methods::show(paste(c("ModNum and NumGenes", mymod, length(keepfeats))))
-                result <- dave_test_pair_detail(modmat, keeplabels + 1, #this too
-                                                perm = retest_perms)
+                result <- rewiring_test(modmat, keeplabels + 1,perm = retest_perms)
                 new_pval <- result$pval
                 stats <- c(modmeth_i, mymod, signif(orig_pval, 3),
                            signif(new_pval, 3), length(modtargs),
-                           length(modregs), regnames,targnames, dim(modmat), class_counts) #this too
+                           length(modregs), regnames,targnames, dim(modmat), class_counts)
 
                 if (new_pval <= final_signif_thresh | new_pval == 1) {
                     # keep as significant
-                    modname <- paste0(modmeth,'.',i, ".mod.", mymod) #we include the 'i' for the parse.
+                    modname <- paste0(modmeth,'.',i, ".mod.", mymod)
                     module_membership_list[[modname]] <- keepfeats
                 }
             }
@@ -98,7 +110,7 @@ runrewiring<- function(ObjectList,orig_test_perms=100,retest_thresh=0.08,retest_
       fisher_cols <- c("user_gene_set", "property_gene_set", "universe_count",
                        "user_count", "property_count", "overlap_count", "pval")
 
-      universe_size <- length(rownames(ObjectList[[1]]$norm_expr_mat_keep)) #we select the Promote one. (it contains all of the S+some of the supermodule)
+      universe_size <- length(rownames(ObjectList[[1]]$norm_expr_mat_keep))
       all_modules <- names(module_membership_list)
       methods::show(paste(c("Significant Modules: ", all_modules)))
 
@@ -106,12 +118,13 @@ runrewiring<- function(ObjectList,orig_test_perms=100,retest_thresh=0.08,retest_
       methods::show(all_modules)
 
       #save significant modules as .txt
-      utils::write.table(all_modules,file=paste(ObjectList[[1]]$outdir,'sigmodules.txt',sep="/"),quote=F,sep="\n",row.names = F,col.names = F)
+      utils::write.table(all_modules,file=paste(ObjectList[[1]]$outdir,
+                         'sigmodules.txt',sep="/"),quote=FALSE,sep="\n",row.names = FALSE,col.names = FALSE)
 
       module_pairs <- gtools::combinations(length(all_modules), 2, all_modules,
                                    repeats = TRUE)
       pvals <- NULL
-      for (pair_idx in 1:nrow(module_pairs)) {
+      for (pair_idx in seq_len(nrow(module_pairs))) {
           mod1genes <- module_membership_list[[module_pairs[pair_idx, ][1]]]
           mod2genes <- module_membership_list[[module_pairs[pair_idx, ][2]]]
           stats <- c(module_pairs[pair_idx, ][1], module_pairs[pair_idx, ][2],
@@ -199,28 +212,28 @@ runrewiring<- function(ObjectList,orig_test_perms=100,retest_thresh=0.08,retest_
                        "' alt='", myplotname,
                        "' height='", 300, "' width='", 600, "'> &emsp; <br>\n"),
                 paste0(indexpageinfo$htmldir, indexpageinfo$indexpath),
-                append = T)
+                append = TRUE)
           write(paste0("<img src='", indexpageinfo$imgstr, myplotname, ".heatm.png",
                        "' alt='", myplotname,
                        "' height='", 600, "' width='", 600, "'> &emsp; <br>\n"),
                 paste0(indexpageinfo$htmldir, indexpageinfo$indexpath),
-                append = T)
+                append = TRUE)
       } # end module simularity if
 
       # write all stats table
       sortidxs <- sort(as.numeric(allstats[, "revised-pvalue"]),
-                       decreasing = F, index.return = T)$ix
+                       decreasing = FALSE, index.return = TRUE)$ix
       write_tables_all(allstats[sortidxs, ],
                        tabletype = paste0(modmeth, "_mod_rewiring_scores"),
-                       filestr = "data", html_idxs = 1:dim(allstats)[1],
+                       filestr = "data", html_idxs = seq_len(dim(allstats)[1]),
                        htmlinfo = indexpageinfo)
 
       # write module similarity table
       sortidxs <- sort(as.numeric(fisher_tbl[, "pval"]),
-                       decreasing = F, index.return = T)$ix
+                       decreasing = FALSE, index.return = TRUE)$ix
       write_tables_all(fisher_tbl[sortidxs, ],
                        tabletype = paste0(modmeth, "_sigmod_overlap"),
-                       filestr = "data", html_idxs = 1:dim(fisher_tbl)[1],
+                       filestr = "data", html_idxs = seq_len(dim(fisher_tbl)[1]),
                        htmlinfo = indexpageinfo)
   }
 }

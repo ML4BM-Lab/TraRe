@@ -6,7 +6,7 @@
 \alias{NET_compute_graph_all_LASSOmin}
 \alias{NET_compute_graph_all_LM}
 \alias{NET_compute_graph_all_VBSR}
-\title{GRN inference via selected model.}
+\title{Single gene network approaches.}
 \usage{
 NET_run(
   lognorm_est_counts,
@@ -14,71 +14,79 @@ NET_run(
   regulator_filtered_idx,
   graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
   FDR = 0.05,
-  NrCores = 30
+  NrCores = 3
 )
 
 NET_compute_graph_all_LASSO1se(
-  Data,
-  regulators_idx,
-  target_idx,
+  lognorm_est_counts,
+  regulator_filtered_idx,
+  target_filtered_idx,
   alpha = 1 - 1e-06
 )
 
 NET_compute_graph_all_LASSOmin(
-  Data,
-  regulators_idx,
-  target_idx,
+  lognorm_est_counts,
+  regulator_filtered_idx,
+  target_filtered_idx,
   alpha = 1 - 1e-06
 )
 
-NET_compute_graph_all_LM(Data, regulators_idx, target_idx)
+NET_compute_graph_all_LM(
+  lognorm_est_counts,
+  regulator_filtered_idx,
+  target_filtered_idx
+)
 
-NET_compute_graph_all_VBSR(Data, regulators_idx, target_idx)
+NET_compute_graph_all_VBSR(
+  lognorm_est_counts,
+  regulator_filtered_idx,
+  target_filtered_idx
+)
 }
 \arguments{
-\item{lognorm_est_counts}{Matrix of log-normalized estimated counts of the gene expression data (Nr Genes x Nr samples)}
+\item{lognorm_est_counts}{Matrix of log-normalized estimated counts of the gene expression
+data (Nr Genes x Nr samples)}
 
 \item{target_filtered_idx}{Index of the target genes on the lognorm_est_counts matrix.}
 
 \item{regulator_filtered_idx}{Index of the regulatory genes on the lognorm_est_counts matrix.}
 
-\item{graph_mode}{Chosen method(s) to generate the edges in the bipartite graph. The available options are "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
+\item{graph_mode}{Chosen method(s) to generate the edges in the bipartite graph. The available options are "VBSR",
+"LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
 
 \item{FDR}{The False Discovery Rate correction used for the enrichment analysis. By default, 0.05.}
 
-\item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that the parallelization is NOT initialized in any of the functions. By default, 30.}
+\item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that
+the parallelization is NOT initialized in any of the functions. By default, 3.}
 
-\item{Data}{Matrix of log-normalized estimated counts of the gene expression data (Nr Genes x Nr samples).}
-
-\item{regulators_idx}{Index of the regulatory genes on the lognorm_est_counts matrix.}
-
-\item{target_idx}{Index of the target genes on the lognorm_est_counts matrix.}
-
-\item{alpha}{feature selection parameter.}
+\item{alpha}{feature selection parameter in case of a LASSO model to be chosen.}
 }
 \value{
-List containing the GRN graphs and GEA results.
+List containing the GRN graphs.
 }
 \description{
-Gene Regulatory Network inference via model selection. \code{NET_compute_graph_all_LASSO1se()} defines
+\code{NET_run()} generate a single GRN. \code{NET_compute_graph_all_LASSO1se()} defines
 the statistics of drivers and targets to be the Lasso method, choosing 1 standard error from the minimum RSS.
 \code{NET_compute_graph_all_LASSOmin()} uses Lasso method, choosing the minimum RSS point. \code{NET_compute_graph_all_LM()}
 uses a linear model and \code{NET_compute_graph_all_VBSR()} uses a Variational Bayes Spike Regression.
 }
 \examples{
-   \dontrun{
-   #(we generally will load it. We will assume it contains 1000 genes and 43 samples, i.e 1000x43)
-   lognorm_est_counts <- readRDS(file="../geneexpressiondata.rds")
 
-   #suppose lognorm_est_counts first 10 genes are drivers
-   regulator_filtered_idx <- c(1,2,3,4,5,6,7,8,9,10)
+   ## Assume we have run the rewiring method and we have discovered a rewired module.
+   ## After we have selected the drivers and targets from that modules, we can build
+   ## a single GRN to study it separately.
 
-   #and the rest are targets
-   target_filtered_idx <- c(11:1000)
-   Gene_set_collections <- readRDS(file=".../gsc.rds")
 
-   #The rest have default values.
-   foo <- LINKER_run(lognorm_est_counts,regulator_filtered_idx,
-                     target_filtered_idx,Gene_set_collections)
-   }
+   ## Imagine our rewired module consists of 5 driver genes and 40 target genes.
+
+   drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
+   targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
+
+   lognorm_est_counts <- rbind(drivers[1:5,],targets[1:30,])
+   regulator_filtered_idx <- 1:5
+   target_filtered_idx <- 5+c(1:30)
+
+   ## We recommend VBSR (rest of parameters are set by default)
+   graph <- NET_run(lognorm_est_counts,target_filtered_idx,
+                     regulator_filtered_idx,graph_mode="VBSR")
 }

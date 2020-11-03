@@ -15,23 +15,27 @@ LINKER_run(
   corrClustNrIter = 100,
   Nr_bootstraps = 10,
   FDR = 0.05,
-  NrCores = 30
+  NrCores = 3
 )
 }
 \arguments{
-\item{lognorm_est_counts}{Matrix of log-normalized estimated counts of the gene expression data (Nr Genes x Nr samples)}
+\item{lognorm_est_counts}{Matrix of log-normalized estimated counts of the gene expression
+data (Nr Genes x Nr samples)}
 
 \item{target_filtered_idx}{Index of the target genes on the lognorm_est_counts matrix.}
 
 \item{regulator_filtered_idx}{Index of the regulatory genes on the lognorm_est_counts matrix.}
 
-\item{link_mode}{Chosen method(s) to link module eigengenes to regulators. The available options are "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
+\item{link_mode}{Chosen method(s) to link module eigengenes to regulators. The available options are
+"VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
 
-\item{graph_mode}{Chosen method(s) to generate the edges in the bipartite graph. The available options are "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
+\item{graph_mode}{Chosen method(s) to generate the edges in the bipartite graph. The available options
+are "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
 
-\item{module_rep}{Method selected for use. Default set to LINKER.}
+\item{module_rep}{Method selected for use. Default set to MEAN.}
 
-\item{NrModules}{Number of modules that are a priori to be found (note that the final number of modules discovered may differ from this value). By default, 100 modules.}
+\item{NrModules}{Number of modules that are a priori to be found (note that the final number of modules
+discovered may differ from this value). By default, 100 modules.}
 
 \item{corrClustNrIter}{output from preparedata(). By default, 100.}
 
@@ -39,28 +43,35 @@ LINKER_run(
 
 \item{FDR}{The False Discovery Rate correction used for the enrichment analysis. By default, 0.05.}
 
-\item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that the parallelization is NOT initialized in any of the functions. By default, 30.}
+\item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that the parallelization
+is NOT initialized in any of the functions. By default, 3.}
 }
 \value{
-List containing the GRN raw results, GRN modules, GRN graphs and GEA results.
+List containing the GRN raw results, GRN modules and GRN graphs.
 }
 \description{
-Gene Regulatory Network inference via model selection.
+Gene Regulatory Network inference via model selection. Consists of two phases,
+\code{LINKER_runPhase1()} and \code{LINKER_runPhase2()}. Help them for more information.
 }
 \examples{
-   \dontrun{
-   #(we generally will load it. We will assume it contains 1000 genes and 43 samples, i.e 1000x43)
-   lognorm_est_counts <- readRDS(file="../geneexpressiondata.rds")
+   ## For this example, we are going to join 15 drivers and 100 targets from the example folder.
 
-   #suppose lognorm_est_counts first 10 genes are drivers
-   regulator_filtered_idx <- c(1,2,3,4,5,6,7,8,9,10)
+   drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
+   targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
 
-   #and the rest are targets
-   target_filtered_idx <- c(11:1000)
-   Gene_set_collections <- readRDS(file=".../gsc.rds")
+   lognorm_est_counts <- rbind(drivers[seq_len(15),],targets[seq_len(100),])
 
-   #The rest have default values.
-   foo <- LINKER_run(lognorm_est_counts,regulator_filtered_idx,
-                      target_filtered_idx,Gene_set_collections)
-   }
+   ## We create the index for drivers and targets in the log-normalized gene expression matrix.
+   L <- 15
+   regulator_filtered_idx <- seq_len(L)
+   target_filtered_idx <- L+c(seq_len(100))
+
+
+   ## We recommend VBSR.
+
+   linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx,regulator_filtered_idx,
+                              link_mode="VBSR",graph_mode="VBSR",NrModules=3,Nr_bootstraps=1)
+
+
+
 }

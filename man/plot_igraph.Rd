@@ -13,7 +13,7 @@ return_layout(regs, targets, namehash)
 return_layout_phenotype(regs, targets, varfile)
 }
 \arguments{
-\item{mygraph}{igraph::igraph object returned from \code{NET_run()}.}
+\item{mygraph}{igraph object returned from \code{NET_run()}.}
 
 \item{mytitle}{Desired tittle.}
 
@@ -33,23 +33,63 @@ t-statistic from the differential expression analysis of the desired phenotype c
 a boolean variable for regulator (1) - no regulator (0) column.}
 }
 \value{
-None.
+plot of the desired single GRN using a specific layout.
 }
 \description{
 Collection of functions for generating graphs layouts to plot GRN obtained from \code{NET_run()} method.
 \code{return_layout()} generates a layout from the graph object returned by \code{NET_run()} and \code{return_layout_phenotype()}
 plots targets according to the t-statistic from the differential expression analysis of the desired phenotype.
-\code{plot_igraph()} takes in the igraph::igraph object and generated layout and generates plot.
+\code{plot_igraph()} takes in the igraph object and generated layout and generates plot.
 }
 \examples{
-   \dontrun{
-   testNet <- NET_run(lognorm_est_counts, target_filtered_idx,
-                      regulator_filtered_idx, Gene_set_Collections,
-   graph_mode=c("VBSR"),FDR=0.05,NrCores=3)
 
-   mygraph <- testNet$graphs$VBSR
-   mylayout <- return_layout(mygraph,c("Reg1","Reg2","Reg3"),c("Target1","Target2","Target3"))
+   ## Assume we have run the rewiring method and the `NET_run()` method to generate the
+   ## igraph object. We are going to generate and plot both layouts for the example.
+   ## We are going to generate all the files we need except for the igraph object, which
+   ## is included as an example file in this package.
 
-   plot_igraph(mygraph,"MyTittle","black",mylayout)
-   }
+
+   ## We load the igraph object that we generated from the `NET_run()` example.
+   ## Note: the igraph object is inside the list `NET_run()` generates.
+
+   graph <- readRDS(paste0(system.file("extdata",package="TraRe"),'/graph_netrun_example.rds'))
+
+
+   ## We first generate the normal layout for the plot.
+   ## We need the drivers and target names.
+
+   drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
+   drivers_n <- rownames(drivers)[1:5]
+
+   targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
+   targets_n <- rownames(targets)[1:30]
+
+   ## As for this example we are working at gene level (we dont have transcripts inside genes),
+   ## we will generate a dictionary with genes as keys and values (see param `namehash`)
+
+   namehash <- drivers_n
+   normal_layout <- return_layout(drivers_n,targets_n,namehash)
+
+   ## We now generate the phenotype layout and the `varfile` we ned for this layout.
+   ## (I leave here a way to generate) We need to separate our expression matrix by
+   ## a binary phenotype, for this case, i will consider the first 40 samples are
+   ## responding to a treatment (R) and the rest not (NR).
+
+   gnames <- c(drivers_n,targets_n)
+   expmat <-rbind(drivers,targets)
+   expmat_R <- expmat[,1:40]
+   expmat_NR <- expmat[,40+(1:28)]
+
+
+   varfile <- t(as.matrix(sapply(gnames,
+              function(x) c(stats::t.test(expmat_R[x,],expmat_NR[x,])$statistic,
+              if(x\%in\%drivers_n) 1 else 0))))
+
+   colnames(varfile)<-c("t-stat","is-regulator")
+
+   phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,varfile)
+
+   plot_igraph(graph,"Normal Layout","black",normal_layout)
+   plot_igraph(graph,"Phenotype Layout","black",phenotype_layout)
+
 }

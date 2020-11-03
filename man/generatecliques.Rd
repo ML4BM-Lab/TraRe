@@ -2,6 +2,9 @@
 % Please edit documentation in R/cliques_generatecliques.R
 \name{generatecliques}
 \alias{generatecliques}
+\alias{preparedata}
+\alias{generategraph}
+\alias{selectmethod}
 \title{Cliques generation and plot displaying.}
 \usage{
 generatecliques(
@@ -10,41 +13,72 @@ generatecliques(
   correlationth,
   sparsecorrmatrix,
   numcliques,
-  mandatorygenes,
+  mandatorygenes = c(),
   selection = 1
 )
+
+preparedata(dataset, method)
+
+generategraph(correlationth, sparsecorrmatrix, pdoutput)
+
+selectmethod(selection, ggoutput, pdoutput)
 }
 \arguments{
 \item{dataset}{input expression file with genes as rows and samples as columns.}
 
-\item{method}{method to use in the correlation matrix (see stats:cor).}
+\item{method}{method to use in the correlation matrix generation (see stats:cor).}
 
 \item{correlationth}{threshold to consider edge exists.}
 
-\item{sparsecorrmatrix}{boolean variable specifying whether to fix values below threshold to 0 or not.}
+\item{sparsecorrmatrix}{boolean variable specifying whether to set to 0 values below threshold or not.}
 
 \item{numcliques}{number of cliques to be generated.}
 
 \item{mandatorygenes}{array of gene names which is mandatory to include in the returned cliques.}
 
-\item{selection}{integer selecting method.}
+\item{selection}{integer selecting method. The available options are: 1 - Maximize Genes/Clique,
+2 - Maximize Median Correlation Value/Clique, 3- Maximize Avg Variance Correlation Value/Clique or
+4 - Maximize Sum(option two, option three).}
+
+\item{pdoutput}{output from preparedata()}
+
+\item{ggoutput}{output from generategraph()}
 }
 \value{
 List containing the plot generated and a list with all the generated cliques.
 }
 \description{
-Cliques generation and plot displaying of the selected method.
+By the way the LINKER method works, some highly-correlated driver genes (TFs) may be dropped from the
+resultant model, as the role they play at the GRN inference process is very similar. Due to this,
+we propose a method based on cliques (Fully Connected Networks) to recover those dropped drivers.
+}
+\details{
+First, \code{preparedata()} prepares the correlation matrix and the hash table
+for future uses. Then, \code{generategraph()} generates an igraph object from genes correlation
+(threshold dependant) adjacency matrix. After that, \code{selectmethod()} chooses method
+in order to remove duplicities generated from the igraph::max_cliques method. Finally,
+\code{generatecliques()} generates all the cliques, containing fully connected networks of genes
+per clique.
 }
 \examples{
-   \dontrun{
-   mat <- matrix(c(0,0,0,0,0,1,0,1,0),3,3)
-   g <- graph_from_adjacency_matrix(mat)
-   cli <- max_cliques(g)
-   tittle <- "Maximizing genes/cliques"
-   L <-  350
-   numcliques <- 'All'
-   mandatorygenes <- c()
 
-   generatecliques(cli,tittle,L,numcliques,mandatorygenes)
-   }
+   ## Suppose we want to recover the drivers LINKER may have dropped out.
+   ## This method allows to group the highly correlated (above `correlationth`)
+   ## driver genes so after the GRN generation, we know that if a particular
+   ## driver gene is taking part of a relationship inside that GRN, all the
+   ## genes inside this group may be also taking part of the same relationship
+   ## due to the high correlation. Note that the large this threshold is, the
+   ## surer we are about this affirmation.
+
+
+   ## For this example, we will only work with the driver genes of a example dataset.
+
+   dataset <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
+
+   ## Lets select the first method (its set by default) and we dont want to fix any genes
+   ## (no mandatory genes)
+
+   clioutput <- generatecliques(dataset = dataset,method = "pearson",correlationth=0.6,
+                               sparsecorrmatrix = TRUE,numcliques = 'All')
+
 }

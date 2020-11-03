@@ -2,16 +2,9 @@
 % Please edit documentation in R/linker_html_summary.R
 \name{create_html_summary}
 \alias{create_html_summary}
-\title{create_html_summary}
+\title{Create HTML summary}
 \usage{
-create_html_summary(
-  rfiles = c("data/Tumor_OV50.tar8855_reg638.VBSR.m100_b10.rds",
-    "data/Tumor_OV50.tar8855_reg638.VBSR.single_gene.rds"),
-  tagstr = "Tumor_OV50.tar8855_reg638",
-  mapfile = "data/Tumor_OV50.gene_info.txt",
-  outdir = "html_files/",
-  evidfile = "data/Tumor_OV50_intersectBed.weighted_evidence.txt"
-)
+create_html_summary(rfiles, tagstr, mapfile, outdir = getwd(), evidfile)
 }
 \arguments{
 \item{rfiles, }{character vector of the string file names where results of linker
@@ -49,4 +42,34 @@ percentage of cumulative edges with each type of ChIP evidence
 Given results of Linker runs and other annotations, builds an interconnected
 html website that summarizes graph edges by support and ChIP evidence (if
 provided).
+}
+\examples{
+
+   ## We are going to use files from the example folder.
+   ## `create_html_summary()` only needs the paths, so thats what
+   ## we are giving it.
+
+   evidpath <- paste0(system.file("extdata",package="TraRe"),'/ChIP',
+                      '/Tumor_OV50_intersectBed.weighted_evidence.txt')
+
+   rfiles <- c(paste0(system.file("extdata",package="TraRe"),'/ChIP',
+                      '/Tumor_OV50.tar8855_reg638.VBSR.m100_b10.rds'),
+
+               paste0(system.file("extdata",package="TraRe"),'/ChIP',
+                      '/Tumor_OV50.tar8855_reg638.VBSR.single_gene.rds'))
+
+   tagstr <- "Tumor_OV50.tar8855_reg638"
+
+   mapfile <- paste0(system.file("extdata",package="TraRe"),'/ChIP',
+                      '/Tumor_OV50.gene_info.txt')
+
+   ## We are going to create a folder for this example
+
+   \dontrun{
+   dir.create(paste0(getwd(),'/summaryfolder'),showWarnings=FALSE)
+   outdir <- paste0(getwd(),'/summaryfolder/')
+
+
+   create_html_summary(rfiles,tagstr,mapfile,outdir,evidpath)
+   }
 }

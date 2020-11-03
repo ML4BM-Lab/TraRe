@@ -19,8 +19,8 @@ LINKER_runPhase1(
   alpha = 1 - 1e-06,
   pmax = 10,
   mode = "LASSO",
-  used_method = "LINKER",
-  NrCores = 30,
+  used_method = "MEAN",
+  NrCores = 3,
   corrClustNrIter = 21,
   Nr_bootstraps = 1
 )
@@ -29,7 +29,7 @@ LINKER_init(
   MA_matrix_Var,
   RegulatorData,
   NrModules,
-  NrCores = 30,
+  NrCores = 3,
   corrClustNrIter = 21,
   Parameters
 )
@@ -44,29 +44,30 @@ LINKER_EvaluateTestSet(
   LINKERresults,
   MA_Data_TestSet,
   RegulatorData_TestSet,
-  used_method = "LINKER"
+  used_method = "MEAN"
 )
 
 LINKER_LearnRegulatoryPrograms(
   Data,
   Clusters,
   RegulatorData,
-  RegulatorSign,
   Lambda,
   alpha,
   pmax,
   mode,
-  used_method = "LINKER"
+  used_method = "MEAN"
 )
 }
 \arguments{
-\item{lognorm_est_counts}{Matrix of log-normalized estimated counts of the gene expression data (Nr Genes x Nr samples).}
+\item{lognorm_est_counts}{Matrix of log-normalized estimated counts of the gene expression
+data (Nr Genes x Nr samples)}
 
 \item{target_filtered_idx}{Index of the target genes on the lognorm_est_counts matrix.}
 
 \item{regulator_filtered_idx}{Index of the regulatory genes on the lognorm_est_counts matrix.}
 
-\item{NrModules}{Number of modules that are a priori to be found (note that the final number of modules discovered may differ from this value).}
+\item{NrModules}{Number of modules that are a priori to be found (note that the final number of modules
+discovered may differ from this value). By default, 100 modules.}
 
 \item{Lambda}{Lambda variable for Lasso models.}
 
@@ -74,15 +75,17 @@ LINKER_LearnRegulatoryPrograms(
 
 \item{pmax}{Maximum numbers of regulators that we want.}
 
-\item{mode}{The model used to}
+\item{mode}{Chosen method(s) to link module eigengenes to regulators. The available options are
+"VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
 
-\item{used_method}{Method selected for use. Default set to LINKER.}
+\item{used_method}{Method selected for use. Default set to MEAN.}
 
-\item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that the parallelization is NOT initialized in any of the functions.}
+\item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that the parallelization
+is NOT initialized in any of the functions. By default, 3.}
 
 \item{corrClustNrIter}{Number of iteration for the phase I part of the method.}
 
-\item{Nr_bootstraps}{Number of bootstraps.}
+\item{Nr_bootstraps}{Number of bootstrap of Phase I. By default, 10.}
 
 \item{MA_matrix_Var}{Matrix of log-normalized estimated counts of the gene expression data, centered and scaled, containing
 only the train samples.}
@@ -108,8 +111,6 @@ only the train samples.}
 only the test samples.}
 
 \item{RegulatorData_TestSet}{Expression matrix containing only the regulators of the test samples.}
-
-\item{RegulatorSign}{unnecessary variable, we will delete it.}
 }
 \value{
 igraph object containing the modules containing the related drivers and targets within bootstraps.
@@ -123,4 +124,29 @@ This functions takes place inside the linkerrun function, so it is not recommend
 \code{LINKER_corrClust()} go through two steps within a loop, learning regulatory program of modules and reassigning
 genes. \code{LINKER_extract_modules()} extract all the modules, genes and relevant information. \code{LINKER_EvaluateTestSet()}
 fits the selected model with the test data. \code{LINKER_LearnRegulatoryPrograms()} learns the regulatory program of the modules.
+}
+\examples{
+
+   ## This example is very similar to the `LINKER_run()` function.
+   ## Again, we are going to join drivers and targets to create the working dataset.
+
+   drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
+   targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
+
+   lognorm_est_counts <- rbind(drivers,targets)
+
+   ## We create the index for drivers and targets in the log-normalized gene expression matrix.
+   L <- dim(drivers)[1]
+   regulator_filtered_idx <- 1:L
+   target_filtered_idx <- L+c(1:dim(targets)[1])
+
+
+   ## We recommend VBSR.
+   \dontrun{
+   linkeroutput <- LINKER_runPhase1(lognorm_est_counts,target_filtered_idx,
+                                    regulator_filtered_idx, NrModules=50)
+   }
+
+
+
 }

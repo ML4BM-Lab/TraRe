@@ -9,26 +9,53 @@
 #' genes. `LINKER_extract_modules()` extract all the modules, genes and relevant information. `LINKER_EvaluateTestSet()`
 #' fits the selected model with the test data. `LINKER_LearnRegulatoryPrograms()` learns the regulatory program of the modules.
 #'
-#' @param lognorm_est_counts Matrix of log-normalized estimated counts of the gene expression data (Nr Genes x Nr samples).
+#' @param lognorm_est_counts Matrix of log-normalized estimated counts of the gene expression
+#' data (Nr Genes x Nr samples)
 #' @param target_filtered_idx Index of the target genes on the lognorm_est_counts matrix.
 #' @param regulator_filtered_idx Index of the regulatory genes on the lognorm_est_counts matrix.
-#' @param NrModules Number of modules that are a priori to be found (note that the final number of modules discovered may differ from this value).
+#' @param mode Chosen method(s) to link module eigengenes to regulators. The available options are
+#' "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.
+#' @param used_method Method selected for use. Default set to MEAN.
+#' @param Nr_bootstraps Number of bootstrap of Phase I. By default, 10.
+#' @param NrCores Nr of computer cores for the parallel parts of the method. Note that the parallelization
+#' is NOT initialized in any of the functions. By default, 3.
 #' @param Lambda Lambda variable for Lasso models.
 #' @param alpha Alpha variable for Lasso models.
 #' @param pmax Maximum numbers of regulators that we want.
-#' @param mode The model used to
-#' @param used_method Method selected for use. Default set to LINKER.
-#' @param NrCores Nr of computer cores for the parallel parts of the method. Note that the parallelization is NOT initialized in any of the functions.
 #' @param corrClustNrIter Number of iteration for the phase I part of the method.
-#' @param Nr_bootstraps Number of bootstraps.
 #'
 #' @return igraph object containing the modules containing the related drivers and targets within bootstraps.
+#'
+#' @examples
+#'
+#'    ## This example is very similar to the `LINKER_run()` function.
+#'    ## Again, we are going to join drivers and targets to create the working dataset.
+#'
+#'    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
+#'    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
+#'
+#'    lognorm_est_counts <- rbind(drivers,targets)
+#'
+#'    ## We create the index for drivers and targets in the log-normalized gene expression matrix.
+#'    L <- dim(drivers)[1]
+#'    regulator_filtered_idx <- 1:L
+#'    target_filtered_idx <- L+c(1:dim(targets)[1])
+#'
+#'
+#'    ## We recommend VBSR.
+#'    \dontrun{
+#'    linkeroutput <- LINKER_runPhase1(lognorm_est_counts,target_filtered_idx,
+#'                                     regulator_filtered_idx, NrModules=50)
+#'    }
+#'
+#'
+#'
 #' @export LINKER_runPhase1
 
 LINKER_runPhase1<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, NrModules,
                            Lambda=0.0001, alpha=1-1e-06,
-                           pmax=10, mode="LASSO", used_method="LINKER",
-                           NrCores=30, corrClustNrIter=21,
+                           pmax=10, mode="LASSO", used_method="MEAN",
+                           NrCores=3, corrClustNrIter=21,
                            Nr_bootstraps=1)
 {
 
@@ -41,11 +68,11 @@ LINKER_runPhase1<-function(lognorm_est_counts, target_filtered_idx, regulator_fi
   bootstrap_results<-list()
 
 
-  for(boost_idx in 1:Nr_bootstraps)
+  for(boost_idx in seq_len(Nr_bootstraps))
   {
 
-    train_samples<-sample(1:sample_size, train_size, replace=F)
-    validation_samples<-setdiff(1:sample_size, train_samples)
+    train_samples<-sample(seq_len(sample_size), train_size, replace=FALSE)
+    validation_samples<-setdiff(seq_len(sample_size), train_samples)
 
     Regulator_data_train = t(scale(t(lognorm_est_counts[regulator_filtered_idx,train_samples])))
     Regulator_data_validation = t(scale(t(lognorm_est_counts[regulator_filtered_idx,validation_samples])))
@@ -75,14 +102,16 @@ LINKER_runPhase1<-function(lognorm_est_counts, target_filtered_idx, regulator_fi
 #' only the train samples.
 #' @param RegulatorData Expression matrix containing only the regulators of the train samples.
 #' @param Parameters List of parameters containig lambda, pmax, alpha, mode and used method.
-LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, NrCores=30, corrClustNrIter=21, Parameters) {
+#' @param NrModules Number of modules that are a priori to be found (note that the final number of modules
+#' discovered may differ from this value). By default, 100 modules.
+LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, NrCores=3, corrClustNrIter=21, Parameters) {
 
   if (nrow(MA_matrix_Var)>NrModules){
 
     #K-means++-style initialization
     rnd_cent<-matrix()
     #First one at random
-    rnd_cent<-(MA_matrix_Var[sample(1:nrow(MA_matrix_Var), 1),])
+    rnd_cent<-(MA_matrix_Var[sample(seq_len(nrow(MA_matrix_Var)), 1),])
     if(NrModules>0){
 
       if(NrModules>1){
@@ -95,7 +124,7 @@ LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, NrCores=30, cor
           Px<-numeric(length = nrow(MA_matrix_Var))
           for(center_idx in 3:NrModules){
 
-            for(i in 1: nrow(MA_matrix_Var)){
+            for(i in seq_len(nrow(MA_matrix_Var))){
               gene<-MA_matrix_Var[i,]
               corr_dists<-apply( rnd_cent, 1, function(x) ((x%*%gene)/(length(x)-1) )^2 )
               Px[i]<-2-max(corr_dists)
@@ -103,7 +132,7 @@ LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, NrCores=30, cor
             if(sum(is.finite(Px))!= length(Px)){
               print("asdf")
             }
-            rnd_cent<-rbind(rnd_cent,MA_matrix_Var[sample(1:nrow(MA_matrix_Var), 1, prob = Px),])
+            rnd_cent<-rbind(rnd_cent,MA_matrix_Var[sample(seq_len(nrow(MA_matrix_Var)), 1, prob = Px),])
           }
         }
       }
@@ -117,8 +146,8 @@ LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, NrCores=30, cor
 
     Data<-MA_matrix_Var
     Clusters<-numeric()
-    for(jj in 1:5){
-      for (i in 1:nrow(MA_matrix_Var)){
+    for(jj in seq_len(5)){
+      for (i in seq_len(nrow(MA_matrix_Var))){
         CurrentGeneVector = Data[i,,drop=FALSE]
         Correlations = (stats::cor(t(CurrentGeneVector),t(ModuleVectors)))
         corr = data.matrix(Correlations,rownames.force = NA)
@@ -129,7 +158,7 @@ LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, NrCores=30, cor
         Clusters[i] = MaxPosition
       }
       ClusterIDs<-unique(Clusters)
-      for (idx in 1:length(ClusterIDs)){
+      for (idx in seq_along(ClusterIDs)){
         genesInModule<-which(Clusters == ClusterIDs[idx])
         cx <- MA_matrix_Var[genesInModule, ]
         if(length(genesInModule) > 1){
@@ -188,7 +217,7 @@ LINKER_ReassignGenesToClusters <- function(Data,RegulatorData,Beta,Clusters){
 
   #reassigning genes:
   `%dopar%` <- foreach::`%dopar%`
-  nc <- foreach::foreach(i = 1:NrGenes, .combine = c) %dopar% {
+  nc <- foreach::foreach(i = seq_len(NrGenes), .combine = c) %dopar% {
     OldModule = Clusters[i]
     CurrentGeneVector = Data[i,,drop=FALSE]
     Correlations = (stats::cor(t(CurrentGeneVector),t(ModuleVectors)))
@@ -303,13 +332,13 @@ LINKER_extract_modules<-function(results){
 
   enriched_idx<-1
   NrBootstraps<-length(results$bootstrapResult)
-  for(idx_bootstrap in 1:NrBootstraps){
+  for(idx_bootstrap in seq_len(NrBootstraps)){
 
     NrModules<-results$bootstrapResult[[idx_bootstrap]]$NrModules
     boot_results<-results$bootstrapResult[[idx_bootstrap]]
     boot_idx<-sort(unique(boot_results$ModuleMembership[,]))
 
-    for(Module_number in 1:NrModules){
+    for(Module_number in seq_len(NrModules)){
 
 
       Module_target_genes_full_name<-boot_results$AllGenes[which(boot_results$ModuleMembership[,]==boot_idx[Module_number])]
@@ -365,8 +394,7 @@ LINKER_extract_modules<-function(results){
 #' @param MA_Data_TestSet Matrix of log-normalized estimated counts of the gene expression data, centered and scaled, containing
 #' only the test samples.
 #' @param RegulatorData_TestSet Expression matrix containing only the regulators of the test samples.
-#' @param used_method Method selected for use. Default set to LINKER.
-LINKER_EvaluateTestSet <- function(LINKERresults,MA_Data_TestSet,RegulatorData_TestSet, used_method="LINKER") {
+LINKER_EvaluateTestSet <- function(LINKERresults,MA_Data_TestSet,RegulatorData_TestSet, used_method="MEAN") {
   nrSamples = ncol(MA_Data_TestSet)
   RegulatorNames=rownames(RegulatorData_TestSet)
 
@@ -376,7 +404,7 @@ LINKER_EvaluateTestSet <- function(LINKERresults,MA_Data_TestSet,RegulatorData_T
   RsquareAjusted = mat.or.vec(LINKERresults$NrModules,1)
   modules <- list()
 
-  for (i in 1:LINKERresults$NrModules){
+  for (i in seq_len(LINKERresults$NrModules)){
     #check regulator presence
     currentRegulators = RegulatorNames[which(LINKERresults$RegulatoryPrograms[i,] != 0)]
     stats[i,1] = length(currentRegulators)
@@ -452,8 +480,7 @@ LINKER_EvaluateTestSet <- function(LINKERresults,MA_Data_TestSet,RegulatorData_T
 #' @param Data Matrix of log-normalized estimated counts of the gene expression data, centered and scaled, containing
 #' only the train samples.
 #' @param Clusters Clusters generated from the linkerinit function.
-#' @param RegulatorSign unnecessary variable, we will delete it.
-LINKER_LearnRegulatoryPrograms<-function(Data,Clusters,RegulatorData,RegulatorSign,Lambda,alpha,pmax, mode, used_method="LINKER"){
+LINKER_LearnRegulatoryPrograms<-function(Data,Clusters,RegulatorData,Lambda,alpha,pmax, mode, used_method="MEAN"){
 
   RegulatorData_rownames=rownames(RegulatorData)
   Data_rownames=rownames(Data)
@@ -464,10 +491,10 @@ LINKER_LearnRegulatoryPrograms<-function(Data,Clusters,RegulatorData,RegulatorSi
   y_all = mat.or.vec(NrClusters,NrSamples)
   ClusterIDs = unique(Clusters)
   ClusterIDs = sort(ClusterIDs, decreasing = FALSE)
-  cnt <- 1:NrClusters
+  cnt <- seq_len(NrClusters)
 
   `%dopar%` <- foreach::`%dopar%`
-  BetaY_all <- foreach::foreach(i=1:NrClusters,.combine=cbind,.init=list(list(),list(),list()),.packages = c("vbsr","glmnet","igraph")) %dopar% {
+  BetaY_all <- foreach::foreach(i=seq_len(NrClusters),.combine=cbind,.init=list(list(),list(),list()),.packages = c("vbsr","glmnet","igraph")) %dopar% {
 
     CurrentClusterPositions = which(Clusters %in% ClusterIDs[i])
     nrGenesInClusters = length(CurrentClusterPositions)
@@ -543,7 +570,7 @@ LINKER_LearnRegulatoryPrograms<-function(Data,Clusters,RegulatorData,RegulatorSi
 
     else if(mode=="LM"){
       b_opt<-numeric(length = nrow(RegulatorData))
-      for(i in 1:nrow(RegulatorData))
+      for(i in seq_len(nrow(RegulatorData)))
       {
         x<-X[i,]
         fit = stats::lm(y~x)

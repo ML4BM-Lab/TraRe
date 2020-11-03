@@ -1,21 +1,3 @@
-#' Generate summary
-#'
-#' Given results of Linker runs and other annotations, builds a summary in order to
-#' afterwards
-#' html website that summarizes graph edges by support and ChIP evidence (if
-#' provided).
-#'
-#' @param rungraphs example of description
-#' @param iso_table example of description
-#' @param weighted_chip_evidence example of description
-#' @param graphstr example of description
-#' @param htmlinfo example of description
-#' @param runinfo example of description
-#'
-#' @return summaryfinal, a data frame that contains for each module and graph
-#'      the number of graph edges at each possible level of support and the
-#'      percentage of cumulative edges with each type of ChIP evidence
-#' @export linker_summarize_rungraphs
 linker_summarize_rungraphs <- function(rungraphs = NULL, iso_table = NULL,
                                 weighted_chip_evidence = NULL,
                                 graphstr = "data",
@@ -28,13 +10,13 @@ linker_summarize_rungraphs <- function(rungraphs = NULL, iso_table = NULL,
 
   methods::show(paste0("Processing ", graphstr, " graph method ..."))
   write(paste0("<br><br><b>", graphstr, "</b><br><br>"),
-        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = T)
+        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
 
   # summarize edge results
   edgesinfo <- edgeinfo_from_graphs(rungraphs = rungraphs,
                                     iso_table = iso_table,
                                     weighted_chip_evidence = weighted_chip_evidence)
-  edgesinfo <<- edgesinfo
+  #edgesinfo <<- edgesinfo
 
   # write edge results summary
   write_tables_all(edgesinfo, tabletype = "edges",
@@ -42,7 +24,7 @@ linker_summarize_rungraphs <- function(rungraphs = NULL, iso_table = NULL,
                                  "target-origid", "reg-geneid",
                                  "target-geneid", "chip-evidence",
                                  "num-chip-peaks"),
-                   html_idxs = 1:min(1000, dim(edgesinfo)[1]),
+                   html_idxs = seq_len(min(1000, dim(edgesinfo)[1])),
                    filestr = graphstr,
                    htmlinfo = htmlinfo)
 
@@ -74,19 +56,19 @@ linker_summarize_rungraphs <- function(rungraphs = NULL, iso_table = NULL,
 
   write(paste0("<br>", ngraphmods, " graphs with an average of ",
                signif(sum(myweights) / ngraphmods, 3), " edges each.<br>"),
-        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = T)
+        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
   write(paste0(sum(myweights), " (",
                signif(sum(myweights) / ( runinfo$nregs * runinfo$ntargets *
                                            runinfo$nboots) * 100, 3),
                "%) of ", runinfo$nregs, "*", runinfo$ntargets, "*",
                runinfo$nboots, " possible edges across bootstraps.<br>"),
-        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = T)
+        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
   write(paste0(length(myweights), " (",
                signif(length(myweights) / (runinfo$nregs *
                                              runinfo$ntargets) * 100, 3),
                "%) of ", runinfo$nregs, "*", runinfo$ntargets,
                " unique edges found.<br><br>"),
-        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = T)
+        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
 
   evid_weight_raw <- cbind(c(myweights), c(myevidence))
   if (length(unique(myweights)) == 1 || length(unique(myweights)) == 1){
@@ -106,29 +88,21 @@ linker_summarize_rungraphs <- function(rungraphs = NULL, iso_table = NULL,
 
   htmlstr <- table2html(summary_final)
   write(htmlstr, file = paste0(htmlinfo$htmldir, htmlinfo$indexpath),
-        append = T)
+        append = TRUE)
   return(summary_final)
 }
-#' @export
-#' @rdname linker_summarize_rungraphs
-#' @param outdir example of description
-#' @param runtag example of description
-#' @param codedir example of description
-#' @param indexpath example of description
-#' @param glossarypath example of description
-#' @param imgstr example of description
-#' @param txtstr example of description
+
 linker_create_index_page <- function(outdir="./", runtag="run", codedir="./",
                               indexpath="index.html",
                               glossarypath="glossary.html",
                               imgstr="imgs/", txtstr="txts/"){
 
-  dir.create(file.path(outdir))
+  dir.create(file.path(outdir),showWarnings=FALSE)
   htmldir <- paste0(outdir, runtag, "/")
-  dir.create(file.path(htmldir))
+  dir.create(file.path(htmldir),showWarnings=FALSE)
   file.copy(from = paste0(codedir, "sorttable.js"), to = htmldir)
-  dir.create(file.path(paste0(htmldir, imgstr)))
-  dir.create(file.path(paste0(htmldir, txtstr)))
+  dir.create(file.path(paste0(htmldir, imgstr)),showWarnings=FALSE)
+  dir.create(file.path(paste0(htmldir, txtstr)),showWarnings=FALSE)
 
   glossary <- as.matrix(utils::read.table(paste0(codedir, "glossary.txt"),
                                    header = TRUE, sep = "\t", quote = ""))
@@ -141,14 +115,7 @@ linker_create_index_page <- function(outdir="./", runtag="run", codedir="./",
   return(list(htmldir = htmldir, indexpath = indexpath, imgstr = imgstr,
               txtstr = txtstr, glossarypath = glossarypath, abspath = abspath))
 }
-#' @export
-#' @rdname linker_summarize_rungraphs
-#' @param filter example of description
-#' @param filterNeigh example of description
-#' @param tabletype example of description
-#' @param nboots example of description
-#' @param minsupport example of description
-#' @param edgesinfo example of description
+
 genetable_summary <- function(filter, filterNeigh, tabletype,
                               nboots = 10, minsupport = 4, edgesinfo,
                               graphstr, htmlinfo){
@@ -166,8 +133,8 @@ genetable_summary <- function(filter, filterNeigh, tabletype,
       colstrs <- intersect(colnames(scaledtable), as.character(keepsupport))
       topgenes <- rowSums(scaledtable[, as.character(colstrs)])
     }
-    sortidxs <- sort(topgenes, decreasing = T, index.return = T)$ix
-    mygids <- rownames(tmptable)[sortidxs[1:min(1000, length(topgenes))]]
+    sortidxs <- sort(topgenes, decreasing = TRUE, index.return = TRUE)$ix
+    mygids <- rownames(tmptable)[sortidxs[seq_len(min(1000, length(topgenes)))]]
   }
   ###
   genetable <- t(sapply(mygids, extract_gene_row, filter, filterNeigh,
@@ -176,15 +143,14 @@ genetable_summary <- function(filter, filterNeigh, tabletype,
                            "topNeigh", "suppTable")
   sortval <- (as.numeric(genetable[, "nMax-Conf-Neigh"]) * 1000000000 +
                 as.numeric(genetable[, "nEdges"]))
-  sortidxs <- sort(sortval, decreasing = T,
-                   index.return = T)$ix[1:min(1000, length(sortval))]
+  sortidxs <- sort(sortval, decreasing = TRUE,
+                   index.return = TRUE)$ix[seq_len(min(1000, length(sortval)))]
   write_tables_all(genetable, tabletype = tabletype,
                    html_idxs = sortidxs, filestr = graphstr,
                    htmlinfo = htmlinfo)
   return(genetable)
 }
-#' @export
-#' @rdname linker_summarize_rungraphs
+
 edgeinfo_from_graphs <- function(rungraphs, iso_table, weighted_chip_evidence){
 
   methods::show("Extracting edges from all graphs...")
@@ -227,7 +193,7 @@ edgeinfo_from_graphs <- function(rungraphs, iso_table, weighted_chip_evidence){
                            "num-chip-peaks", "sort-val")
 
   return(edgesinfo[sort(as.numeric(edgesinfo[, "sort-val"]),
-                        decreasing = TRUE, index.return = T)$ix, ])
+                        decreasing = TRUE, index.return = TRUE)$ix, ])
 }
 
 # Helpers -----------------------------------------------------------------
@@ -240,7 +206,7 @@ showfirstlast <- function(mynames){
 
 cumSumTable <- function(mydataframe){
   dftable <- table(as.data.frame(as.matrix(mydataframe)))
-  idxnums <- sort(as.numeric(rownames(dftable)), decreasing = T)
+  idxnums <- sort(as.numeric(rownames(dftable)), decreasing = TRUE)
   dftable <- dftable[as.character(idxnums), ]
   if (is.null(dim(dftable))){ # if only one column or row
     nCount <- dftable
@@ -272,7 +238,7 @@ extract_edge_strings_from_graph <- function(mygraph){
 }
 
 write_tables_all <- function(mytab, tabletype="table",
-                             html_idxs=1:dim(mytab)[1],
+                             html_idxs=seq_len(dim(mytab)[1]),
                              html_cols=colnames(mytab),
                              filestr="data",
                              htmlinfo=list(htmldir = "html/",
@@ -318,14 +284,15 @@ extract_gene_row <- function(mygid, myfield, myfield2, edgesinfo,
            sum(as.numeric(mysubtab[, "weight"])),
            length(gididxs),
            sum(as.numeric(mysubtab[, "weight"]) == nboots),
-           tab2cell(mysubtab[1:min(maxneigh, length(gididxs)), ],
-                    keeprnames = F),
+           tab2cell(mysubtab[seq_len(min(maxneigh, length(gididxs))), ],
+                    keeprnames = FALSE),
            tab2cell(evid_weight_tab) ))
 }
 
 
-tab2cell <- function(mytab, keepheader=T, keeprnames=T){
+tab2cell <- function(mytab, keepheader=TRUE, keeprnames=TRUE){
   if (keepheader){ mytab <- rbind(colnames(mytab), mytab) }
   if (keeprnames){ mytab <- cbind(rownames(mytab), mytab) }
   return(paste(collapse = "<br>", apply(mytab, 1, paste, collapse = " | ")))
 }
+

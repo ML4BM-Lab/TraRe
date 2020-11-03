@@ -1,4 +1,4 @@
-#' create_html_summary
+#' Create HTML summary
 #'
 #' Given results of Linker runs and other annotations, builds an interconnected
 #' html website that summarizes graph edges by support and ChIP evidence (if
@@ -28,14 +28,38 @@
 #' @return allsummaries, a data frame that contains for each module and graph
 #'      the number of graph edges at each possible level of support and the
 #'      percentage of cumulative edges with each type of ChIP evidence
+#'
+#' @examples
+#'
+#'    ## We are going to use files from the example folder.
+#'    ## `create_html_summary()` only needs the paths, so thats what
+#'    ## we are giving it.
+#'
+#'    evidpath <- paste0(system.file("extdata",package="TraRe"),'/ChIP',
+#'                       '/Tumor_OV50_intersectBed.weighted_evidence.txt')
+#'
+#'    rfiles <- c(paste0(system.file("extdata",package="TraRe"),'/ChIP',
+#'                       '/Tumor_OV50.tar8855_reg638.VBSR.m100_b10.rds'),
+#'
+#'                paste0(system.file("extdata",package="TraRe"),'/ChIP',
+#'                       '/Tumor_OV50.tar8855_reg638.VBSR.single_gene.rds'))
+#'
+#'    tagstr <- "Tumor_OV50.tar8855_reg638"
+#'
+#'    mapfile <- paste0(system.file("extdata",package="TraRe"),'/ChIP',
+#'                       '/Tumor_OV50.gene_info.txt')
+#'
+#'    ## We are going to create a folder for this example
+#'
+#'    \dontrun{
+#'    dir.create(paste0(getwd(),'/summaryfolder'),showWarnings=FALSE)
+#'    outdir <- paste0(getwd(),'/summaryfolder/')
+#'
+#'
+#'    create_html_summary(rfiles,tagstr,mapfile,outdir,evidpath)
+#'    }
 #' @export
-create_html_summary <- function(rfiles=c("data/Tumor_OV50.tar8855_reg638.VBSR.m100_b10.rds",
-                                         "data/Tumor_OV50.tar8855_reg638.VBSR.single_gene.rds"),
-                                tagstr = "Tumor_OV50.tar8855_reg638",
-                                mapfile = "data/Tumor_OV50.gene_info.txt",
-                                outdir = "html_files/",
-                                evidfile = "data/Tumor_OV50_intersectBed.weighted_evidence.txt"
-){
+create_html_summary <- function(rfiles,tagstr,mapfile,outdir = getwd(),evidfile){
   runinfo <- list()
   runinfo$rfiles <- rfiles
   runinfo$tagstr <- tagstr
@@ -46,7 +70,7 @@ create_html_summary <- function(rfiles=c("data/Tumor_OV50.tar8855_reg638.VBSR.m1
   #################### load information on gene identifiers ####################
 
   methods::show(paste0("Loading id conversion table: ", runinfo$mapfile, "..."))
-  iso_table <- as.matrix(utils::read.table(runinfo$mapfile, header = T, sep = "\t",
+  iso_table <- as.matrix(utils::read.table(runinfo$mapfile, header = TRUE, sep = "\t",
                                     quote = ""))
   rownames(iso_table) <- iso_table[, "uniq_isos"]
   all_reg_genes <- iso_table[which(iso_table[, "regulator"] == 1),
@@ -59,22 +83,23 @@ create_html_summary <- function(rfiles=c("data/Tumor_OV50.tar8855_reg638.VBSR.m1
   ################ create overall summary for html index page #################
   indexpath <- paste(sep = ".", "index",  runinfo$tagstr, "html")
   htmlinfo <- linker_create_index_page(outdir = runinfo$outdir,
-                                runtag = runinfo$tagstr,
-                                indexpath = indexpath)
+                                       runtag = runinfo$tagstr,
+                                       indexpath = indexpath,
+                                       codedir = paste0(system.file("extdata",package="TraRe"),'/'))
 
   # write gene info stats
   write(paste0("<br>", length(all_tar_genes), " target isoforms covering ",
                length(unique(all_tar_genes)), " genes.<br>"),
-        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = T)
+        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
   write(paste0(length(all_reg_genes), " regulator isoforms covering ",
                length(unique(all_reg_genes)), " genes.<br><br>"),
-        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = T)
+        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
 
   ################# load information on chip evidence, if exists ###############
   weighted_chip_evidence <- NULL
   if (file.exists(runinfo$evidfile)){
     methods::show(paste0("Loading chip evidence table: ", runinfo$evidfile, "..."))
-    weighted_chip_evidence <- as.matrix(utils::read.table(runinfo$evidfile, header = T,
+    weighted_chip_evidence <- as.matrix(utils::read.table(runinfo$evidfile, header = TRUE,
                                                    row.names = 1, sep = "\t",
                                                    quote = ""))
     methods::show("chip evidence regulators: ")
@@ -85,8 +110,7 @@ create_html_summary <- function(rfiles=c("data/Tumor_OV50.tar8855_reg638.VBSR.m1
     binary_chip_evidence[binary_chip_evidence > 1] <- 1
     binary_chip_summary <- table(as.numeric(binary_chip_evidence))
     methods::show(signif(binary_chip_summary / ( dim(weighted_chip_evidence)[1] *
-                                          dim(weighted_chip_evidence)[2]) *
-                  100, 3))
+                  dim(weighted_chip_evidence)[2]) * 100, 3))
 
     nonzeroregs <- sum(rowSums(binary_chip_evidence) >= 0)
     nonzerotargs <- sum(colSums(binary_chip_evidence) !=
@@ -94,13 +118,13 @@ create_html_summary <- function(rfiles=c("data/Tumor_OV50.tar8855_reg638.VBSR.m1
 
     write(paste0(nonzeroregs, " regulators and ", nonzerotargs,
                  " targets with possible chip evidence."),
-          file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = T)
+          file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
     write(paste0(binary_chip_summary["1"], " (",
                  signif(binary_chip_summary["1"] / (nonzeroregs *
                                                       nonzerotargs) * 100, 3),
                  "%) of ", nonzeroregs, "*", nonzerotargs,
                  " possible chip edges have at least one peak.<br>"),
-          file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = T)
+          file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
     bin_summ <- cumSumTable(cbind(as.numeric(binary_chip_evidence),
                                   1 - as.numeric(binary_chip_evidence)))
     myrnames <- c("Peaks", "noPeak", "NA")
@@ -109,7 +133,7 @@ create_html_summary <- function(rfiles=c("data/Tumor_OV50.tar8855_reg638.VBSR.m1
                             "%RowNoPeak", "%RowNAs")
     rownames(bin_summ) <- myrnames
     htmlstr <- table2html(bin_summ)
-    write(htmlstr, file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = T)
+    write(htmlstr, file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
   }
 
   ###################### for each saved linker run result ########################
@@ -164,9 +188,10 @@ create_html_summary <- function(rfiles=c("data/Tumor_OV50.tar8855_reg638.VBSR.m1
                               runinfo$tagstr, ".all_summaries.txt")
         methods::show(paste0("Writing table: ", resultspath))
         utils::write.table(allsummaries, paste0(htmlinfo$htmldir, resultspath),
-                    sep = "\t", row.names = F, col.names = T, quote = F)
+                    sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
       } # end graphmeth
     } # end modmeth
   } # end rfile
   return(allsummaries)
 }
+

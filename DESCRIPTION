@@ -3,31 +3,48 @@ Title: Transcriptional Rewiring
 Version: 1.0.0
 URL: https://github.com/ubioinformat/TraRePackage/tree/master
 Authors@R: 
-    person(given = "Jesus",
+    c(person(given = "Jesus",
            family = "De La Fuente Cedeño",
-           role = c("aut", "cre"),
+           role = c("aut", "cre","cph"),
            email = "jdelafuentec@unav.es",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Maintainer: Jesus de la Fuente Cedeño <jdelafuentec@unav.es>
+           comment = c(ORCID = "YOUR-ORCID-ID")),
+    person(given = "Mikel",
+           family = "Hernaez",
+           role = c("aut", "cph","ths"),
+           email = "mhernaez@unav.es",
+           comment = c(ORCID = "YOUR-ORCID-ID")),
+    person(given = "Charles",
+           family = "Blatti",
+           role = c("aut", "cph"),
+           email = "blatti@illinois.edu",
+           comment = c(ORCID = "YOUR-ORCID-ID")))
 Description: What the package does (one paragraph).
+Depends:
+	R (>= 4.0)
+Imports: 
+	hash,
+	ggplot2,
+	stats,
+	methods,
+	igraph,
+	utils,
+    	foreach,
+    	glmnet,
+    	vbsr,
+    	grDevices,
+    	gplots,
+    	gtools,
+    	pvclust,
+    	doParallel,
+    	R.utils,
+    	dqrng
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
-Imports: 
-	hash,
-	ggplot2,
-	stats,
-    methods,
-	igraph,
-    utils,
-    foreach,
-    glmnet,
-    vbsr,
-    grDevices,
-    gplots,
-    gtools,
-    pvclust,
-    doParallel,
-    R.utils
+biocViews: GeneRegulation, RNASeq, GraphAndNetwork, Bayesian
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

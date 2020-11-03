@@ -3,23 +3,25 @@
 #' Run second phase of the linker method where a bipartitive graph is generated from the phase I output.
 #' This functions takes place inside the linkerrun function, so it is not recommended to run it on its own.
 #'
+#' @param Data Matrix of log-normalized estimated counts of the gene expression
+#' data (Nr Genes x Nr samples)
+#' @param mode Chosen method(s) to link module eigengenes to regulators. The available options are
+#' "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.
 #' @param modules Modules obtained from the phase I linker output.
-#' @param Data lognorm gene expression matrix.
-#' @param mode Model to use when stablishing the relation between drivers and targets for the graphs generation. By default, VSBR,
 #' @param alpha alpha parameter if a LASSO model is chosen.
-
 #'
 #' @return igraph object containing the related drivers and targets in the form of a bipartitive graph.
 #' @export
 
-LINKER_compute_modules_graph<-function(modules, Data, mode="VBSR",alpha=1-1e-06)
+LINKER_runPhase2<-function(modules, Data, mode="VBSR",alpha=1-1e-06)
 {
 
   bp_g<-list()
   i<-1
 
   `%dopar%` <- foreach::`%dopar%`
-  bp_g<-foreach::foreach(mod_idx=1:length(modules), .packages = c("vbsr","glmnet","igraph"))%dopar%
+  mod_idx<-NULL
+  bp_g<-foreach::foreach(mod_idx=seq_along(modules), .packages = c("vbsr","glmnet","igraph"))%dopar%
   {
     targetgenes<-unlist(modules[[mod_idx]]$target_genes)
     regulators<-unlist(modules[[mod_idx]]$regulators)
@@ -42,7 +44,7 @@ LINKER_compute_modules_graph<-function(modules, Data, mode="VBSR",alpha=1-1e-06)
 
       driverMat<-matrix(data = NA, nrow = length(targetgenes), ncol = length(regulators))
 
-      for(idx_gene in 1:length(targetgenes))
+      for(idx_gene in seq_along(targetgenes))
       {
         y<-Data[targetgenes[idx_gene],]
 
@@ -71,7 +73,7 @@ LINKER_compute_modules_graph<-function(modules, Data, mode="VBSR",alpha=1-1e-06)
         }
         else if(mode=="LM")
         {
-          for(idx_regs in 1:length(regulators))
+          for(idx_regs in seq_along(regulators))
           {
             x<-t(X)[,idx_regs]
             fit = stats::lm(y~x)

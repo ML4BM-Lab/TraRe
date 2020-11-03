@@ -1,0 +1,182 @@
+---
+title: "TraRe: Identification of conditions dependant Gene Regulatory Networks"
+output: rmarkdown::html_vignette
+abstract: >
+  *TraRe* is an R package to identify Gene Regulatory Networks (GRN) that born from specific conditions. The
+  algorithm works with sequenced data (RNA-Seq).
+  
+  It generates html reports containing statistical information about the generated GRN and graphs to visualize how this GRN behave.
+vignette: >
+  %\VignetteIndexEntry{TraRe}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r LoadFunctions, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+library(TraRe)
+```
+
+# Installation 
+TraRe can be currently installed from Github usind the devtools package (we are currently working to deliver to CRAN and Bioconductor):
+
+```{r, eval=FALSE}
+devtools::install_github(repo="ubioinformat/TraRe")
+```
+
+#Introduction 
+*TraRe* R package provides a way to discover condition-dependent deregulatory networks on a four steps path: 
+
+* *LINKER* step generates, from an initial RNA-Seq dataset where drivers (Transcription Factor) and targets genes are provided, GRN modules in the form of bipartite graphs, where drivers and targets relationships are defined.
+
+![**Figure 1.** LINKER module ](linker.png)
+
+* *Rewiring* step performs a permutation test in order to score LINKER output modules. As bootstrapping has been performed in previous step, rewiring will try to group similar highly scored modules, to infer similar behavior across bootstraps. It will outputs a correlation matrix in the form of a heatmap (and sorted by hierarchical clustering for easier interpretation), containing similar highly scored modules.
+
+![**Figure 2.** Rewiring module ](rewiring.png)
+
+* *Plot:* From highly scored modules clusters, we can evaluate them individually by generating single GRN inference, and plot how these GRN vary when analyzed phenotype changes.
+
+![**Figure 3.** Plot ](plot.png)
+
+* *Cliques:* From the chosen individual GRN, an excel file is generated containing drivers-targets relationships and cliques module. By how LINKER method works, some highly-correlated driver genes (TFs) may be dropped from the
+resultant model, as the role they play at the GRN inference process is very similar. Due to this,
+we propose a method based on cliques (Fully Connected Networks) to recover those dropped drivers.
+
+![**Figure 4.** Cliques and results ](cliques.png)
+# LINKER : Generating Gene Regulatory Networks
+
+## Overview of the proposed method
+The aim of the proposed method is to find relatively small networks
+that link few regulatory (or driver) genes with a similarly regulated
+set of genes, also known as the target genes. 
+In order to build such networks, the method is divided into two
+phases. During Phase I the method generates K modules of similarly
+expressed genes and then associates each module to few regulators. 
+
+Due to the non-convex nature of the problem, we perform
+B runs of this step using a different set of samples (sub-sampling
+without replacement) with a different random initialization in order
+to explore more broadly the set of potentially valid modules. Thus, at 
+the end of this step the method has generated
+K  B modules of similarly regulated genes, each of them with their
+associated regulators.
+
+## Running LINKER in TraRe
+
+The main entry function of LINKER is
+
+```{r, eval=FALSE}
+
+LINKER_run<-function(
+                  lognorm_est_counts, 
+                  target_filtered_idx, 
+                  regulator_filtered_idx, 
+                  Gene_set_Collections,
+                  link_mode=c("VBSR", "LASSOmin", "LASSO1se", "LM"),
+                  graph_mode=c("VBSR", "LASSOmin", "LASSO1se", "LM"),
+                  module_rep="MEAN",
+                  NrModules=100, 
+                  corrClustNrIter=100,
+                  Nr_bootstraps=10,
+                  FDR=0.05,
+                  NrCores=3)
+
+```
+
+All parameters are explained in the help section of `LINKER_run()`.
+Example from there is also provided here.
+
+```{r, eval=FALSE, warning=FALSE, collapse=TRUE}
+
+     # For this example, we are going to join drivers and targets from the example folder.
+
+    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
+
+    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
+
+    lognorm_est_counts <- rbind(drivers,targets)
+
+    # We create the index for drivers and targets in the log-normalized gene expression matrix.
+    
+    L <- dim(drivers)[1]
+    regulator_filtered_idx <- 1:L
+    target_filtered_idx <- L+c(1:dim(targets)[1])
+
+
+    # We recommend VBSR.
+
+    linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx,regulator_filtered_idx,
+                               link_mode="VBSR",graph_mode="VBSR")
+
+```
+
+
+# Rewiring GRN modules
+
+## Overview of rewiring method
+
+The rewiring test performs a permutation test over a certain condition to infere if that condition is producing any dysregulation on GRN. Here bootstrapping plays an important role, as the non-convex nature of this biological events makes necessary to ensure that a certain behavior is repeated across bootstraps, and that this event does not come from a particular realization.
+
+## How to run rewiring on TraRe
+
+In order to run rewiring, *Trare* provides a `preparerewiring()` function that requires 
+
+
+* ```name``` Desired name of the folder which is generated. The chosen
+threshold will be `paste()` to the name folder.
+* ```linker_saved_file``` Output file from linker function path.
+* ```expr_matrix_file``` Lognorm counts of the gene expression matrix path.
+* **gene_info_file** path of a two-column file containing genes and 'regulator' boolean variable.
+* *phenotype_file* path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).
+* *final_signif_thresh* Significance threshold for the rewiring method. The lower the threshold, the restrictive the method.
+
+We also provide here a piece of the example of `preparerewiring()`
+
+```{r, eval=FALSE, warning=FALSE, collapse=TRUE}
+
+ linker_output <- paste0(system.file("extdata",package="TraRe"),'/linker_rewiring_example.rds')
+
+ expr_matrix <- paste0(system.file("extdata",package="TraRe"), '/expression_rewiring_example.txt')
+
+ gene_info <- paste0(system.file("extdata",package="TraRe"),'/geneinfo_rewiring_example.txt')
+
+ phenotype_info <- paste0(system.file("extdata",package="TraRe"),'/phenotype_rewiring_example.txt')
+
+
+ prepared <- preparerewiring(name="example",linker_output,expr_matrix,gene_info,
+                             phenotype_info,final_signif_thresh=0.001)
+
+
+```
+
+# Plot single GRN 
+
+## Overview
+
+Once we have selected a cluster of modules that across bootstraps have similar behavior as GRN, and we have
+generated a single GRN, we can plot if the regulatory behavior is changing within the evaluated condition.
+
+
+## Plot GRN in TraRe
+
+We provide two ways of building the layout for the plot, depending of if a t.test is evaluated over the generated
+GRN or not. For more information, refer to the help file of `plot_functions()`.
+
+
+# Cliques method and results
+
+## Overview 
+
+From all these analysis, we provide an informative way of looking at the generated GRN, the relationships they have within the network, easing a possible biological validation afterwards this in silico analysis.
+
+# Generate file in TraRe
+
+This part of the package is still developing.
+

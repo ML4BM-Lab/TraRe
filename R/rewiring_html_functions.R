@@ -1,36 +1,37 @@
-#' Generate html report.
+#' Generate html report from the `runrewiring()` method.
 #'
 #' @description
 #'
-#' Contain functions to generate an html report from the output modules. `table2html()`
-#' creates html summary of a set of linker runs on the same data. `write_html_table_page()` place all
-#' pngs on same html page, for run directory. `write_tables_all()` create html summary of a set of
-#' linker runs on the same data. `create_index_page()` generates the rest of pages of the html report.
+#' Contain functions to generate an html report from the rewired linker modules.
+#' `create_index_page()` initializes folders and files for the html report. `write_tables_all()` generates
+#' a table given stats from the rewiring method. `write_html_table_page()` creates the header for the
+#' html file when the table will be placed. `table2html()` gets the `write_html_table_page()` info and
+#' return the generated html file. This functions run inside `runrewiring()`
+#'
+#' @param outdir path for the resultant folder.
+#' @param runtag name that is `paste()` to the name folder.
+#' @param codedir folder from which `sorttable.js` and `glossary.txt`
+#' files are `paste()` into the output folder.
+#' @param indexpath name for the index file.
+#' @param glossarypath name for the glossary file.
+#' @param imgstr path for the image folder.
+#' @param txtstr path for the txts folder.
+#'
+#' @param mytab table to transform into html file.
+#' @param tabletype type of table.
+#' @param html_idxs index for table rows.
+#' @param html_cols index for table columns.
+#' @param filestr name of the html file to be generated.
+#' @param htmlinfo list containing `indexpath`,`txtstr`, and html dir.
 #'
 #'
-#' @param resultstable example of param.
-#' @param htmlpagefile example of param.
-#' @param resultsrelpath example of param.
-#' @param indexpath example of param.
-#' @param glossarypath example of param.
-#' @param mytab example of param.
-#' @param tabletype example of param.
-#' @param html_idxs example of param.
-#' @param html_cols example of param.
-#' @param filestr example of param.
-#' @param htmlinfo example of param.
-#' @param outdir example of param.
-#' @param runtag example of param.
-#' @param codedir example of param.
-#' @param imgstr example of param.
+#' @param resultstable modified table from `write_tables_all()`.
+#' @param htmlpagefile path of the html file.
+#' @param resultsrelpath path of the txt files.
 #'
 #'
-#' @examples
-#' \dontrun{
-#' example of example.
-#' }
 #'
-#' @export
+#' @noRd
 
 table2html <- function(resultstable){
 
@@ -40,12 +41,13 @@ table2html <- function(resultstable){
   head_str = paste0("<script src='sorttable.js'></script>\n<TABLE class=",
                     "'sortable' border =1 >\n", theader)
 
-  numtable = cbind(1:dim(resultstable)[1], resultstable)
+  numtable = cbind(seq_len(nrow(resultstable)), resultstable)
   rowinnerstrs = apply(numtable, 1, paste, collapse = "</td><td>")
   rowstrs = paste0("<tr><td>", rowinnerstrs, "</td></tr>")
   rows_str = paste(collapse="\n", rowstrs)
 
   return(paste0(collapse="\n", head_str, rows_str, "\n</tbody></table><br>"))
+
 }
 
 
@@ -60,12 +62,12 @@ write_html_table_page <- function(resultstable, htmlpagefile, resultsrelpath,
                "' target='_blank'>Download</a></th></tr></table><br><br>"),
         file = htmlpagefile)
   htmlstr = table2html(resultstable)
-  write(htmlstr, file = htmlpagefile, append = T)
+  write(htmlstr, file = htmlpagefile, append = TRUE)
 }
 
 
 write_tables_all <- function(mytab, tabletype="table",
-                             html_idxs=1:dim(mytab)[1],
+                             html_idxs=seq_len(nrow(mytab)),
                              html_cols=colnames(mytab),
                              filestr="data",
                              htmlinfo=list(htmldir="html/",
@@ -75,10 +77,10 @@ write_tables_all <- function(mytab, tabletype="table",
   resultspath = paste0(htmlinfo$txtstr, filestr, "_", tabletype, ".txt")
   methods::show(paste0("Writing table: ", resultspath))
   utils::write.table(mytab, paste0(htmlinfo$htmldir, resultspath), sep='\t',
-              row.names=F, col.names=T, quote=F)
+              row.names=FALSE, col.names=TRUE, quote=FALSE)
   write(paste0('<a href = "',htmlpath,'" target="_blank">',
                tabletype,'</a><br>'),
-        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append=T)
+        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append=TRUE)
   write_html_table_page(resultstable=mytab[html_idxs,html_cols],
                         htmlpagefile=paste0(htmlinfo$htmldir, htmlpath),
                         resultsrelpath=resultspath,
@@ -103,8 +105,6 @@ create_index_page <- function(outdir="./", runtag="run", codedir="code/",
   abspath <- paste0(htmldir, indexpath)
 
   write(paste0("<br>"), file = abspath)
-  #  write(paste0("<a href = '",indexpath,"' target='_blank'>Index</a><br><br>"), file = abspath)
-  #  write_html_table(paste0(htmldir, glossarypath), glossary, glossarypath)
 
   return(list(htmldir = htmldir, indexpath = indexpath, imgstr = imgstr,
               txtstr = txtstr, glossarypath = glossarypath, abspath = abspath))

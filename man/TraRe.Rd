@@ -34,7 +34,13 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Jesus De La Fuente Cedeño \email{jdelafuentec@unav.es} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
+\strong{Maintainer}: Jesus De La Fuente Cedeño \email{jdelafuentec@unav.es} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID}) [copyright holder]
+
+Authors:
+\itemize{
+  \item Mikel Hernaez \email{mhernaez@unav.es} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID}) [copyright holder, thesis advisor]
+  \item Charles Blatti \email{blatti@illinois.edu} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID}) [copyright holder]
+}
 
 }
 \keyword{internal}

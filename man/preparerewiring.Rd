@@ -17,7 +17,8 @@ preparerewiring(
 )
 }
 \arguments{
-\item{name}{Desired name of the folder which is generated.}
+\item{name}{Desired name of the folder which is generated. The chosen
+threshold will be \code{paste()} to the name folder.}
 
 \item{linker_saved_file}{Output file from linker function path.}
 
@@ -36,23 +37,31 @@ preparerewiring(
 \item{phenotype_class_vals_string}{Boolean terms of the phenotype_file at the 'Class' column. By default, (NR,R).}
 }
 \value{
-Return a list containing linker output file path, expression matrix path, geneinfo file path, phenotype file path,
-regulator info column name, the phenotype column name, the phenotype class strings (NR,R by default), initial permutations
-parameters, the retest threshold, the retest permutations and the significance threshold.
+Return a list containing: LINKER's output, expression matrix, boolean array from phenotype file,
+array containing number of c(R,NR) samples, significance threshold and output directory.
 }
 \description{
-Prepare all the files neccessary for running the gene regulatory network rewiring method.
+Prepare neccessary files for running \code{runrewiring()}
 }
 \examples{
-\dontrun{
-wd <- "mypath"
-linker_saved_file<-c(paste(wd,'rds','su2c.rds',sep="/"))
-expr_matrix_file<-c(paste(wd,'expression','su2c_expression_ARSI.txt',sep="/"))
-gene_info_file<-c(paste(wd,'geneinfo','su2c_geneinfo.txt',sep="/"))
-phenotype_file<-c(paste(wd,'clinical','su2c_clinical_ARSI.txt',sep="/"))
-final_signif_thresh<-c(0.051)
 
-rewiringinput<-preparerewiring(name="example",linker_rds_v,expr_mat_v,gene_info_v,
-                               phenotype_file_v,final_signif_thresh)
-}
+## We are going to prepare 4 files that we have in the example folder: the output from LINKER, the
+## gene expression matrix, the phenotype file and the gene info file. Note that the LINKER
+## output is generated from the gene expression matrix. Note: if rewiring across more than 1 dataset
+## is desired, paths will be given as arrays (i.e. linker_output <- c(path1,path2))
+
+
+linker_output <- paste0(system.file("extdata",package="TraRe"),'/linker_rewiring_example.rds')
+
+expr_matrix <- paste0(system.file("extdata",package="TraRe"), '/expression_rewiring_example.txt')
+
+gene_info <- paste0(system.file("extdata",package="TraRe"),'/geneinfo_rewiring_example.txt')
+
+phenotype_info <- paste0(system.file("extdata",package="TraRe"),'/phenotype_rewiring_example.txt')
+
+
+prepared <- preparerewiring(name="example",linker_output,expr_matrix,gene_info,
+                            phenotype_info,final_signif_thresh=0.001)
+
+
 }

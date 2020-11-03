@@ -2,7 +2,7 @@
 % Please edit documentation in R/rewiring_runrewiring.R
 \name{runrewiring}
 \alias{runrewiring}
-\title{GRN modules Rewiring method.}
+\title{GRN Modules Rewiring Method.}
 \usage{
 runrewiring(
   ObjectList,
@@ -12,7 +12,7 @@ runrewiring(
 )
 }
 \arguments{
-\item{ObjectList}{Output from preparerewiring function.}
+\item{ObjectList}{Output from \code{preparerewiring()}containing some required parameters.}
 
 \item{orig_test_perms}{Initial permutations for first test (default: 100) .}
 
@@ -21,18 +21,29 @@ runrewiring(
 \item{retest_perms}{Permutations if a second test is performed (default: 0.08) .}
 }
 \value{
-None. Generate an html report containing a hierarchical clustering of the rewired modules,
-a correlation matrix containing the rewiring scores of the modules as aheatmap and all the rewired
-modules drivers and targets statistical information about the rewiring process.
+It creates a folder (in the working directory) containing the files explained above.
 }
 \description{
-Gene Regulatory Network modules Rewiring method.
+Gene Regulatory Network modules Rewiring method. It performs a permutation test,
+(what we call rewiring test) and generates an html report containing a correlation matrix
+with the higher scores obtained from the rewiring test. This matrix is shown in the way of a
+heatmap, and its sorted by a hierarchical clustering for better interpretation.
 }
 \examples{
+
+## Lets assume that we have already generated the ObjectList, we will load it from
+## the folder containing the examples files. After this, it is all straight forward.
+## For this example, we will use the default parameters (`orig_test_perms`,`retest_thresh`,
+## `retest_perms`)
+
+
+objectlist <- readRDS(file=paste0(system.file("extdata",package="TraRe"),
+                      '/prepared_rewiring_example.rds'))
+
 \dontrun{
-rewiringinput<-preparerewiring(name="example",linker_rds_v,expr_mat_v,gene_info_v,
-                               phenotype_file_v,final_signif_thresh)
-runrewiring(rewiringinput)
-}
+ runrewiring(ObjectList = objectlist)
+ }
+
+
 
 }
