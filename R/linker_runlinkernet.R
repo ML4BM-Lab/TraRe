@@ -178,7 +178,7 @@ NET_compute_graph_all_LM<-function(lognorm_est_counts, regulator_filtered_idx, t
 NET_compute_graph_all_VBSR<-function(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx)
 {
 
-  X<-lognorm_est_counts[regulator_filtered_idx,]
+  X<-lognorm_est_counts[regulator_filtered_idx,,drop=FALSE]
 
   driverMat<-matrix(data = NA, nrow = length(target_filtered_idx), ncol = length(regulator_filtered_idx))
 
@@ -187,21 +187,32 @@ NET_compute_graph_all_VBSR<-function(lognorm_est_counts, regulator_filtered_idx,
   idx_gene<-NULL
   driverMat<-foreach::foreach(idx_gene=seq_along(target_filtered_idx), .combine = rbind, .packages = "vbsr") %dopar%
     {
-      y<-lognorm_est_counts[target_filtered_idx[idx_gene],]
-      res<-vbsr::vbsr(y,t(X),n_orderings = 15,family='normal')
-      betas<-res$beta
-      betas[res$pval > 0.05/(length(target_filtered_idx)*length(regulator_filtered_idx))]<-0
-      betas
+      y<-lognorm_est_counts[target_filtered_idx[idx_gene],,drop=F]
+      if(nrow(y)){
+        y=t(y)
+      }
+      if(length(unique(y))==1){rep(0, length(regulator_filtered_idx))}
+      else{
+        res<-try(vbsr::vbsr(y,t(X),n_orderings = 15,family='normal'))
+        if(class(res)=="try-error"){rep(0, length(regulator_filtered_idx))}
+        else{
+          betas<-res$beta
+          betas[res$pval > 0.05/(length(target_filtered_idx)*length(regulator_filtered_idx))]<-0
+          betas
+        }
+      }
     }
+
   rownames(driverMat)<-rownames(lognorm_est_counts)[target_filtered_idx]
   colnames(driverMat)<-rownames(lognorm_est_counts)[regulator_filtered_idx]
 
   regulated_genes<-which(rowSums(abs(driverMat))!=0)
   regulatory_genes<-which(colSums(abs(driverMat))!=0)
+
   driverMat<-driverMat[regulated_genes,]
   driverMat<-driverMat[,regulatory_genes]
 
-  g<-igraph::graph_from_incidence_matrix(driverMat)
+  g<-igraph::graph_from_incidence_matrix(driverMat,weighted = TRUE)
 
   return(g)
 
