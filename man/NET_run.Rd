@@ -14,7 +14,7 @@ NET_run(
   regulator_filtered_idx,
   graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
   FDR = 0.05,
-  NrCores = 3
+  NrCores = 1
 )
 
 NET_compute_graph_all_LASSO1se(
@@ -82,11 +82,13 @@ uses a linear model and \code{NET_compute_graph_all_VBSR()} uses a Variational B
    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
 
-   lognorm_est_counts <- rbind(drivers[1:5,],targets[1:30,])
-   regulator_filtered_idx <- 1:5
-   target_filtered_idx <- 5+c(1:30)
+   lognorm_est_counts <- rbind(drivers[seq_len(5),],targets[seq_len(30),])
+   regulator_filtered_idx <- seq_len(5)
+   target_filtered_idx <- 5+c(seq_len(30))
 
    ## We recommend VBSR (rest of parameters are set by default)
+
    graph <- NET_run(lognorm_est_counts,target_filtered_idx,
                      regulator_filtered_idx,graph_mode="VBSR")
+
 }

@@ -5,15 +5,19 @@
 \title{Prepare rewiring data for running the method.}
 \usage{
 preparerewiring(
-  name,
-  linker_saved_file,
-  expr_matrix_file,
-  gene_info_file,
-  phenotype_file,
-  final_signif_thresh,
+  name = "defaultname",
+  linker_saved_file = NULL,
+  expr_matrix_file = NULL,
+  gene_info_file = NULL,
+  phenotype_file = NULL,
+  final_signif_thresh = 0.001,
   regulator_info_col_name = "regulator",
   phenotype_col_name = "Class",
-  phenotype_class_vals_string = "NR,R"
+  phenotype_class_vals_string = "NR,R",
+  phenotype_class_vals_string_label = "0,1",
+  orig_test_perms = 100,
+  retest_thresh = 0.08,
+  retest_perms = 1000
 )
 }
 \arguments{
@@ -35,6 +39,14 @@ threshold will be \code{paste()} to the name folder.}
 \item{phenotype_col_name}{Column name of the phenotype_file. By default, 'Class'.}
 
 \item{phenotype_class_vals_string}{Boolean terms of the phenotype_file at the 'Class' column. By default, (NR,R).}
+
+\item{phenotype_class_vals_string_label}{Boolean terms of the phenotype_file values at the 'Class' column. By default (0,1)}
+
+\item{orig_test_perms}{Initial permutations for first test (default: 100) .}
+
+\item{retest_thresh}{Threshold if a second test is performed (default: 0.08) .}
+
+\item{retest_perms}{Permutations if a second test is performed (default: 1000) .}
 }
 \value{
 Return a list containing: LINKER's output, expression matrix, boolean array from phenotype file,
@@ -48,7 +60,7 @@ Prepare neccessary files for running \code{runrewiring()}
 ## We are going to prepare 4 files that we have in the example folder: the output from LINKER, the
 ## gene expression matrix, the phenotype file and the gene info file. Note that the LINKER
 ## output is generated from the gene expression matrix. Note: if rewiring across more than 1 dataset
-## is desired, paths will be given as arrays (i.e. linker_output <- c(path1,path2))
+## is desired, paths will be given as arrays. (i.e. linker_output <- c(path1,path2))
 
 
 linker_output <- paste0(system.file("extdata",package="TraRe"),'/linker_rewiring_example.rds')

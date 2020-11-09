@@ -6,9 +6,6 @@
 #' heatmap, and its sorted by a hierarchical clustering for better interpretation.
 #'
 #' @param ObjectList Output from `preparerewiring()`containing some required parameters.
-#' @param orig_test_perms Initial permutations for first test (default: 100) .
-#' @param retest_thresh Threshold if a second test is performed (default: 1000) .
-#' @param retest_perms Permutations if a second test is performed (default: 0.08) .
 #'
 #' @return It creates a folder (in the working directory) containing the files explained above.
 #'
@@ -16,9 +13,6 @@
 #'
 #' ## Lets assume that we have already generated the ObjectList, we will load it from
 #' ## the folder containing the examples files. After this, it is all straight forward.
-#' ## For this example, we will use the default parameters (`orig_test_perms`,`retest_thresh`,
-#' ## `retest_perms`)
-#'
 #'
 #' objectlist <- readRDS(file=paste0(system.file("extdata",package="TraRe"),
 #'                       '/prepared_rewiring_example.rds'))
@@ -30,12 +24,23 @@
 #'
 #'
 #' @export
-runrewiring<- function(ObjectList,orig_test_perms=100,retest_thresh=0.08,retest_perms=1000){
+runrewiring<- function(ObjectList){
 
-# helper directory
+
+  # helper directory
 
   codedir <- paste0(system.file("extdata",package="TraRe"),"/")
   methods::show(codedir)
+
+  #initialize common parameters
+
+  regulator_info_col_name<-ObjectList$regulator_info_col_name
+  phenotype_class_vals<-ObjectList$phenotype_class_vals
+  phenotype_class_vals_label<-ObjectList$phenotype_class_vals_label
+  outdir<-ObjectList$outdir
+  orig_test_perms<-ObjectList$orig_test_perms
+  retest_thresh<-ObjectList$retest_thresh
+  retest_perms<-ObjectList$retest_perms
 
   # set up output html page, we use the first argv.
   indexpageinfo <- create_index_page(outdir = ObjectList[[1]]$outdir, runtag = "",
@@ -58,14 +63,20 @@ runrewiring<- function(ObjectList,orig_test_perms=100,retest_thresh=0.08,retest_
 
       for (i in seq_along(ObjectList)){
 
+
         modmeth_i<-paste(modmeth,i)
         methods::show(paste('VBSR:',i))
+
         rundata<-ObjectList[[i]]$rundata
         norm_expr_mat_keep<-ObjectList[[i]]$norm_expr_mat_keep
         keepsamps<-ObjectList[[i]]$keepsamps
         keeplabels<-ObjectList[[i]]$keeplabels
         class_counts<-ObjectList[[i]]$class_counts
         final_signif_thresh<-ObjectList[[i]]$final_signif_thresh
+        responder<-ObjectList[[i]]$responder
+        gene_info_df_keep<-ObjectList[[i]]$gene_info_df_keep
+        name2idx<-ObjectList[[i]]$name2idx
+
 
         for (mymod in seq_along(rundata$modules[[modmeth]])) {
 
@@ -76,14 +87,14 @@ runrewiring<- function(ObjectList,orig_test_perms=100,retest_thresh=0.08,retest_
             keepfeats <- unique(c(modregs, modtargs))
             modmat <- t(norm_expr_mat_keep[keepfeats, keepsamps])
 
-            orig_pval <- rewiring_test(modmat, keeplabels + 1, perm = orig_test_perms)$pval
+            orig_pval <- rewiring_test(modmat, keeplabels + 1, perm = orig_test_perms)
             new_pval <- orig_pval
             stats <- c(modmeth_i, mymod, signif(orig_pval, 3), signif(new_pval, 3),
                        length(modtargs), length(modregs), regnames,targnames, dim(modmat),
                        class_counts)
             if (orig_pval < retest_thresh | orig_pval == 1 | mymod %% 300 == 0) {
                 methods::show(paste(c("ModNum and NumGenes", mymod, length(keepfeats))))
-                result <- rewiring_test(modmat, keeplabels + 1,perm = retest_perms)
+                result <- rewiring_test_pair_detail(modmat, keeplabels + 1,perm = retest_perms)
                 new_pval <- result$pval
                 stats <- c(modmeth_i, mymod, signif(orig_pval, 3),
                            signif(new_pval, 3), length(modtargs),
@@ -118,7 +129,7 @@ runrewiring<- function(ObjectList,orig_test_perms=100,retest_thresh=0.08,retest_
       methods::show(all_modules)
 
       #save significant modules as .txt
-      utils::write.table(all_modules,file=paste(ObjectList[[1]]$outdir,
+      utils::write.table(all_modules,file=paste(ObjectList[[i]]$outdir,
                          'sigmodules.txt',sep="/"),quote=FALSE,sep="\n",row.names = FALSE,col.names = FALSE)
 
       module_pairs <- gtools::combinations(length(all_modules), 2, all_modules,
@@ -235,5 +246,166 @@ runrewiring<- function(ObjectList,orig_test_perms=100,retest_thresh=0.08,retest_
                        tabletype = paste0(modmeth, "_sigmod_overlap"),
                        filestr = "data", html_idxs = seq_len(dim(fisher_tbl)[1]),
                        htmlinfo = indexpageinfo)
+
+      # Create multiplicity table
+      supermod_regs_list = NULL
+      supermod_targs_list = NULL
+      for (clusmod in clusters$clusters[[1]]) {
+        clusmod_vec = unlist(strsplit(clusmod, "\\."))
+        methods::show(clusmod_vec)
+        mregs <- unique(rundata$modules[[clusmod_vec[1]]][[as.numeric(clusmod_vec[2])]]$regulators)
+        mtargs <- unique(rundata$modules[[clusmod_vec[1]]][[as.numeric(clusmod_vec[2])]]$target_genes)
+        supermod_regs_list = c(supermod_regs_list, mregs)
+        supermod_targs_list = c(supermod_targs_list, mtargs)
+      }
+      reg_multiplicity = sort(table(supermod_regs_list), decreasing = TRUE)
+      targ_multiplicity = sort(table(supermod_targs_list), decreasing = TRUE)
+      multitab = NULL
+      for (i in sort(unique(c(reg_multiplicity,targ_multiplicity)), decreasing=TRUE)) {
+        multitab = rbind(multitab, c(i, sum(reg_multiplicity == i),
+                                     paste(collapse = ", ",
+                                           names(reg_multiplicity)[reg_multiplicity == i]),
+                                     sum(targ_multiplicity == i),
+                                     paste(collapse = ", ",
+                                           names(targ_multiplicity)[targ_multiplicity == i])
+        ))
+      }
+      colnames(multitab) = c("multiplicity", "number-of-regs", "reg-name-list", "number-of-targs", "targ-name-list")
+
+      # multitab table
+      write(
+        paste0(
+          "<table style='width:100%' bgcolor='gray'><tr><td><h1>",
+          "Multiplicity Table",
+          "</h1></td></tr></table><br>\n"
+        ),
+        paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE
+      )
+      write(table2html(multitab), paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
+
+      alllabels = responder[keepsamps]
+      samps2pheno = alllabels
+      samps2pheno[which(alllabels == phenotype_class_vals_label[2])] = phenotype_class_vals[2]
+      samps2pheno[which(alllabels == phenotype_class_vals_label[1])] = phenotype_class_vals[1]
+
+      nonrespond_idxs = names(samps2pheno)[which(samps2pheno == phenotype_class_vals[1])]
+      responder_idxs = names(samps2pheno)[which(samps2pheno == phenotype_class_vals[2])]
+
+      rawrunmoddata = list(regulators = names(reg_multiplicity), target_genes = names(targ_multiplicity))
+      rawsumm = summarize_module(norm_expr_mat_keep, rawrunmoddata, name2idx, nonrespond_idxs, responder_idxs)
+
+      refinedmod = unique(names(igraph::V(rawsumm$full_graph)))
+
+      refinedrunmoddata = list(regulators = refinedmod[(gene_info_df_keep[refinedmod, regulator_info_col_name] ==
+                                                          "1")],
+                               target_genes = refinedmod[(gene_info_df_keep[refinedmod, regulator_info_col_name] ==
+                                                            "0")])
+      refinedsumm = summarize_module(norm_expr_mat_keep, refinedrunmoddata, name2idx, nonrespond_idxs, responder_idxs)
+
+      # summary of raw
+      write(
+        paste0(
+          "<table style='width:100%' bgcolor='gray'><tr><td><h1>",
+          "Raw Modules Summary",
+          "</h1></td></tr></table><br>\n"
+        ),
+        paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE
+      )
+
+      pname = paste(sep = ".", "igraphs.raw.full_graph")
+      grDevices::png(paste0(ObjectList[[i]]$outdir, "imgs/", pname, ".png"), 1500, 750)
+      graphics::par(mfrow = c(1, 3))
+      mylayout <- return_layout_phenotype(rawrunmoddata$regulators,
+                                          rawrunmoddata$target_genes,
+                                          rownames(norm_expr_mat_keep),
+                                          rawsumm$nodesumm)
+      # mylayout = return_layout_phenotype(rawsumm$respond_graph,
+      #                                    rawsumm$nonresp_graph,
+      #                                    rawrunmoddata$regulators,
+      #                                    rawrunmoddata$target_genes,
+      #                                    rownames(norm_expr_mat_keep),
+      #                                    rawsumm$nodesumm)
+      try(plot_igraph(rawsumm$full_graph, "68 Samples", "black", mylayout))
+      grDevices::dev.off()
+
+      # write plot to index page
+      write(paste0("<img src='", indexpageinfo$imgstr, pname, ".png",
+                   "' alt='", pname,
+                   "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
+            paste0(indexpageinfo$htmldir, indexpageinfo$indexpath),
+            append = TRUE)
+
+      # Write tables for rawsumm
+      sortidxs <- sort(as.numeric(rawsumm$nodesumm[, "t-pval"]),
+                       decreasing = FALSE, index.return = TRUE)$ix
+      write_tables_all(rawsumm$nodesumm[sortidxs, ],
+                       tabletype = paste0(modmeth, "_raw_nodesumm"),
+                       filestr = "data", html_idxs = seq_len(nrow(rawsumm$nodesumm)),
+                       htmlinfo = indexpageinfo)
+
+      sortidxs <- sort(as.numeric(rawsumm$fulledgesumm[, "all.weights"]),
+                       decreasing = FALSE, index.return = TRUE)$ix
+      write_tables_all(rawsumm$fulledgesumm[sortidxs, ],
+                       tabletype = paste0(modmeth, "_raw_edgesumm"),
+                       filestr = "data", html_idxs = seq_len(nrow(rawsumm$fulledgesumm)),
+                       htmlinfo = indexpageinfo)
+
+      # summary of refined
+      write(
+        paste0(
+          "<table style='width:100%' bgcolor='gray'><tr><td><h1>",
+          "Refined Modules Summary",
+          "</h1></td></tr></table><br>\n"
+        ),
+        paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE
+      )
+
+      pname = paste(sep = ".", "igraphs.refined.graphs")
+      grDevices::png(paste0(ObjectList[[i]]$outdir, "imgs/", pname, ".png"), 1500, 750)
+      graphics::par(mfrow = c(1, 3))
+      mylayout <- return_layout_phenotype(refinedrunmoddata$regulators,
+                                        refinedrunmoddata$target_genes,
+                                        rownames(norm_expr_mat_keep),
+                                        refinedsumm$nodesumm)
+     # mylayout = return_layout_phenotype(refinedsumm$respond_graph,
+     #                                    refinedsumm$nonresp_graph,
+      #                                   refinedrunmoddata$regulators,
+      #                                   refinedrunmoddata$target_genes,
+      #                                   rownames(norm_expr_mat_keep),
+      #                                   refinedsumm$nodesumm)
+      try(plot_igraph(refinedsumm$full_graph, paste0(dim(norm_expr_mat_keep)[2], " Samples"), "black", mylayout))
+      try(plot_igraph(refinedsumm$nonresp_graph, paste0(length(nonrespond_idxs), " Phenotype1"), "darkviolet", mylayout))
+      try(plot_igraph(refinedsumm$respond_graph, paste0(length(responder_idxs), " Phenotype2"), "darkgoldenrod", mylayout))
+      grDevices::dev.off()
+
+      # write plot to index page
+      write(paste0("<img src='", indexpageinfo$imgstr, pname, ".png",
+                   "' alt='", pname,
+                   "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
+            paste0(indexpageinfo$htmldir, indexpageinfo$indexpath),
+            append = TRUE)
+
+      # Write tables for refinedsumm
+      sortidxs <- sort(as.numeric(refinedsumm$nodesumm[, "t-pval"]),
+                       decreasing = FALSE, index.return = TRUE)$ix
+      write_tables_all(refinedsumm$nodesumm[sortidxs, ],
+                       tabletype = paste0(modmeth, "_refined_nodesumm"),
+                       filestr = "data", html_idxs = seq_len(nrow(refinedsumm$nodesumm)),
+                       htmlinfo = indexpageinfo)
+
+      sortidxs <- sort(as.numeric(refinedsumm$fulledgesumm[, "all.weights"]),
+                       decreasing = FALSE, index.return = TRUE)$ix
+      write_tables_all(refinedsumm$fulledgesumm[sortidxs, ],
+                       tabletype = paste0(modmeth, "_refined_edgesumm"),
+                       filestr = "data", html_idxs = seq_len(nrow(refinedsumm$fulledgesumm)),
+                       htmlinfo = indexpageinfo)
+
+      # Write raw and refined r object
+      # nodesumm, fulledgesumm, full_graph, respond_graph, nonresp_graph
+      saveRDS(rawsumm, file = paste0(ObjectList[[i]]$outdir, "rawsumm.rds"))
+      saveRDS(refinedsumm, file = paste0(ObjectList[[i]]$outdir, "refinedsumm.rds"))
+
   }
 }
+
+

@@ -30,10 +30,10 @@
 #'    ## We need the drivers and target names.
 #'
 #'    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
-#'    drivers_n <- rownames(drivers)[1:5]
+#'    drivers_n <- rownames(drivers)[seq_len(5)]
 #'
 #'    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
-#'    targets_n <- rownames(targets)[1:30]
+#'    targets_n <- rownames(targets)[seq_len(30)]
 #'
 #'    ## As for this example we are working at gene level (we dont have transcripts inside genes),
 #'    ## we will generate a dictionary with genes as keys and values (see param `namehash`)
@@ -48,8 +48,8 @@
 #'
 #'    gnames <- c(drivers_n,targets_n)
 #'    expmat <-rbind(drivers,targets)
-#'    expmat_R <- expmat[,1:40]
-#'    expmat_NR <- expmat[,40+(1:28)]
+#'    expmat_R <- expmat[,seq_len(40)]
+#'    expmat_NR <- expmat[,40+seq_len(28)]
 #'
 #'
 #'    varfile <- t(as.matrix(sapply(gnames,
@@ -58,13 +58,20 @@
 #'
 #'    colnames(varfile)<-c("t-stat","is-regulator")
 #'
-#'    phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,varfile)
+#'    phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,varfile,namehash)
 #'
-#'    plot_igraph(graph,"Normal Layout","black",normal_layout)
-#'    plot_igraph(graph,"Phenotype Layout","black",phenotype_layout)
+#'    plot_igraph(graph,mytitle="Normal Layout",titlecol="black",mylayout=normal_layout)
+#'    plot_igraph(graph,mytitle="Phenotype Layout",titlecol="black",mylayout=phenotype_layout)
 #'
 #' @export plot_igraph
-plot_igraph <- function(mygraph, mytitle, titlecol, mylayout){
+plot_igraph <- function(mygraph=NULL, mytitle="", titlecol="black", mylayout=NULL){
+
+  if (is.null(mygraph)){
+    stop("graph object field empty")
+  }
+  if (is.null(mylayout)){
+    stop("layout field empty")
+  }
 
   nodecol <- c("darkblue", "darkorange")
   framecol <- c("black", "darkorange")
@@ -79,12 +86,9 @@ plot_igraph <- function(mygraph, mytitle, titlecol, mylayout){
                                             x[3] / 255, 0.8))
 
   degrees = igraph::degree(mygraph, igraph::V(mygraph)$name)
-  #show(degrees)
   nodenames = mylayout$genesnames[igraph::V(mygraph)$name]
-  #show(nodenames)
   regdegrees = degrees[nodenames]
   regdegrees[which(is.na(regdegrees))]=""
-  #show(regdegrees)
   finalnames = apply(cbind(nodenames,regdegrees),1,paste, collapse=" - ")
 
   plot(mygraph,
@@ -92,9 +96,7 @@ plot_igraph <- function(mygraph, mytitle, titlecol, mylayout){
        vertex.shape = shape[as.numeric(igraph::V(mygraph)$type) + 1],
        vertex.label = finalnames,
        vertex.label.cex = 1.5,
-       #vertex.label.cex = 3.5,
        vertex.frame.color = framecol[as.numeric(igraph::V(mygraph)$type) + 1],
-       #vertex.size = as.numeric(V(mygraph)$type)*10 + 10,
        vertex.size = as.numeric(igraph::V(mygraph)$type)*5 + 5,
        layout = cbind(mylayout$genesx[igraph::V(mygraph)$name],
                       mylayout$genesy[igraph::V(mygraph)$name]
@@ -107,9 +109,21 @@ plot_igraph <- function(mygraph, mytitle, titlecol, mylayout){
 #' @rdname plot_igraph
 #' @param regs regulators name list
 #' @param targets targets name list
-#' @param namehash dictionary with genes as keys and transcripts as values.
-#' If there is no transcripts, build the dictionary with genes as keys and values. ({"g1":"g1","g2":"g2"})
-return_layout <- function(regs, targets, namehash){
+#' @param namehash list containing the drivers genes as names and transcripts as values.
+#' If only genes are required, leave it empty.
+return_layout <- function(regs=NULL, targets=NULL, namehash=NULL){
+
+  if (is.null(regs)){
+    stop("regulators field empty")
+  }
+  if (is.null(targets)){
+    stop("targets field empty")
+  }
+  if (is.null(namehash)){
+    namehash <- regs
+  }
+
+
   nregs <- length(regs)
   myratio <- length(targets) / nregs
   genesx <- c(seq_len(nregs) * myratio - myratio / 2, seq_along(targets))
@@ -117,41 +131,85 @@ return_layout <- function(regs, targets, namehash){
   genesy <- c(rep(c(1, -1), nregs)[seq_len(nregs)] * (1 + stats::runif(nregs)),
               rep(0, length(targets)))
   names(genesy) <- c(regs, targets)
-  #genesnames <- c(namehash[regs], rep("", length(targets)))
-  genesnames <- c(regs, rep("", length(targets)))
+  if (length(names(namehash)) == 0){
+    names(namehash) <- namehash
+  }
+  genesnames <- c(namehash[regs], rep("", length(targets)))
   names(genesnames) <- c(regs, targets)
-  return(list(genesx = genesx, genesy = genesy,
-              genesnames = genesnames))
+  return(list(genesx = genesx, genesy = genesy, genesnames = genesnames))
 }
 #' @export
 #' @rdname plot_igraph
 #' @param varfile two column file containing, gene names as rows,
 #' t-statistic from the differential expression analysis of the desired phenotype column and
 #' a boolean variable for regulator (1) - no regulator (0) column.
-return_layout_phenotype <- function(regs, targets, varfile){
+return_layout_phenotype <- function(regs=NULL, targets=NULL, varfile=NULL, namehash=NULL){
 
-  vals = as.numeric(varfile[,"t-stat"])
-  genesnames = rownames(varfile)[order(vals)]
-  names(genesnames) = genesnames
+  if (is.null(regs)){
+    stop("regulators field empty")
+  }
+  if (is.null(targets)){
+    stop("targets field empty")
+  }
+  if (is.null(varfile)){
+    stop("varfile field empty")
+  }
+  if (is.null(namehash)){
+    namehash <- regs
+  }
 
-  genesx = seq_along(vals)
-  names(genesx) = genesnames
+  #check varfile structure
+  if (is.null(rownames(varfile))){
+    stop("genes names must be specified at varfile as rownames")
+  }
+  if (is.null(colnames(varfile))){
+    stop("colnames must be specified, in particular 'is-regulator' and 't-stat'")
+  }
+  if (!("is-regulator"%in%colnames(varfile))){
+    stop("varfile must contain the column is-regulator")
+  }
+  if (!("t-stat"%in%colnames(varfile))){
+    stop("varfile must contain the column t-stat")
+  }
 
-  orderedregs = names(genesx)[which(varfile[names(genesx),"is-regulator"]==1)]
-  absval = max(abs(vals))
-  genesy = signif(vals[order(vals)]/absval,3)
-  names(genesy) = genesnames
-  genesy[orderedregs] = genesy[orderedregs] + rep(c(2,-2),length(regs))[seq_along(regs)]
+
+  vals <- as.numeric(varfile[,"t-stat"])
+  genesnames <- rownames(varfile)[order(vals)]
+  names(genesnames) <- genesnames
+
+  genesx <- seq_along(vals)
+  names(genesx) <- genesnames
+
+  orderedregs <- names(genesx)[which(varfile[names(genesx),"is-regulator"]==1)]
+  absval<- max(abs(vals))
+  genesy <- signif(vals[order(vals)]/absval,3)
+  names(genesy) <- genesnames
+  genesy[orderedregs] <- genesy[orderedregs] + rep(c(2,-2),length(regs))[seq_along(regs)]
 
   #my part
   nregs <- length(regs)
   myratio <- length(targets) / nregs
-  genesx[orderedregs]= seq_len(nregs) * myratio - myratio / 2
+  genesx[orderedregs]<- seq_len(nregs) * myratio - myratio / 2
 
-  genesnames[targets] = ""
-  #genesnames[regs] = namehash[regs]
-  genesnames[regs]= regs
+  genesnames[targets] <- ""
+  if (length(names(namehash)) == 0){
+    names(namehash) <- namehash
+  }
+  genesnames[regs]<- namehash[regs]
 
   return(list(genesx=genesx, genesy=genesy, genesnames=genesnames))
-}
 
+}
+#' @export
+#' @rdname plot_igraph
+#' @param graph igraph object
+#' @param edgelist list containing the edges of the igraph object.
+orderGraphWeights <- function(graph,  edgelist){
+
+  weights = igraph::get.data.frame(igraph::graph.adjacency(as.matrix(igraph::get.adjacency(graph,
+                                                                   attr="weight", type="upper")), weighted=TRUE))
+  rownames(weights) <- apply(weights[,seq_len(2)],1,paste,collapse="||")
+  commonedges <- intersect(edgelist, rownames(weights))
+  return(list(commonedges=commonedges, weights = weights[commonedges,"weight"] ))
+
+}

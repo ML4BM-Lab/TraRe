@@ -53,10 +53,7 @@ provided).
                       '/Tumor_OV50_intersectBed.weighted_evidence.txt')
 
    rfiles <- c(paste0(system.file("extdata",package="TraRe"),'/ChIP',
-                      '/Tumor_OV50.tar8855_reg638.VBSR.m100_b10.rds'),
-
-               paste0(system.file("extdata",package="TraRe"),'/ChIP',
-                      '/Tumor_OV50.tar8855_reg638.VBSR.single_gene.rds'))
+                      '/Tumor_OV50.tar8855_reg638.VBSR.m100_b10.rds'))
 
    tagstr <- "Tumor_OV50.tar8855_reg638"
 
