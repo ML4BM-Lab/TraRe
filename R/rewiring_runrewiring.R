@@ -26,7 +26,6 @@
 #' @export
 runrewiring<- function(ObjectList){
 
-
   # helper directory
 
   codedir <- paste0(system.file("extdata",package="TraRe"),"/")
@@ -43,7 +42,7 @@ runrewiring<- function(ObjectList){
   retest_perms<-ObjectList$retest_perms
 
   # set up output html page, we use the first argv.
-  indexpageinfo <- create_index_page(outdir = ObjectList[[1]]$outdir, runtag = "",
+  indexpageinfo <- create_index_page(outdir = ObjectList$outdir, runtag = "",
                                      codedir = codedir)
   imgdir <- paste0(indexpageinfo$htmldir, indexpageinfo$imgstr)
 
@@ -53,7 +52,7 @@ runrewiring<- function(ObjectList){
 
   #we create rundata and combine the modules of both parsers.
 
-  for (modmeth in names(ObjectList[[1]]$rundata$modules)) { #VBSR
+  for (modmeth in names(ObjectList$'datasets'[[1]]$rundata$modules)) { #VBSR
        methods::show(paste(c("ModuleMethod", modmeth)))
        allstats <- NULL
        statsnames <- c("module-method", "module-index", "orig-pval",
@@ -61,21 +60,21 @@ runrewiring<- function(ObjectList){
                        "regulator-names","target-names", "num-samples", "num-genes",
                        "num-class1", "num-class2")
 
-      for (i in seq_along(ObjectList)){
+      for (i in seq_along(ObjectList$'datasets')){
 
 
         modmeth_i<-paste(modmeth,i)
         methods::show(paste('VBSR:',i))
 
-        rundata<-ObjectList[[i]]$rundata
-        norm_expr_mat_keep<-ObjectList[[i]]$norm_expr_mat_keep
-        keepsamps<-ObjectList[[i]]$keepsamps
-        keeplabels<-ObjectList[[i]]$keeplabels
-        class_counts<-ObjectList[[i]]$class_counts
-        final_signif_thresh<-ObjectList[[i]]$final_signif_thresh
-        responder<-ObjectList[[i]]$responder
-        gene_info_df_keep<-ObjectList[[i]]$gene_info_df_keep
-        name2idx<-ObjectList[[i]]$name2idx
+        rundata<-ObjectList$'datasets'[[i]]$rundata
+        norm_expr_mat_keep<-ObjectList$'datasets'[[i]]$norm_expr_mat_keep
+        keepsamps<-ObjectList$'datasets'[[i]]$keepsamps
+        keeplabels<-ObjectList$'datasets'[[i]]$keeplabels
+        class_counts<-ObjectList$'datasets'[[i]]$class_counts
+        final_signif_thresh<-ObjectList$'datasets'[[i]]$final_signif_thresh
+        responder<-ObjectList$'datasets'[[i]]$responder
+        gene_info_df_keep<-ObjectList$'datasets'[[i]]$gene_info_df_keep
+        name2idx<-ObjectList$'datasets'[[i]]$name2idx
 
 
         for (mymod in seq_along(rundata$modules[[modmeth]])) {
@@ -121,7 +120,7 @@ runrewiring<- function(ObjectList){
       fisher_cols <- c("user_gene_set", "property_gene_set", "universe_count",
                        "user_count", "property_count", "overlap_count", "pval")
 
-      universe_size <- length(rownames(ObjectList[[1]]$norm_expr_mat_keep))
+      universe_size <- length(rownames(ObjectList$'datasets'[[1]]$norm_expr_mat_keep))
       all_modules <- names(module_membership_list)
       methods::show(paste(c("Significant Modules: ", all_modules)))
 
@@ -129,7 +128,7 @@ runrewiring<- function(ObjectList){
       methods::show(all_modules)
 
       #save significant modules as .txt
-      utils::write.table(all_modules,file=paste(ObjectList[[i]]$outdir,
+      utils::write.table(all_modules,file=paste(ObjectList$outdir,
                          'sigmodules.txt',sep="/"),quote=FALSE,sep="\n",row.names = FALSE,col.names = FALSE)
 
       module_pairs <- gtools::combinations(length(all_modules), 2, all_modules,
@@ -247,6 +246,9 @@ runrewiring<- function(ObjectList){
                        filestr = "data", html_idxs = seq_len(dim(fisher_tbl)[1]),
                        htmlinfo = indexpageinfo)
 
+
+      stop("End of last version of TraRe")
+
       # Create multiplicity table
       supermod_regs_list = NULL
       supermod_targs_list = NULL
@@ -313,18 +315,13 @@ runrewiring<- function(ObjectList){
       )
 
       pname = paste(sep = ".", "igraphs.raw.full_graph")
-      grDevices::png(paste0(ObjectList[[i]]$outdir, "imgs/", pname, ".png"), 1500, 750)
+      grDevices::png(paste0(ObjectList$outdir, "imgs/", pname, ".png"), 1500, 750)
       graphics::par(mfrow = c(1, 3))
       mylayout <- return_layout_phenotype(rawrunmoddata$regulators,
                                           rawrunmoddata$target_genes,
                                           rownames(norm_expr_mat_keep),
                                           rawsumm$nodesumm)
-      # mylayout = return_layout_phenotype(rawsumm$respond_graph,
-      #                                    rawsumm$nonresp_graph,
-      #                                    rawrunmoddata$regulators,
-      #                                    rawrunmoddata$target_genes,
-      #                                    rownames(norm_expr_mat_keep),
-      #                                    rawsumm$nodesumm)
+
       try(plot_igraph(rawsumm$full_graph, "68 Samples", "black", mylayout))
       grDevices::dev.off()
 
@@ -361,7 +358,7 @@ runrewiring<- function(ObjectList){
       )
 
       pname = paste(sep = ".", "igraphs.refined.graphs")
-      grDevices::png(paste0(ObjectList[[i]]$outdir, "imgs/", pname, ".png"), 1500, 750)
+      grDevices::png(paste0(ObjectList$outdir, "imgs/", pname, ".png"), 1500, 750)
       graphics::par(mfrow = c(1, 3))
       mylayout <- return_layout_phenotype(refinedrunmoddata$regulators,
                                         refinedrunmoddata$target_genes,
@@ -402,8 +399,8 @@ runrewiring<- function(ObjectList){
 
       # Write raw and refined r object
       # nodesumm, fulledgesumm, full_graph, respond_graph, nonresp_graph
-      saveRDS(rawsumm, file = paste0(ObjectList[[i]]$outdir, "rawsumm.rds"))
-      saveRDS(refinedsumm, file = paste0(ObjectList[[i]]$outdir, "refinedsumm.rds"))
+      saveRDS(rawsumm, file = paste0(ObjectList$outdir, "rawsumm.rds"))
+      saveRDS(refinedsumm, file = paste0(ObjectList$outdir, "refinedsumm.rds"))
 
   }
 }

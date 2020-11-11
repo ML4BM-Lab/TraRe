@@ -79,6 +79,7 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
   #dir.create(file.path(outdir), showWarnings = FALSE)
 
   rewobjects<-list()
+  rewobjects$'datasets'<-list()
 
   for (i in seq_along(linker_saved_file)){
 
@@ -134,6 +135,7 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
     keepsamps <- intersect(colnames(norm_expr_mat_keep),
                            names(responder)[which(responder == 0 | responder == 1 )])
     methods::show(keepsamps)
+
     # keeplabels is numeric class id, 0 or 1, in keep samps order
     keeplabels <- as.numeric(responder[keepsamps]) #used outside
     methods::show(paste('keeplabels: ',keeplabels,sep=""))
@@ -151,7 +153,7 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
     rewobject$'gene_info_df_keep'<-gene_info_df_keep
     rewobject$'name2idx'<-name2idx
 
-    rewobjects[[i]]<-rewobject
+    rewobjects$'datasets'[[i]]<-rewobject
   }
 
   rewobjects$'regulator_info_col_name'<-regulator_info_col_name
@@ -165,5 +167,4 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
   return (rewobjects)
 
 }
-
 
