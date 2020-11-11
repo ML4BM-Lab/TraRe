@@ -14,8 +14,8 @@ return_layout(regs = NULL, targets = NULL, namehash = NULL)
 return_layout_phenotype(
   regs = NULL,
   targets = NULL,
-  varfile = NULL,
-  namehash = NULL
+  namehash = NULL,
+  varfile = NULL
 )
 
 orderGraphWeights(graph, edgelist)
@@ -99,7 +99,7 @@ plots targets according to the t-statistic from the differential expression anal
 
    colnames(varfile)<-c("t-stat","is-regulator")
 
-   phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,varfile,namehash)
+   phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,namehash,varfile)
 
    plot_igraph(graph,mytitle="Normal Layout",titlecol="black",mylayout=normal_layout)
    plot_igraph(graph,mytitle="Phenotype Layout",titlecol="black",mylayout=phenotype_layout)

@@ -58,7 +58,7 @@
 #'
 #'    colnames(varfile)<-c("t-stat","is-regulator")
 #'
-#'    phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,varfile,namehash)
+#'    phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,namehash,varfile)
 #'
 #'    plot_igraph(graph,mytitle="Normal Layout",titlecol="black",mylayout=normal_layout)
 #'    plot_igraph(graph,mytitle="Phenotype Layout",titlecol="black",mylayout=phenotype_layout)
@@ -73,12 +73,15 @@ plot_igraph <- function(mygraph=NULL, mytitle="", titlecol="black", mylayout=NUL
     stop("layout field empty")
   }
 
+  if (is.null(igraph::E(mygraph)$weight)){
+    igraph::E(mygraph)$weight <- rep(1,length(igraph::E(mygraph)))
+  }
+
   nodecol <- c("darkblue", "darkorange")
   framecol <- c("black", "darkorange")
   shape <- c("circle", "square")
   edge_cscale <- grDevices::colorRamp(c("darkred", "lightgrey", "darkgreen"))
 
-  #igraph::E(mygraph)$weight <- rep(1,length(igraph::E(mygraph))) #assign weight 1.
   maxw <- max(abs(igraph::E(mygraph)$weight))
   tweight = (igraph::E(mygraph)$weight+maxw)/(2*maxw)
   igraph::E(mygraph)$color <- apply(edge_cscale(tweight), 1,
@@ -143,7 +146,7 @@ return_layout <- function(regs=NULL, targets=NULL, namehash=NULL){
 #' @param varfile two column file containing, gene names as rows,
 #' t-statistic from the differential expression analysis of the desired phenotype column and
 #' a boolean variable for regulator (1) - no regulator (0) column.
-return_layout_phenotype <- function(regs=NULL, targets=NULL, varfile=NULL, namehash=NULL){
+return_layout_phenotype <- function(regs=NULL, targets=NULL, namehash=NULL,varfile=NULL){
 
   if (is.null(regs)){
     stop("regulators field empty")
@@ -200,6 +203,29 @@ return_layout_phenotype <- function(regs=NULL, targets=NULL, varfile=NULL, nameh
   return(list(genesx=genesx, genesy=genesy, genesnames=genesnames))
 
 }
+# return_layout_phenotype <- function(regs, targets, namehash, nodesumm){
+#   vals = as.numeric(nodesumm[,"t-stat"])
+#   genesnames = rownames(nodesumm)[order(vals)]
+#   names(genesnames) = genesnames
+#
+#   genesx = 1:length(vals)
+#   names(genesx) = genesnames
+#
+#   orderedregs = names(genesx)[which(nodesumm[names(genesx),"is-regulator"]==1)]
+#   absval = max(abs(vals))
+#   genesy = signif(vals[order(vals)]/absval,3)
+#   names(genesy) = genesnames
+#   genesy[orderedregs] = genesy[orderedregs] + rep(c(2,-2),length(regs))[1:length(regs)]
+#
+#   genesnames[targets] = ""
+#   if (length(names(namehash)) == 0){
+#     names(namehash) = namehash
+#   }
+#   genesnames[regs] = namehash[regs]
+#
+#   return(list(genesx=genesx, genesy=genesy, genesnames=genesnames))
+# }
+
 #' @export
 #' @rdname plot_igraph
 #' @param graph igraph object

@@ -247,7 +247,7 @@ runrewiring<- function(ObjectList){
                        htmlinfo = indexpageinfo)
 
 
-      stop("End of last version of TraRe")
+      #stop("End of last version of TraRe")
 
       # Create multiplicity table
       supermod_regs_list = NULL
@@ -315,7 +315,7 @@ runrewiring<- function(ObjectList){
       )
 
       pname = paste(sep = ".", "igraphs.raw.full_graph")
-      grDevices::png(paste0(ObjectList$outdir, "imgs/", pname, ".png"), 1500, 750)
+      grDevices::png(paste0(ObjectList$outdir, "/imgs/", pname, ".png"), 1500, 750)
       graphics::par(mfrow = c(1, 3))
       mylayout <- return_layout_phenotype(rawrunmoddata$regulators,
                                           rawrunmoddata$target_genes,
@@ -358,18 +358,14 @@ runrewiring<- function(ObjectList){
       )
 
       pname = paste(sep = ".", "igraphs.refined.graphs")
-      grDevices::png(paste0(ObjectList$outdir, "imgs/", pname, ".png"), 1500, 750)
+      grDevices::png(paste0(ObjectList$outdir, "/imgs/", pname, ".png"), 1500, 750)
       graphics::par(mfrow = c(1, 3))
+
       mylayout <- return_layout_phenotype(refinedrunmoddata$regulators,
                                         refinedrunmoddata$target_genes,
                                         rownames(norm_expr_mat_keep),
                                         refinedsumm$nodesumm)
-     # mylayout = return_layout_phenotype(refinedsumm$respond_graph,
-     #                                    refinedsumm$nonresp_graph,
-      #                                   refinedrunmoddata$regulators,
-      #                                   refinedrunmoddata$target_genes,
-      #                                   rownames(norm_expr_mat_keep),
-      #                                   refinedsumm$nodesumm)
+
       try(plot_igraph(refinedsumm$full_graph, paste0(dim(norm_expr_mat_keep)[2], " Samples"), "black", mylayout))
       try(plot_igraph(refinedsumm$nonresp_graph, paste0(length(nonrespond_idxs), " Phenotype1"), "darkviolet", mylayout))
       try(plot_igraph(refinedsumm$respond_graph, paste0(length(responder_idxs), " Phenotype2"), "darkgoldenrod", mylayout))
