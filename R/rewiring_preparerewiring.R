@@ -90,7 +90,6 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
 
     # read in linker output
     rundata <- readRDS(linker_saved_file[i]); #used outside
-    methods::show('RDS done')
 
     # read in expression matrix
     input_expr_mat <- as.matrix(utils::read.table(expr_matrix_file[i], header = TRUE,
@@ -128,20 +127,19 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
     responder[which(pheno_df[, phenotype_col_name] == phenotype_class_vals[2])] <- 1
     names(responder) <- make.names(rownames(pheno_df))
     pheno_df <- cbind(pheno_df, responder)
-    #show(responder)
-    methods::show(paste('responder: ',responder,sep=''))
+
 
     # find intesection of sample ids, keepsamps
     keepsamps <- intersect(colnames(norm_expr_mat_keep),
                            names(responder)[which(responder == 0 | responder == 1 )])
-    methods::show(keepsamps)
+
 
     # keeplabels is numeric class id, 0 or 1, in keep samps order
     keeplabels <- as.numeric(responder[keepsamps]) #used outside
-    methods::show(paste('keeplabels: ',keeplabels,sep=""))
+
 
     class_counts <- as.numeric(table(keeplabels)) #used outside
-    methods::show(paste(c("Class Per Counts", class_counts)))
+
 
     rewobject$'rundata'<-rundata
     rewobject$'norm_expr_mat_keep'<-norm_expr_mat_keep

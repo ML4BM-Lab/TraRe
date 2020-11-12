@@ -9,3 +9,7 @@ Changes in Version 1.1
  + vignette file added
  + minor bugs fixed 
 
+Changes in Version 1.2
+ ------------------
+ + rewiring method part parallelized
+

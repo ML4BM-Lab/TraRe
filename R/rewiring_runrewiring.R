@@ -29,7 +29,6 @@ runrewiring<- function(ObjectList){
   # helper directory
 
   codedir <- paste0(system.file("extdata",package="TraRe"),"/")
-  methods::show(codedir)
 
   #initialize common parameters
 
@@ -77,8 +76,13 @@ runrewiring<- function(ObjectList){
         name2idx<-ObjectList$'datasets'[[i]]$name2idx
 
 
-        for (mymod in seq_along(rundata$modules[[modmeth]])) {
+        doParallel::registerDoParallel(3)
+        `%dopar%` <- foreach::`%dopar%`
 
+        foreach_allstats <-foreach::foreach(mymod = seq_along(rundata$modules[[modmeth]])) %dopar% {
+        #for (mymod in seq_along(rundata$modules[[modmeth]])){
+
+            signify <- NULL
             modregs <- unique(rundata$modules[[modmeth]][[mymod]]$regulators)
             modtargs <- unique(rundata$modules[[modmeth]][[mymod]]$target_genes)
             regnames <- paste(collapse = ", ", modregs)
@@ -102,11 +106,29 @@ runrewiring<- function(ObjectList){
                 if (new_pval <= final_signif_thresh | new_pval == 1) {
                     # keep as significant
                     modname <- paste0(modmeth,'.',i, ".mod.", mymod)
-                    module_membership_list[[modname]] <- keepfeats
+                    signify <- list(modname,keepfeats)
+                    #module_membership_list[[modname]] <- keepfeats
                 }
             }
-            allstats <- rbind(stats, allstats)
+            list(stats,signify)
+
+            #allstats <- rbind(stats, allstats)
         } # end mymod
+        closeAllConnections()
+
+        for (elements in foreach_allstats){
+
+          #now we recover first allstats matrix
+          foreach_stats <- elements[[1]]
+          allstats<-rbind(allstats,foreach_stats)
+
+          #and then update the module_membership dictionary
+          hashtable <- elements[[2]]
+          if (!is.null(hashtable)){
+            module_membership_list[[hashtable[[1]]]]<-hashtable[[2]]
+          }
+        }
+
       }
 
       # generate txt file with pvals
@@ -124,9 +146,6 @@ runrewiring<- function(ObjectList){
       all_modules <- names(module_membership_list)
       methods::show(paste(c("Significant Modules: ", all_modules)))
 
-      methods::show(length(all_modules))
-      methods::show(all_modules)
-
       #save significant modules as .txt
       utils::write.table(all_modules,file=paste(ObjectList$outdir,
                          'sigmodules.txt',sep="/"),quote=FALSE,sep="\n",row.names = FALSE,col.names = FALSE)
@@ -134,7 +153,13 @@ runrewiring<- function(ObjectList){
       module_pairs <- gtools::combinations(length(all_modules), 2, all_modules,
                                    repeats = TRUE)
       pvals <- NULL
-      for (pair_idx in seq_len(nrow(module_pairs))) {
+
+      #we init parallelization
+      doParallel::registerDoParallel(3)
+
+      fisher_tbl<-foreach::foreach(pair_idx = seq_len(nrow(module_pairs)),.combine=rbind) %dopar% {
+      #for (pair_idx in seq_len(nrow(module_pairs))) {
+
           mod1genes <- module_membership_list[[module_pairs[pair_idx, ][1]]]
           mod2genes <- module_membership_list[[module_pairs[pair_idx, ][2]]]
           stats <- c(module_pairs[pair_idx, ][1], module_pairs[pair_idx, ][2],
@@ -151,8 +176,9 @@ runrewiring<- function(ObjectList){
                                         ncol = 2, byrow = TRUE))
           #show(contig_tbl)
           res <- stats::fisher.test(contig_tbl, alternative = "g")
-          fisher_tbl <- rbind(fisher_tbl, c(stats, res$p.value))
-          pvals <- c(pvals, res$p.value)
+          #fisher_tbl <- rbind(fisher_tbl, c(stats, res$p.value))
+          #pvals <- c(pvals, res$p.value)
+          c(stats,res$p.value)
       }
 
       # generate txt file with pvals
@@ -171,6 +197,7 @@ runrewiring<- function(ObjectList){
 
       pvc_result <- pvclust::pvclust(simmat, method.dist = "cor", method.hclust = "average",
                             nboot = 1000)
+
       clusters <- pvclust::pvpick(pvc_result)
       myplotname <- paste0("mod_sim.", modmeth)
       grDevices::png(paste0(imgdir, myplotname, ".dendro.png"),
@@ -216,7 +243,6 @@ runrewiring<- function(ObjectList){
                     lhei = c(1, 8, .1)
           )
           grDevices::dev.off()
-
           # write plot to index page
           write(paste0("<img src='", indexpageinfo$imgstr, myplotname, ".dendro.png",
                        "' alt='", myplotname,
@@ -257,14 +283,14 @@ runrewiring<- function(ObjectList){
         methods::show(clusmod_vec)
         mregs <- unique(rundata$modules[[clusmod_vec[1]]][[as.numeric(clusmod_vec[2])]]$regulators)
         mtargs <- unique(rundata$modules[[clusmod_vec[1]]][[as.numeric(clusmod_vec[2])]]$target_genes)
-        supermod_regs_list = c(supermod_regs_list, mregs)
-        supermod_targs_list = c(supermod_targs_list, mtargs)
+        supermod_regs_list <- c(supermod_regs_list, mregs)
+        supermod_targs_list <- c(supermod_targs_list, mtargs)
       }
-      reg_multiplicity = sort(table(supermod_regs_list), decreasing = TRUE)
-      targ_multiplicity = sort(table(supermod_targs_list), decreasing = TRUE)
-      multitab = NULL
+      reg_multiplicity <- sort(table(supermod_regs_list), decreasing = TRUE)
+      targ_multiplicity <- sort(table(supermod_targs_list), decreasing = TRUE)
+      multitab <- NULL
       for (i in sort(unique(c(reg_multiplicity,targ_multiplicity)), decreasing=TRUE)) {
-        multitab = rbind(multitab, c(i, sum(reg_multiplicity == i),
+        multitab <- rbind(multitab, c(i, sum(reg_multiplicity == i),
                                      paste(collapse = ", ",
                                            names(reg_multiplicity)[reg_multiplicity == i]),
                                      sum(targ_multiplicity == i),
@@ -272,7 +298,7 @@ runrewiring<- function(ObjectList){
                                            names(targ_multiplicity)[targ_multiplicity == i])
         ))
       }
-      colnames(multitab) = c("multiplicity", "number-of-regs", "reg-name-list", "number-of-targs", "targ-name-list")
+      colnames(multitab) <- c("multiplicity", "number-of-regs", "reg-name-list", "number-of-targs", "targ-name-list")
 
       # multitab table
       write(
@@ -290,19 +316,19 @@ runrewiring<- function(ObjectList){
       samps2pheno[which(alllabels == phenotype_class_vals_label[2])] = phenotype_class_vals[2]
       samps2pheno[which(alllabels == phenotype_class_vals_label[1])] = phenotype_class_vals[1]
 
-      nonrespond_idxs = names(samps2pheno)[which(samps2pheno == phenotype_class_vals[1])]
-      responder_idxs = names(samps2pheno)[which(samps2pheno == phenotype_class_vals[2])]
+      nonrespond_idxs <- names(samps2pheno)[which(samps2pheno == phenotype_class_vals[1])]
+      responder_idxs <- names(samps2pheno)[which(samps2pheno == phenotype_class_vals[2])]
 
-      rawrunmoddata = list(regulators = names(reg_multiplicity), target_genes = names(targ_multiplicity))
-      rawsumm = summarize_module(norm_expr_mat_keep, rawrunmoddata, name2idx, nonrespond_idxs, responder_idxs)
+      rawrunmoddata <- list(regulators = names(reg_multiplicity), target_genes = names(targ_multiplicity))
+      rawsumm <- summarize_module(norm_expr_mat_keep, rawrunmoddata, name2idx, nonrespond_idxs, responder_idxs)
 
-      refinedmod = unique(names(igraph::V(rawsumm$full_graph)))
+      refinedmod <- unique(names(igraph::V(rawsumm$full_graph)))
 
-      refinedrunmoddata = list(regulators = refinedmod[(gene_info_df_keep[refinedmod, regulator_info_col_name] ==
+      refinedrunmoddata <- list(regulators = refinedmod[(gene_info_df_keep[refinedmod, regulator_info_col_name] ==
                                                           "1")],
                                target_genes = refinedmod[(gene_info_df_keep[refinedmod, regulator_info_col_name] ==
                                                             "0")])
-      refinedsumm = summarize_module(norm_expr_mat_keep, refinedrunmoddata, name2idx, nonrespond_idxs, responder_idxs)
+      refinedsumm <- summarize_module(norm_expr_mat_keep, refinedrunmoddata, name2idx, nonrespond_idxs, responder_idxs)
 
       # summary of raw
       write(
@@ -314,7 +340,7 @@ runrewiring<- function(ObjectList){
         paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE
       )
 
-      pname = paste(sep = ".", "igraphs.raw.full_graph")
+      pname <- paste(sep = ".", "igraphs.raw.full_graph")
       grDevices::png(paste0(ObjectList$outdir, "/imgs/", pname, ".png"), 1500, 750)
       graphics::par(mfrow = c(1, 3))
       mylayout <- return_layout_phenotype(rawrunmoddata$regulators,

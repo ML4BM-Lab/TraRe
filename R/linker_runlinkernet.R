@@ -109,7 +109,10 @@ NET_compute_graph_all_LASSO1se<-function(lognorm_est_counts, regulator_filtered_
   X<-lognorm_est_counts[regulator_filtered_idx,]
 
   driverMat<-matrix(data = NA, nrow = length(target_filtered_idx), ncol = length(regulator_filtered_idx))
+
+  doParallel::registerDoParallel(3)
   `%dopar%` <- foreach::`%dopar%`
+
   #compute the LASSO1se
   idx_gene<-NULL
   driverMat<-foreach::foreach(idx_gene=seq_along(target_filtered_idx), .combine = rbind, .packages="glmnet") %dopar%
@@ -144,7 +147,9 @@ NET_compute_graph_all_LASSOmin<-function(lognorm_est_counts, regulator_filtered_
 
   driverMat<-matrix(data = NA, nrow = length(target_filtered_idx), ncol = length(regulator_filtered_idx))
 
+  doParallel::registerDoParallel(3)
   `%dopar%` <- foreach::`%dopar%`
+
   #compute the LASSOmin
   idx_gene<-NULL
   driverMat<-foreach::foreach(idx_gene=seq_along(target_filtered_idx), .combine = rbind, .packages="glmnet") %dopar%
@@ -183,7 +188,9 @@ NET_compute_graph_all_LM<-function(lognorm_est_counts, regulator_filtered_idx, t
   NrTotalEdges<-length(target_filtered_idx)*length(regulator_filtered_idx)
   Pthre<-0.05/(NrTotalEdges)
 
+  doParallel::registerDoParallel(3)
   `%dopar%` <- foreach::`%dopar%`
+
   idx_gene<-NULL
   driverMat<-foreach::foreach(idx_gene=seq_len(target_filtered_idx), .combine=rbind) %dopar%
 
@@ -225,7 +232,10 @@ NET_compute_graph_all_VBSR<-function(lognorm_est_counts, regulator_filtered_idx,
 
   driverMat<-matrix(data = NA, nrow = length(target_filtered_idx), ncol = length(regulator_filtered_idx))
 
+
+  doParallel::registerDoParallel(3)
   `%dopar%` <- foreach::`%dopar%`
+
   #compute the VBSR
   idx_gene<-NULL
   driverMat<-foreach::foreach(idx_gene=seq_along(target_filtered_idx), .combine = rbind, .packages = "vbsr") %dopar%
