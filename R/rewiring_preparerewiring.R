@@ -12,6 +12,10 @@
 #' @param regulator_info_col_name Column name of the gene_info_file. By default, 'regulator'.
 #' @param phenotype_col_name Column name of the phenotype_file. By default, 'Class'.
 #' @param phenotype_class_vals_string Boolean terms of the phenotype_file at the 'Class' column. By default, (NR,R).
+#' @param phenotype_class_vals_string_label Boolean terms of the phenotype_file values at the 'Class' column. By default (0,1)
+#' @param orig_test_perms Initial permutations for first test (default: 100) .
+#' @param retest_thresh Threshold if a second test is performed (default: 0.08) .
+#' @param retest_perms Permutations if a second test is performed (default: 1000) .
 #'
 #'
 #' @return Return a list containing: LINKER's output, expression matrix, boolean array from phenotype file,
@@ -22,7 +26,7 @@
 #' ## We are going to prepare 4 files that we have in the example folder: the output from LINKER, the
 #' ## gene expression matrix, the phenotype file and the gene info file. Note that the LINKER
 #' ## output is generated from the gene expression matrix. Note: if rewiring across more than 1 dataset
-#' ## is desired, paths will be given as arrays (i.e. linker_output <- c(path1,path2))
+#' ## is desired, paths will be given as arrays. (i.e. linker_output <- c(path1,path2))
 #'
 #'
 #' linker_output <- paste0(system.file("extdata",package="TraRe"),'/linker_rewiring_example.rds')
@@ -39,14 +43,35 @@
 #'
 #'
 #' @export
-preparerewiring<- function(name,linker_saved_file,
-                           expr_matrix_file,
-                           gene_info_file,
-                           phenotype_file,
-                           final_signif_thresh,
+preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
+                           expr_matrix_file=NULL,
+                           gene_info_file=NULL,
+                           phenotype_file=NULL,
+                           final_signif_thresh=0.001,
                            regulator_info_col_name='regulator',
                            phenotype_col_name='Class',
-                           phenotype_class_vals_string='NR,R'){
+                           phenotype_class_vals_string='NR,R',
+                           phenotype_class_vals_string_label='0,1',
+                           orig_test_perms=100,
+                           retest_thresh=0.08,
+                           retest_perms=1000){
+
+
+  #checks
+
+  if (is.null(linker_saved_file)){
+    stop("linker_saved_file field required")
+  }
+  if (is.null(expr_matrix_file)){
+    stop("expr_matrix_file field required")
+  }
+  if (is.null(gene_info_file)){
+    stop("gene_info_file field required")
+  }
+  if (is.null(phenotype_file)){
+    stop("phenotype_file field required")
+  }
+
 
   newdir<-paste(name,paste(final_signif_thresh,collapse="_"),sep="_")
   outdir<-paste(getwd(),newdir,sep="/")
@@ -54,16 +79,17 @@ preparerewiring<- function(name,linker_saved_file,
   #dir.create(file.path(outdir), showWarnings = FALSE)
 
   rewobjects<-list()
+  rewobjects$'datasets'<-list()
 
   for (i in seq_along(linker_saved_file)){
 
     rewobject<-list()
 
     phenotype_class_vals <- unlist(strsplit(phenotype_class_vals_string, ","))
+    phenotype_class_vals_label <- unlist(strsplit(phenotype_class_vals_string_label, ","))
 
     # read in linker output
     rundata <- readRDS(linker_saved_file[i]); #used outside
-    methods::show('RDS done')
 
     # read in expression matrix
     input_expr_mat <- as.matrix(utils::read.table(expr_matrix_file[i], header = TRUE,
@@ -101,19 +127,19 @@ preparerewiring<- function(name,linker_saved_file,
     responder[which(pheno_df[, phenotype_col_name] == phenotype_class_vals[2])] <- 1
     names(responder) <- make.names(rownames(pheno_df))
     pheno_df <- cbind(pheno_df, responder)
-    #show(responder)
-    methods::show(paste('responder: ',responder,sep=''))
+
 
     # find intesection of sample ids, keepsamps
     keepsamps <- intersect(colnames(norm_expr_mat_keep),
-                           names(responder)[which(responder == 0 | responder == 1 )]) #usedoutside
-    methods::show(keepsamps)
+                           names(responder)[which(responder == 0 | responder == 1 )])
+
+
     # keeplabels is numeric class id, 0 or 1, in keep samps order
     keeplabels <- as.numeric(responder[keepsamps]) #used outside
-    methods::show(paste('keeplabels: ',keeplabels,sep=""))
+
 
     class_counts <- as.numeric(table(keeplabels)) #used outside
-    methods::show(paste(c("Class Per Counts", class_counts)))
+
 
     rewobject$'rundata'<-rundata
     rewobject$'norm_expr_mat_keep'<-norm_expr_mat_keep
@@ -121,13 +147,22 @@ preparerewiring<- function(name,linker_saved_file,
     rewobject$'keeplabels'<-keeplabels
     rewobject$'class_counts'<-class_counts
     rewobject$'final_signif_thresh'<-final_signif_thresh
-    rewobject$'outdir'<-outdir
+    rewobject$'responder'<-responder
+    rewobject$'gene_info_df_keep'<-gene_info_df_keep
+    rewobject$'name2idx'<-name2idx
 
-    rewobjects[[i]]<-rewobject
+    rewobjects$'datasets'[[i]]<-rewobject
   }
+
+  rewobjects$'regulator_info_col_name'<-regulator_info_col_name
+  rewobjects$'phenotype_class_vals'<-phenotype_class_vals
+  rewobjects$'phenotype_class_vals_label'<-phenotype_class_vals_label
+  rewobjects$'outdir'<-outdir
+  rewobjects$'orig_test_perms'<-orig_test_perms
+  rewobjects$'retest_thresh'<-retest_thresh
+  rewobjects$'retest_perms'<-retest_perms
 
   return (rewobjects)
 
 }
-
 

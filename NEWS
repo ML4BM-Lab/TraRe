@@ -1,0 +1,15 @@
+Changes in Version 1.0
+ ------------------
+ + automatic modules selection in rewiring test.
+ + rewiring html report file added.
+ + unit tests added.
+
+Changes in Version 1.1
+ ------------------
+ + vignette file added
+ + minor bugs fixed 
+
+Changes in Version 1.2
+ ------------------
+ + rewiring method part parallelized
+

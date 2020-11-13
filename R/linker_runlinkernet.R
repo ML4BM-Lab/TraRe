@@ -30,19 +30,61 @@
 #'    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
 #'    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
 #'
-#'    lognorm_est_counts <- rbind(drivers[1:5,],targets[1:30,])
-#'    regulator_filtered_idx <- 1:5
-#'    target_filtered_idx <- 5+c(1:30)
+#'    lognorm_est_counts <- rbind(drivers[seq_len(5),],targets[seq_len(30),])
+#'    regulator_filtered_idx <- seq_len(5)
+#'    target_filtered_idx <- 5+c(seq_len(30))
 #'
 #'    ## We recommend VBSR (rest of parameters are set by default)
+#'
 #'    graph <- NET_run(lognorm_est_counts,target_filtered_idx,
 #'                      regulator_filtered_idx,graph_mode="VBSR")
+#'
 #' @export NET_run
 NET_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx,
                   graph_mode=c("VBSR", "LASSOmin", "LASSO1se", "LM"),
                   FDR=0.05,
-                  NrCores=3)
+                  NrCores=1)
 {
+
+  #checks for lognorm_est_counts
+
+  if (is.null(lognorm_est_counts)){
+    stop("lognorm_est_counts field empty")
+  }
+
+  if (!(is.matrix(lognorm_est_counts) | is.data.frame(lognorm_est_counts))){
+    stop("matrix or dataframe class is required")
+  }
+
+  if (class(lognorm_est_counts[1,1])!="numeric" & class(lognorm_est_counts[1,1])!="integer"){
+    stop("non-numeric values inside lognorm_est_counts variable")
+  }
+
+  if (is.null(rownames(lognorm_est_counts)) | is.null(colnames(lognorm_est_counts))){
+    stop("null field detected in row names or column names, check lognorm_est_counts matrix")
+  }
+
+  #checks for target and regulator filtered index
+
+  if (is.null(target_filtered_idx)){
+    stop("target_filtered_idx field empty")
+  }
+
+  if (is.null(regulator_filtered_idx)){
+    stop("regulator_filtered_idx field empty")
+  }
+
+  if (length(target_filtered_idx)+length(regulator_filtered_idx)!=nrow(lognorm_est_counts)){
+    stop("the total number of genes is not equal to the sum of target_filtered_idx and regulatory_filtered_idx lengths")
+  }
+
+  if (!(is.numeric(target_filtered_idx) & is.numeric(regulator_filtered_idx))){
+    stop("targets and regulators index arrays must be numeric")
+  }
+
+  # this will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
+  doParallel::registerDoParallel(NrCores)
+
   graphs<-list()
   for(j in seq_along(graph_mode)){
     graphs[[ graph_mode[j] ]] <- switch( graph_mode[j],
@@ -55,6 +97,7 @@ NET_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered_id
     print(paste0("Graphs for (" ,graph_mode[j], ") computed!"))
   }
 
+  closeAllConnections()
   return(list(graphs=graphs))
 }
 #' @export
@@ -66,7 +109,10 @@ NET_compute_graph_all_LASSO1se<-function(lognorm_est_counts, regulator_filtered_
   X<-lognorm_est_counts[regulator_filtered_idx,]
 
   driverMat<-matrix(data = NA, nrow = length(target_filtered_idx), ncol = length(regulator_filtered_idx))
+
+  doParallel::registerDoParallel(3)
   `%dopar%` <- foreach::`%dopar%`
+
   #compute the LASSO1se
   idx_gene<-NULL
   driverMat<-foreach::foreach(idx_gene=seq_along(target_filtered_idx), .combine = rbind, .packages="glmnet") %dopar%
@@ -101,7 +147,9 @@ NET_compute_graph_all_LASSOmin<-function(lognorm_est_counts, regulator_filtered_
 
   driverMat<-matrix(data = NA, nrow = length(target_filtered_idx), ncol = length(regulator_filtered_idx))
 
+  doParallel::registerDoParallel(3)
   `%dopar%` <- foreach::`%dopar%`
+
   #compute the LASSOmin
   idx_gene<-NULL
   driverMat<-foreach::foreach(idx_gene=seq_along(target_filtered_idx), .combine = rbind, .packages="glmnet") %dopar%
@@ -140,7 +188,9 @@ NET_compute_graph_all_LM<-function(lognorm_est_counts, regulator_filtered_idx, t
   NrTotalEdges<-length(target_filtered_idx)*length(regulator_filtered_idx)
   Pthre<-0.05/(NrTotalEdges)
 
+  doParallel::registerDoParallel(3)
   `%dopar%` <- foreach::`%dopar%`
+
   idx_gene<-NULL
   driverMat<-foreach::foreach(idx_gene=seq_len(target_filtered_idx), .combine=rbind) %dopar%
 
@@ -178,30 +228,44 @@ NET_compute_graph_all_LM<-function(lognorm_est_counts, regulator_filtered_idx, t
 NET_compute_graph_all_VBSR<-function(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx)
 {
 
-  X<-lognorm_est_counts[regulator_filtered_idx,]
+  X<-lognorm_est_counts[regulator_filtered_idx,,drop=FALSE]
 
   driverMat<-matrix(data = NA, nrow = length(target_filtered_idx), ncol = length(regulator_filtered_idx))
 
+
+  doParallel::registerDoParallel(3)
   `%dopar%` <- foreach::`%dopar%`
+
   #compute the VBSR
   idx_gene<-NULL
   driverMat<-foreach::foreach(idx_gene=seq_along(target_filtered_idx), .combine = rbind, .packages = "vbsr") %dopar%
     {
-      y<-lognorm_est_counts[target_filtered_idx[idx_gene],]
-      res<-vbsr::vbsr(y,t(X),n_orderings = 15,family='normal')
-      betas<-res$beta
-      betas[res$pval > 0.05/(length(target_filtered_idx)*length(regulator_filtered_idx))]<-0
-      betas
+      y<-lognorm_est_counts[target_filtered_idx[idx_gene],,drop=FALSE]
+      if(nrow(y)){
+        y=t(y)
+      }
+      if(length(unique(y))==1){rep(0, length(regulator_filtered_idx))}
+      else{
+        res<-try(vbsr::vbsr(y,t(X),n_orderings = 15,family='normal'))
+        if(class(res)=="try-error"){rep(0, length(regulator_filtered_idx))}
+        else{
+          betas<-res$beta
+          betas[res$pval > 0.05/(length(target_filtered_idx)*length(regulator_filtered_idx))]<-0
+          betas
+        }
+      }
     }
+
   rownames(driverMat)<-rownames(lognorm_est_counts)[target_filtered_idx]
   colnames(driverMat)<-rownames(lognorm_est_counts)[regulator_filtered_idx]
 
   regulated_genes<-which(rowSums(abs(driverMat))!=0)
   regulatory_genes<-which(colSums(abs(driverMat))!=0)
+
   driverMat<-driverMat[regulated_genes,]
   driverMat<-driverMat[,regulatory_genes]
 
-  g<-igraph::graph_from_incidence_matrix(driverMat)
+  g<-igraph::graph_from_incidence_matrix(driverMat,weighted = TRUE)
 
   return(g)
 

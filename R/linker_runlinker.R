@@ -18,7 +18,7 @@
 #' @param Nr_bootstraps Number of bootstrap of Phase I. By default, 10.
 #' @param FDR The False Discovery Rate correction used for the enrichment analysis. By default, 0.05.
 #' @param NrCores Nr of computer cores for the parallel parts of the method. Note that the parallelization
-#' is NOT initialized in any of the functions. By default, 3.
+#' is NOT initialized in any of the functions. By default, 2.
 #'
 #'
 #' @return List containing the GRN raw results, GRN modules and GRN graphs.
@@ -38,10 +38,10 @@
 #'
 #'
 #'    ## We recommend VBSR.
-#'    \dontrun{
+#'
 #'    linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx,regulator_filtered_idx,
 #'                               link_mode="VBSR",graph_mode="VBSR",NrModules=3,Nr_bootstraps=1)
-#'    }
+#'
 #'
 #'
 #' @export
@@ -53,9 +53,47 @@ LINKER_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered
                      corrClustNrIter=100,
                      Nr_bootstraps=10,
                      FDR=0.05,
-                     NrCores=3)
-
+                     NrCores=1)
 {
+
+  #checks for lognorm_est_counts
+
+  if (is.null(lognorm_est_counts)){
+    stop("lognorm_est_counts field empty")
+  }
+
+  if (!(is.matrix(lognorm_est_counts) | is.data.frame(lognorm_est_counts))){
+    stop("matrix or dataframe class is required")
+  }
+
+  if (class(lognorm_est_counts[1,1])!="numeric" & class(lognorm_est_counts[1,1])!="integer"){
+    stop("non-numeric values inside lognorm_est_counts variable")
+  }
+
+  if (is.null(rownames(lognorm_est_counts)) | is.null(colnames(lognorm_est_counts))){
+    stop("null field detected in row names or column names, check lognorm_est_counts matrix")
+  }
+
+  #checks for target and regulator filtered index
+
+  if (is.null(target_filtered_idx)){
+    stop("target_filtered_idx field empty")
+  }
+
+  if (is.null(regulator_filtered_idx)){
+    stop("regulator_filtered_idx field empty")
+  }
+
+  if (length(target_filtered_idx)+length(regulator_filtered_idx)!=nrow(lognorm_est_counts)){
+    stop("the total number of genes is not equal to the sum of target_filtered_idx and regulatory_filtered_idx lengths")
+  }
+
+  if (!(is.numeric(target_filtered_idx) & is.numeric(regulator_filtered_idx))){
+    stop("targets and regulators index arrays must be numeric")
+  }
+
+
+
   res<-list()
   modules<-list()
   graphs<-list()
@@ -71,7 +109,9 @@ LINKER_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered
     graphs[[ link_mode[i] ]]<-list()
     for(j in seq_along(graph_mode)){
       graphs[[ link_mode[i] ]][[ graph_mode[j] ]] <- LINKER_runPhase2(modules[[ link_mode[i] ]],
-                                                                                  lognorm_est_counts, mode=graph_mode[j])
+                                                                      lognorm_est_counts, mode=graph_mode[j],
+                                                                      NrCores=NrCores)
+
       print(paste0("Graphs for (",link_mode[i],",",graph_mode[j], ") computed!"))
     }
 

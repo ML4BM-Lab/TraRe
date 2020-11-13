@@ -15,7 +15,7 @@ LINKER_run(
   corrClustNrIter = 100,
   Nr_bootstraps = 10,
   FDR = 0.05,
-  NrCores = 3
+  NrCores = 1
 )
 }
 \arguments{
@@ -44,7 +44,7 @@ discovered may differ from this value). By default, 100 modules.}
 \item{FDR}{The False Discovery Rate correction used for the enrichment analysis. By default, 0.05.}
 
 \item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that the parallelization
-is NOT initialized in any of the functions. By default, 3.}
+is NOT initialized in any of the functions. By default, 2.}
 }
 \value{
 List containing the GRN raw results, GRN modules and GRN graphs.

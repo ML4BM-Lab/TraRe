@@ -1,3 +1,9 @@
+#' Create HTML report
+#'
+#' Contains all the necessary functions to run `create_html_summary()`.
+#'
+#' @noRd
+
 linker_summarize_rungraphs <- function(rungraphs = NULL, iso_table = NULL,
                                 weighted_chip_evidence = NULL,
                                 graphstr = "data",
@@ -137,8 +143,8 @@ genetable_summary <- function(filter, filterNeigh, tabletype,
     mygids <- rownames(tmptable)[sortidxs[seq_len(min(1000, length(topgenes)))]]
   }
   ###
-  genetable <- t(sapply(mygids, extract_gene_row, filter, filterNeigh,
-                        edgesinfo, nboots))
+  genetable <- t(vapply(mygids, extract_gene_row, filter, filterNeigh,
+                        edgesinfo, nboots,FUN.VALUE = c(1.0)))
   colnames(genetable) <- c("gid", "nEdges", "nNeigh", "nMax-Conf-Neigh",
                            "topNeigh", "suppTable")
   sortval <- (as.numeric(genetable[, "nMax-Conf-Neigh"]) * 1000000000 +

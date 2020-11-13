@@ -37,7 +37,14 @@ Imports:
     	pvclust,
     	doParallel,
     	R.utils,
-    	dqrng
+    	dqrng,
+	purrr,
+	RVenn,
+	eulerr,
+	biomaRt,
+	R.matlab,
+	colorspace,
+	parallel
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -46,5 +53,7 @@ RoxygenNote: 7.1.1
 biocViews: GeneRegulation, RNASeq, GraphAndNetwork, Bayesian
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    BiocGenerics,
+    RUnit
 VignetteBuilder: knitr

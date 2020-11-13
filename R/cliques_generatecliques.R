@@ -12,11 +12,11 @@
 #' per clique.
 #'
 #' @param dataset input expression file with genes as rows and samples as columns.
-#' @param method method to use in the correlation matrix generation (see stats:cor).
-#' @param correlationth threshold to consider edge exists.
-#' @param sparsecorrmatrix boolean variable specifying whether to set to 0 values below threshold or not.
-#' @param numcliques number of cliques to be generated.
-#' @param mandatorygenes array of gene names which is mandatory to include in the returned cliques.
+#' @param method method to use in the correlation matrix generation (see stats:cor). Default: "pearson"
+#' @param correlationth threshold to consider edge exists. Default: 0.6
+#' @param sparsecorrmatrix boolean variable specifying whether to set to 0 values below threshold or not. Default: TRUE
+#' @param numcliques number of cliques to be generated. Default: 'All'
+#' @param mandatorygenes array of gene names which is mandatory to include in the returned cliques. Default: c() (none)
 #' @param selection integer selecting method. The available options are: 1 - Maximize Genes/Clique,
 #' 2 - Maximize Median Correlation Value/Clique, 3- Maximize Avg Variance Correlation Value/Clique or
 #' 4 - Maximize Sum(option two, option three).
@@ -38,14 +38,24 @@
 #'
 #'    dataset <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
 #'
-#'    ## Lets select the first method (its set by default) and we dont want to fix any genes
-#'    ## (no mandatory genes)
+#'    ## Lets select the generated dataset, as the rest of parameters are set by default.
 #'
-#'    clioutput <- generatecliques(dataset = dataset,method = "pearson",correlationth=0.6,
-#'                                sparsecorrmatrix = TRUE,numcliques = 'All')
+#'    clioutput <- generatecliques(dataset = dataset)
 #'
 #' @export generatecliques
-generatecliques<-function(dataset,method,correlationth,sparsecorrmatrix,numcliques,mandatorygenes=c(),selection=1){ #All but the last one to print it in a different way.
+generatecliques<-function(dataset=NULL,method="pearson",correlationth=0.6,sparsecorrmatrix=TRUE,numcliques='All',mandatorygenes=c(),selection=1){ #All but the last one to print it in a different way.
+
+  if (is.null(dataset)){
+    stop("dataset field empty")
+  }
+
+  if (!(is.matrix(dataset) | is.data.frame(dataset))){
+    stop("matrix or dataframe class is required")
+  }
+
+  if (class(dataset[1,1])!="numeric"){
+    stop("non-numeric values inside dataset variable")
+  }
 
   methods::show("Preparing data")
   pdobject <- preparedata(dataset,method)
@@ -54,6 +64,7 @@ generatecliques<-function(dataset,method,correlationth,sparsecorrmatrix,numcliqu
   ggobject <- generategraph(correlationth,sparsecorrmatrix,pdobject)
 
   methods::show("Selecting method")
+  #return(selectmethod(selection,ggobject,pdobject))
   smobject <- selectmethod(selection,ggobject,pdobject)
 
   methods::show("Generate Datasets")
@@ -205,6 +216,8 @@ generategraph<-function(correlationth,sparsecorrmatrix,pdoutput){
 selectmethod <- function(selection,ggoutput,pdoutput){
 
   #Run igraph::max_cliques() method
+
+  #Cliques<-vapply(igraph::max_cliques(ggoutput$graph)[],names,FUN.VALUE = c(""))
   Cliques<-sapply(igraph::max_cliques(ggoutput$graph)[],names)
 
   SortingMethod<-switch(selection,length,
