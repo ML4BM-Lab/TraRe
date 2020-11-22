@@ -40,11 +40,11 @@ two graph nodes within the same set are adjacent.
    ## for the phase 2.
 
    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),
-                                         '/tfs_cliques_example.rds'))
+                                         '/tfs_linker_example.rds'))
    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),
                                          '/targets_linker_example.rds'))
 
-   lognorm_est_counts <- rbind(drivers[seq_len(5),],targets[seq_len(30),])
+   lognorm_est_counts <- rbind(drivers[seq_len(30),],targets[seq_len(150),])
 
    ## Now we proceed to call `LINKER_runPhase2()`.
    ## We first, we need to extract modules from the `LINKER_runPhase1()` output.

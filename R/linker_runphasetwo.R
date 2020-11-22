@@ -26,11 +26,11 @@
 #'    ## for the phase 2.
 #'
 #'    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),
-#'                                          '/tfs_cliques_example.rds'))
+#'                                          '/tfs_linker_example.rds'))
 #'    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),
 #'                                          '/targets_linker_example.rds'))
 #'
-#'    lognorm_est_counts <- rbind(drivers[seq_len(5),],targets[seq_len(30),])
+#'    lognorm_est_counts <- rbind(drivers[seq_len(30),],targets[seq_len(150),])
 #'
 #'    ## Now we proceed to call `LINKER_runPhase2()`.
 #'    ## We first, we need to extract modules from the `LINKER_runPhase1()` output.
@@ -53,9 +53,10 @@ LINKER_runPhase2<-function(modules,Data,NrCores, mode="VBSR",alpha=1-1e-06)
   i<-1
 
   # this will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
-  doParallel::registerDoParallel(NrCores)
-
+  cl <- parallel::makeCluster(NrCores)
+  doParallel::registerDoParallel(cl)
   `%dopar%` <- foreach::`%dopar%`
+
   mod_idx<-NULL
   bp_g<-foreach::foreach(mod_idx=seq_along(modules), .packages = c("vbsr","glmnet","igraph"))%dopar%
   {
@@ -148,6 +149,7 @@ LINKER_runPhase2<-function(modules,Data,NrCores, mode="VBSR",alpha=1-1e-06)
 
     igraph::graph_from_incidence_matrix(driverMat)
   }
-  closeAllConnections()
+  parallel::stopCluster(cl)
+
   return(bp_g)
 }

@@ -112,13 +112,7 @@ summarize_module<-function(norm_expr_mat_keep, runmoddata, name2idx, nonrespond_
   regidxs = name2idx[modregs]
   targetidxs = name2idx[modtargs]
 
-  # compute graph
-  full_graph = try(NET_compute_graph_all_VBSR(norm_expr_mat_keep,
-                                              regidxs, targetidxs))
-  respond_graph = try(NET_compute_graph_all_VBSR(norm_expr_mat_keep[, responder_idxs],
-                                                 regidxs, targetidxs))
-  nonresp_graph = try(NET_compute_graph_all_VBSR(norm_expr_mat_keep[, nonrespond_idxs],
-                                                 regidxs, targetidxs))
+
   # get chip evidence and support data
   appendmat = matrix(0, dim(edgesumm)[1], 6)
   rownames(appendmat) = rownames(edgesumm)
@@ -131,18 +125,63 @@ summarize_module<-function(norm_expr_mat_keep, runmoddata, name2idx, nonrespond_
     'respond-weights'
   )
 
-  # extract VBSR edge weights
-  orderweights = orderGraphWeights(full_graph, rownames(appendmat))
-  appendmat[orderweights$commonedges, "all-weights"] = orderweights$weights
+  # compute graphs and extract VBSR edge weights
 
-  orderweights = orderGraphWeights(respond_graph, rownames(appendmat))
-  appendmat[orderweights$commonedges, "respond-weights"] = orderweights$weights
+  cut <- FALSE #define variable to generate grah plots after trycatch graph generations.
 
-  orderweights = orderGraphWeights(nonresp_graph, rownames(appendmat))
-  appendmat[orderweights$commonedges, "nonresp-weights"] = orderweights$weights
+  full_graph <- tryCatch({
+
+    fg <- NET_compute_graph_all_VBSR(norm_expr_mat_keep,regidxs, targetidxs)
+
+    # extract VBSR edge weights
+    orderweights = orderGraphWeights(fg, rownames(appendmat))
+    appendmat[orderweights$commonedges, "all-weights"] = orderweights$weights
+
+    fg
+
+    },error=function(x){
+      methods::show(x)
+      methods::show('cant generate full graph')
+      cut<-TRUE
+      return (NULL)
+    })
+
+  respond_graph <- tryCatch({
+    rg <- NET_compute_graph_all_VBSR(norm_expr_mat_keep[, responder_idxs],regidxs, targetidxs)
+
+    # extract VBSR edge weights
+    orderweights = orderGraphWeights(rg, rownames(appendmat))
+    appendmat[orderweights$commonedges, "respond-weights"] = orderweights$weights
+
+    rg
+
+    }, error = function(x){
+      methods::show(x)
+      methods::show('cant generate responder graph')
+      return (NULL)
+    })
+
+  nonresp_graph <- tryCatch({
+
+    ng <- NET_compute_graph_all_VBSR(norm_expr_mat_keep[, nonrespond_idxs],regidxs, targetidxs)
+
+    # extract VBSR edge weights
+    orderweights = orderGraphWeights(ng, rownames(appendmat))
+    appendmat[orderweights$commonedges, "nonresp-weights"] = orderweights$weights
+
+    ng
+
+    }, error = function(x){
+
+    methods::show(x)
+    methods::show('cant generate nonresponder graph')
+    return(NULL)
+
+    })
+
 
   fulledgesumm = utils::type.convert(as.data.frame(cbind(edgesumm, appendmat), stringsAsFactors=FALSE))
   colnames(fulledgesumm) = make.names(colnames(fulledgesumm))
 
-  return(list('nodesumm'=nodesumm,'fulledgesumm'=fulledgesumm,'full_graph'=full_graph,'respond_graph'=respond_graph,'nonresp_graph'=nonresp_graph))
+  return(list('nodesumm'=nodesumm,'fulledgesumm'=fulledgesumm,'full_graph'=full_graph,'respond_graph'=respond_graph,'nonresp_graph'=nonresp_graph,'cut'=cut))
 }

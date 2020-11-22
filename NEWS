@@ -13,3 +13,8 @@ Changes in Version 1.2
  ------------------
  + rewiring method part parallelized
 
+Changes in Version 1.3
+ ------------------
+ + excel_generation function added
+ + vignette file updated
+

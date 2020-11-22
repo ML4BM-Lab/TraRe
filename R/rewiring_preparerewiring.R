@@ -16,6 +16,7 @@
 #' @param orig_test_perms Initial permutations for first test (default: 100) .
 #' @param retest_thresh Threshold if a second test is performed (default: 0.08) .
 #' @param retest_perms Permutations if a second test is performed (default: 1000) .
+#' @param nrcores Number of cores to run the parallelization within the rewiring test (default: 3).
 #'
 #'
 #' @return Return a list containing: LINKER's output, expression matrix, boolean array from phenotype file,
@@ -39,7 +40,7 @@
 #'
 #'
 #' prepared <- preparerewiring(name="example",linker_output,expr_matrix,gene_info,
-#'                             phenotype_info,final_signif_thresh=0.001)
+#'                             phenotype_info,final_signif_thresh=0.05,nrcores=1)
 #'
 #'
 #' @export
@@ -54,7 +55,8 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
                            phenotype_class_vals_string_label='0,1',
                            orig_test_perms=100,
                            retest_thresh=0.08,
-                           retest_perms=1000){
+                           retest_perms=1000,
+                           nrcores=3){
 
 
   #checks
@@ -128,18 +130,24 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
     names(responder) <- make.names(rownames(pheno_df))
     pheno_df <- cbind(pheno_df, responder)
 
-
     # find intesection of sample ids, keepsamps
     keepsamps <- intersect(colnames(norm_expr_mat_keep),
                            names(responder)[which(responder == 0 | responder == 1 )])
+    methods::show(paste(c("Sample Names:", keepsamps,length(keepsamps))))
 
 
     # keeplabels is numeric class id, 0 or 1, in keep samps order
     keeplabels <- as.numeric(responder[keepsamps]) #used outside
 
+    #check if NR/R proportions are similar to ensure property functioning of the method.
+    klzero <- sum(keeplabels==0)
+    klone <- sum(keeplabels==1)
+    if (min(klone,klzero)/max(klone,klzero)<0.8){
+      warning(paste0('phenotype samples proportions imbalance ',toString(c(klzero,klone)),' (<80%).'))
+    }
+
 
     class_counts <- as.numeric(table(keeplabels)) #used outside
-
 
     rewobject$'rundata'<-rundata
     rewobject$'norm_expr_mat_keep'<-norm_expr_mat_keep
@@ -161,6 +169,7 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
   rewobjects$'orig_test_perms'<-orig_test_perms
   rewobjects$'retest_thresh'<-retest_thresh
   rewobjects$'retest_perms'<-retest_perms
+  rewobjects$'NrCores'<-nrcores
 
   return (rewobjects)
 

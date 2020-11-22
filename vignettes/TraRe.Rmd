@@ -2,7 +2,7 @@
 title: "TraRe: Identification of conditions dependant Gene Regulatory Networks"
 output: rmarkdown::html_vignette
 abstract: >
-  *TraRe* (Transcriptional Rewiring) is an R package which contains the necessary tools to carry out: Identification of module-based gene regulatory networks (GRN); score-based classification of these modules via a rewiring test; visualization of rewired modules to analyze condition-based GRN deregulation and drop out genes recovering via cliques methodology. For each tool, html report can be generated containing useful information about the generated GRN and statistical data about the performed tests.  This tools have been developed considering sequenced data (RNA-Seq).
+  *TraRe* (Transcriptional Rewiring) is an R package which contains the necessary tools to carry out: Identification of module-based gene regulatory networks (GRN); score-based classification of these modules via a rewiring test; visualization of rewired modules to analyze condition-based GRN deregulation and drop out genes recovering via cliques methodology. For each tool, html report can be generated containing useful information about the generated GRN and statistical data about the performed tests. This tools have been developed considering sequenced data (RNA-Seq).
   
 vignette: >
   %\VignetteIndexEntry{TraRe: Identification of conditions dependant Gene Regulatory Networks}
@@ -38,8 +38,6 @@ set of genes, also known as the target genes.
 In order to build such networks, the method is divided into two
 phases. During Phase I the method generates K modules of similarly
 expressed genes and then associates each module to few regulators. 
-
-![**Figure 1.** LINKER module ](linker.png)
 
 Due to the non-convex nature of the problem, we perform
 B runs of this step using a different set of samples (sub-sampling
@@ -195,7 +193,7 @@ threshold will be `paste()` to the name folder.
 
 We also provide here a piece of the example of `preparerewiring()`
 
-```{r, eval=TRUE, warning=FALSE, collapse=TRUE}
+```{r, eval=FALSE, warning=FALSE, collapse=TRUE}
 
  linker_output <- paste0(system.file("extdata",package="TraRe"),'/linker_rewiring_example.rds')
 
@@ -214,8 +212,6 @@ We also provide here a piece of the example of `preparerewiring()`
 
 
 In order to run `runrewiring()`, we have just to call `runrewiring(prepared)`. It will create a folder on the specified output path with a generated html report containing the hierarchical clustering of the rewired modules, the rewired modules in the form of a heatmap and a report containing statistical information about the performed test.
-
-![**Figure 2.** Rewiring module ](rewiring.png)
 
 
 # Visualization of GRN 
@@ -285,8 +281,6 @@ We provide two ways of building the layout for the plot, depending on the choice
 
 ```
 
-![**Figure 3.** Plot ](plot.png)
-
 For more information, refer to the help file of `plot_functions()`.
 
 # Cliques method and results
@@ -296,8 +290,6 @@ For more information, refer to the help file of `plot_functions()`.
 * *Cliques:* From the chosen individual GRN, an excel file is generated containing drivers-targets relationships and cliques module. By how LINKER method works, some highly-correlated driver genes (TFs) may be dropped from the
 resultant model, as the role they play at the GRN inference process is very similar. Due to this,
 we propose a method based on cliques (Fully Connected Networks) to recover those dropped drivers.
-
-![**Figure 4.** Cliques and results ](cliques.png)
 
 From all these analysis, we provide an informative way of looking at the generated GRN, the relationships they have within the network, easing a possible biological validation afterwards this in silico analysis.
 

@@ -36,7 +36,7 @@
 #'
 #'    ## For this example, we will only work with the driver genes of a example dataset.
 #'
-#'    dataset <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
+#'    dataset <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_linker_example.rds'))
 #'
 #'    ## Lets select the generated dataset, as the rest of parameters are set by default.
 #'

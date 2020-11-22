@@ -44,7 +44,8 @@ Imports:
 	biomaRt,
 	R.matlab,
 	colorspace,
-	parallel
+	parallel,
+	openxlsx
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
