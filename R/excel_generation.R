@@ -111,7 +111,8 @@ excel_generation <- function(wpath = getwd(), cliquesbool=TRUE, ...){
                      function(x) paste(x,collapse=','),
                      FUN.VALUE = c('C'))
 
-    # Reorder (in suma they are in alphabetical order, in foo2 as they come out from the cliques object)
+    # Reorder (in normalized_sum they are in alphabetical order,
+    # in Cliques as they come out from the cliques object)
     Cliques <- Cliques[order(names(Cliques))]
 
 

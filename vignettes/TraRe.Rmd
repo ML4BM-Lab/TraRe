@@ -27,7 +27,33 @@ TraRe can be currently installed from Github usind the devtools package (we are 
 ```{r, eval=FALSE}
 devtools::install_github(repo="ubioinformat/TraRe")
 ```
+# Introduction
 
+For fully understanding of how TraRe works and the tools
+it contains, we will go through every one of it: LINKER, a way
+of inferring gene regulatory networks, Rewiring, for selecting 
+important modules from LINKER subject to a phenotype condition, Visualization, 
+for graphically displaying generated GRN from previous process and Results,
+excel generation of useful information about drivers to targets relations from
+previous GRN.
+
+Along with every step description and explanation, we will be working with a SU2C (Stand Up 2 Cancer)
+prostate cancer data, containing 12971 genes (~= 2000 transcription factors or driver 
+genes) and 39 filtered samples. Patients from this clinical case were treated with 
+Abiraterone (ABI) and Enzalutemide. For the phenotype dependant rewiring, we will be 
+focusing on only ABI patients (22). The pathway we will follow is:
+  
+  * Run LINKER using the complete data, 12971 genes and 39 samples, to generate 
+  all possible modules (GRN).
+  * Run Rewiring test selecting the phenotype of ABI (22 samples) to extract 
+  LINKER modules that, its expression can be separated very well according to
+  ABI and behave similar across bootstraps.
+  * Run Visualization, generating GRN graphs of how the regulation process may 
+  change depending on the phenotype condition.
+  * Run Results, that generates an excel containing information about the driver-target
+  relationships from previous generated GRN graphs, and a brief summary that may be 
+  useful for biological validation of GRN.
+  
 
 # LINKER : Generating Gene Regulatory Networks
 
@@ -109,7 +135,7 @@ Example from there is also provided here.
 
     targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
 
-    lognorm_est_counts <- rbind(drivers[seq_len(15),],targets[seq_len(100),])
+    lognorm_est_counts <- rbind(drivers,targets)
 
     # We create the index for drivers and targets in the log-normalized gene expression matrix.
     
