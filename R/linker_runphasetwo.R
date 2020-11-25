@@ -30,7 +30,7 @@
 #'    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),
 #'                                          '/targets_linker_example.rds'))
 #'
-#'    lognorm_est_counts <- rbind(drivers[seq_len(30),],targets[seq_len(150),])
+#'    lognorm_est_counts <- as.matrix(rbind(drivers,targets))
 #'
 #'    ## Now we proceed to call `LINKER_runPhase2()`.
 #'    ## We first, we need to extract modules from the `LINKER_runPhase1()` output.
@@ -40,7 +40,8 @@
 #'    ## Now we generate the bipartitive graph from the extracted modules
 #'
 #'
-#'    graph <- LINKER_runPhase2(modules=modules_phaseone,Data=lognorm_est_counts,NrCores=1)
+#'    graph <- LINKER_runPhase2(modules=modules_phaseone,Data=lognorm_est_counts,
+#'                              NrCores=1,mode="LM")
 #'
 #'
 #' @return igraph object containing the related drivers and targets in the form of a bipartitive graph.

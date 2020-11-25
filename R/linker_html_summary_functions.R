@@ -143,8 +143,8 @@ genetable_summary <- function(filter, filterNeigh, tabletype,
     mygids <- rownames(tmptable)[sortidxs[seq_len(min(1000, length(topgenes)))]]
   }
   ###
-  genetable <- t(vapply(mygids, extract_gene_row, filter, filterNeigh,
-                        edgesinfo, nboots,FUN.VALUE = c(1.0)))
+  genetable <- t(sapply(mygids, extract_gene_row, filter, filterNeigh,
+                        edgesinfo, nboots))
   colnames(genetable) <- c("gid", "nEdges", "nNeigh", "nMax-Conf-Neigh",
                            "topNeigh", "suppTable")
   sortval <- (as.numeric(genetable[, "nMax-Conf-Neigh"]) * 1000000000 +

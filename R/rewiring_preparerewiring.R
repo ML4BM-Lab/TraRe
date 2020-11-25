@@ -90,16 +90,30 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
     phenotype_class_vals <- unlist(strsplit(phenotype_class_vals_string, ","))
     phenotype_class_vals_label <- unlist(strsplit(phenotype_class_vals_string_label, ","))
 
-    # read in linker output
-    rundata <- readRDS(linker_saved_file[i]); #used outside
+    # read in linker output (check if it comes from web)
 
-    # read in expression matrix
+    if (substr(linker_saved_file[i],1,4)=='http'){
+      rundata<-readRDS(url(linker_saved_file[i]))
+    }else rundata <- readRDS(linker_saved_file[i]); #used outside
+
+    # read in expression matrix (check if it comes from web)
+    if (substr(expr_matrix_file[i],1,4)=='http'){
+      input_expr_mat <- as.matrix(utils::read.table(url(expr_matrix_file[i]), header = TRUE,
+                                                    row.names = 1, sep = "\t", quote = ""))
+    }else{
     input_expr_mat <- as.matrix(utils::read.table(expr_matrix_file[i], header = TRUE,
                                            row.names = 1, sep = "\t", quote = ""))
+    }
+
     methods::show(paste(c("Expression Matrix Size", dim(input_expr_mat))))
 
-    # read in gene info
-    gene_info_df <- utils::read.table(gene_info_file[i], header = TRUE, sep = "\t", quote = "")
+    # read in gene info (check if it comes from web)
+    if (substr(gene_info_file[i],1,4)=='http'){
+      gene_info_df <- utils::read.table(url(gene_info_file[i]), header = TRUE,
+                                        sep = "\t", quote = "")
+    }else{
+      gene_info_df <- utils::read.table(gene_info_file[i], header = TRUE, sep = "\t", quote = "")
+    }
     rownames(gene_info_df) <- gene_info_df[, 1]
     methods::show(paste(c("Gene Info Table Size", dim(gene_info_df))))
 
@@ -118,9 +132,15 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
     alltargs <- keepgenes[which(gene_info_df_keep[, regulator_info_col_name] == 0)]
     methods::show(paste(c("NumRegs and NumTargs", length(allregs), length(alltargs))))
 
-    # read in phenotype file
-    pheno_df <- utils::read.table(phenotype_file[i], header = TRUE, row.names = 1,
-                           sep = "\t", quote = "", stringsAsFactors = FALSE);
+    # read in phenotype file (check if it comes from web)
+    if (substr(phenotype_file[i],1,4)=='http'){
+      pheno_df <- utils::read.table(url(phenotype_file[i]), header = TRUE, row.names = 1,
+                                    sep = "\t", quote = "", stringsAsFactors = FALSE);
+    }else{
+
+      pheno_df <- utils::read.table(phenotype_file[i], header = TRUE, row.names = 1,
+                             sep = "\t", quote = "", stringsAsFactors = FALSE);
+    }
     methods::show(paste(c("Phenotype Table Size", dim(pheno_df))))
 
     # clean up phenotype column
@@ -146,8 +166,9 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
       warning(paste0('phenotype samples proportions imbalance ',toString(c(klzero,klone)),' (<80%).'))
     }
 
-
     class_counts <- as.numeric(table(keeplabels)) #used outside
+    methods::show(paste(c("Class Per Counts", class_counts)))
+
 
     rewobject$'rundata'<-rundata
     rewobject$'norm_expr_mat_keep'<-norm_expr_mat_keep

@@ -14,8 +14,8 @@ return_layout(regs = NULL, targets = NULL, namehash = NULL)
 return_layout_phenotype(
   regs = NULL,
   targets = NULL,
-  namehash = NULL,
-  varfile = NULL
+  varfile = NULL,
+  namehash = NULL
 )
 
 orderGraphWeights(graph, edgelist)
@@ -78,8 +78,7 @@ plots targets according to the t-statistic from the differential expression anal
    ## As for this example we are working at gene level (we dont have transcripts inside genes),
    ## we will generate a dictionary with genes as keys and values (see param `namehash`)
 
-   namehash <- drivers_n
-   normal_layout <- return_layout(drivers_n,targets_n,namehash)
+   normal_layout <- return_layout(drivers_n,targets_n)
 
    ## We now generate the phenotype layout and the `varfile` we ned for this layout.
    ## (I leave here a way to generate) We need to separate our expression matrix by
@@ -102,7 +101,7 @@ plots targets according to the t-statistic from the differential expression anal
 
    colnames(varfile)<-c("t-stat","is-regulator")
 
-   phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,namehash,varfile)
+   phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,varfile)
 
    plot_igraph(graph,mytitle="Normal Layout",titlecol="black",mylayout=normal_layout)
    plot_igraph(graph,mytitle="Phenotype Layout",titlecol="black",mylayout=phenotype_layout)

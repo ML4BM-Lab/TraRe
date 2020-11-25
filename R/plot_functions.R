@@ -37,8 +37,7 @@
 #'    ## As for this example we are working at gene level (we dont have transcripts inside genes),
 #'    ## we will generate a dictionary with genes as keys and values (see param `namehash`)
 #'
-#'    namehash <- drivers_n
-#'    normal_layout <- return_layout(drivers_n,targets_n,namehash)
+#'    normal_layout <- return_layout(drivers_n,targets_n)
 #'
 #'    ## We now generate the phenotype layout and the `varfile` we ned for this layout.
 #'    ## (I leave here a way to generate) We need to separate our expression matrix by
@@ -61,7 +60,7 @@
 #'
 #'    colnames(varfile)<-c("t-stat","is-regulator")
 #'
-#'    phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,namehash,varfile)
+#'    phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,varfile)
 #'
 #'    plot_igraph(graph,mytitle="Normal Layout",titlecol="black",mylayout=normal_layout)
 #'    plot_igraph(graph,mytitle="Phenotype Layout",titlecol="black",mylayout=phenotype_layout)
@@ -108,7 +107,7 @@ plot_igraph <- function(mygraph=NULL, mytitle="", titlecol="black", mylayout=NUL
                       mylayout$genesy[igraph::V(mygraph)$name]
        )
   )
-  graphics::title(paste0(mytitle, " ", sum(igraph::V(mygraph)$type==1), "&", sum(igraph::V(mygraph)$type==0)), cex.main = 5, col.main = titlecol)
+  graphics::title(paste0(mytitle, " ", sum(igraph::V(mygraph)$type==1), "&", sum(igraph::V(mygraph)$type==0)), cex.main = 2, col.main = titlecol)
   graphics::abline(h=0, col=grDevices::rgb(0,0,0,alpha=0.3))
 }
 #' @export
@@ -149,7 +148,7 @@ return_layout <- function(regs=NULL, targets=NULL, namehash=NULL){
 #' @param varfile two column file containing, gene names as rows,
 #' t-statistic from the differential expression analysis of the desired phenotype column and
 #' a boolean variable for regulator (1) - no regulator (0) column.
-return_layout_phenotype <- function(regs=NULL, targets=NULL, namehash=NULL,varfile=NULL){
+return_layout_phenotype <- function(regs=NULL, targets=NULL,varfile=NULL, namehash=NULL){
 
   if (is.null(regs)){
     stop("regulators field empty")

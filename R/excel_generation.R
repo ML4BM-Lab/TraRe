@@ -8,9 +8,9 @@
 #' the fitting process of the LINKER method.
 #'
 #'
-#' @param wpath working path, where graph object (should be called 'refinedsumm.rds') should be
-#' and where the excel file ('grnsumm.xlx') will be saved.
-#' @param cliquesbool indicating if cliques method should be added to the summary table.
+#' @param gpath path to the graph object ('refinedsumm.rds'). (RDS format)
+#' @param wpath writing path, where the excel file ('grnsumm.xlx') will be saved. (Default: working directory)
+#' @param cliquesbool indicating if cliques method should be added to the summary table. (Default: TRUE)
 #' @param ... every argument you should pass to generatecliques() in case cliquesbool is TRUE.
 #'
 #' @return Excel containing the mentioned parameters.
@@ -21,21 +21,27 @@
 #' ## (see vignette of TraRe for more information), which is at the external data folder
 #' ## of this package.
 #'
-#' workingpath <- system.file('extdata',package='TraRe')
+#' gpath <- paste0(system.file('extdata',package='TraRe'),'/refinedsumm.rds')
+#' wpath <- system.file('extdata',package='TraRe')
 #'
 #' ## We are going to use the drivers dataset from the external data folder as well.
 #' ## For more information about generatecliques() please check the help page of it.
 #'
-#' dataset<-readRDS(paste0(workingpath,'/tfs_linker_example.rds'))
-#' excel_generation(wpath=workingpath,dataset=dataset)
+#' dataset<-readRDS(paste0(wpath,'/tfs_linker_example_eg.rds'))
+#' excel_generation(gpath=gpath,wpath=wpath,dataset=dataset)
 #'
 #'
 #' @export
 
-excel_generation <- function(wpath = getwd(), cliquesbool=TRUE, ...){
+excel_generation <- function(gpath = NULL, wpath = getwd(), cliquesbool=TRUE, ...){
 
-  if (!file.exists(paste0(wpath,'/refinedsumm.rds'))){
-    stop('refinedsumm.rds in the specified folder must exist')
+  if (is.null(gpath)){
+    stop('Path to the graph object must be specified')
+  }
+  if (!any(class(gpath)==c('url','connection'))){
+    if (!file.exists(gpath)){
+      stop('graph object in the specified folder must exist')
+    }
   }
   if (!is.logical(cliquesbool)){
     stop('non-logical variable pass to this cliquesbool argument')
@@ -44,7 +50,7 @@ excel_generation <- function(wpath = getwd(), cliquesbool=TRUE, ...){
   # List of nodes - XOR-------------------------------------------------------
 
   # Import graph objects
-  graphs <- readRDS(paste0(wpath,'/refinedsumm.rds'))
+  graphs <- readRDS(gpath)
   graph_R <- graphs$respond_graph
   graph_NR <- graphs$nonresp_graph
 

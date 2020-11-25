@@ -84,61 +84,59 @@ runrewiring<- function(ObjectList){
         `%dopar%` <- foreach::`%dopar%`
 
         mymod <- NULL
+
         foreach_allstats <-foreach::foreach(mymod = seq_along(rundata$modules[[modmeth]])) %dopar% {
 
-            signify <- NULL
-            modregs <- unique(rundata$modules[[modmeth]][[mymod]]$regulators)
-            modtargs <- unique(rundata$modules[[modmeth]][[mymod]]$target_genes)
-            regnames <- paste(collapse = ", ", modregs)
-            targnames <- paste(collapse = ", ", modtargs)
-            keepfeats <- unique(c(modregs, modtargs))
-            modmat <- t(norm_expr_mat_keep[keepfeats, keepsamps])
+             signify <- NULL
+             modregs <- unique(rundata$modules[[modmeth]][[mymod]]$regulators)
+             modtargs <- unique(rundata$modules[[modmeth]][[mymod]]$target_genes)
+             regnames <- paste(collapse = ", ", modregs)
+             targnames <- paste(collapse = ", ", modtargs)
+             keepfeats <- unique(c(modregs, modtargs))
+             modmat <- t(norm_expr_mat_keep[keepfeats, keepsamps])
 
-            orig_pval <- rewiring_test(modmat, keeplabels + 1, perm = orig_test_perms)
-            new_pval <- orig_pval
-            stats <- c(modmeth_i, mymod, signif(orig_pval, 3), signif(new_pval, 3),
-                       length(modtargs), length(modregs), regnames,targnames, dim(modmat),
-                       class_counts)
+             orig_pval <- rewiring_test(modmat, keeplabels + 1, perm = orig_test_perms)
+             new_pval <- orig_pval
+             stats <- c(modmeth_i, mymod, signif(orig_pval, 3), signif(new_pval, 3),
+                        length(modtargs), length(modregs), regnames,targnames, dim(modmat),
+                        class_counts)
             if (orig_pval < retest_thresh | orig_pval == 1 | mymod %% 300 == 0) {
-                methods::show(paste(c("ModNum and NumGenes", mymod, length(keepfeats))))
-                result <- rewiring_test_pair_detail(modmat, keeplabels + 1,perm = retest_perms)
-                new_pval <- result$pval
-                stats <- c(modmeth_i, mymod, signif(orig_pval, 3),
-                           signif(new_pval, 3), length(modtargs),
-                           length(modregs), regnames,targnames, dim(modmat), class_counts)
+                 methods::show(paste(c("ModNum and NumGenes", mymod, length(keepfeats))))
+                 result <- rewiring_test_pair_detail(modmat, keeplabels + 1,perm = retest_perms)
+                 new_pval <- result$pval
+                 stats <- c(modmeth_i, mymod, signif(orig_pval, 3),
+                            signif(new_pval, 3), length(modtargs),
+                            length(modregs), regnames,targnames, dim(modmat), class_counts)
 
-                # save as list
-                modname <- paste0(modmeth,'.',i, ".mod.", mymod)
-                signify <- list(modname,keepfeats)
+                if (new_pval <= final_signif_thresh | new_pval == 1) {
+                 # save as list
+                 modname <- paste0(modmeth,'.',i, ".mod.", mymod)
+                 #module_membership_list[[modname]] <- keepfeats
+                 signify <- list(modname,keepfeats)
+                }
 
-            }
-            list(stats,signify,new_pval)
+             }
+             list(stats,signify)
 
 
-        } # end mymod
+         } # end mymod
         parallel::stopCluster(cl)
 
+         for (elements in foreach_allstats){
 
-        all_pvals <- vapply(foreach_allstats,function(x) x[[3]],FUN.VALUE=c(1.0))
-        #all_pvals <- p.adjust(all_pvals,method='BH') multiple hiphotesis correction.
+           #now we recover first allstats matrix
+           foreach_stats <- elements[[1]]
+           allstats<-rbind(allstats,foreach_stats)
 
-        for (i in seq_along(foreach_allstats)){
+           #and then update the module_membership dictionary
+           hashtable <- elements[[2]]
 
-          #now we recover first allstats matrix
-          foreach_stats <- foreach_allstats[[i]][[1]]
-          allstats<-rbind(allstats,foreach_stats)
+           if (!is.null(hashtable)){
 
-          #and then update the module_membership dictionary
-          hashtable <- foreach_allstats[[i]][[2]]
+               module_membership_list[[hashtable[[1]]]] <- hashtable[[2]]
 
-          if (!is.null(hashtable)){
-
-            new_pval <- all_pvals[i]
-            if (new_pval <= final_signif_thresh | new_pval == 1) {
-              module_membership_list[[hashtable[[1]]]] <- hashtable[[2]]
-            }
-          }
-        }
+           }
+         }
 
       }
 
@@ -358,8 +356,8 @@ runrewiring<- function(ObjectList){
           graphics::par(mfrow = c(1, 3))
           mylayout <- return_layout_phenotype(rawrunmoddata$regulators,
                                               rawrunmoddata$target_genes,
-                                              rownames(norm_expr_mat_keep),
-                                              rawsumm$nodesumm)
+                                              rawsumm$nodesumm,
+                                              rownames(norm_expr_mat_keep))
 
           try(plot_igraph(rawsumm$full_graph, "68 Samples", "black", mylayout))
           grDevices::dev.off()
@@ -421,8 +419,9 @@ runrewiring<- function(ObjectList){
 
       mylayout <- return_layout_phenotype(refinedrunmoddata$regulators,
                                           refinedrunmoddata$target_genes,
-                                          rownames(norm_expr_mat_keep),
-                                          refinedsumm$nodesumm)
+                                          refinedsumm$nodesumm,
+                                          rownames(norm_expr_mat_keep))
+
 
       try(plot_igraph(refinedsumm$full_graph, paste0(dim(norm_expr_mat_keep)[2], " Samples"), "black", mylayout))
       try(plot_igraph(refinedsumm$nonresp_graph, paste0(length(nonrespond_idxs), " Phenotype1"), "darkviolet", mylayout))

@@ -75,7 +75,7 @@ Gene Regulatory Network inference via model selection. Consists of two phases,
    ## For the sake of time, we will select faster (and worse) ones.
 
    linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx,regulator_filtered_idx,
-                              link_mode="LASSOmin",graph_mode="LM",NrModules=2,Nr_bootstraps=1,
+                              link_mode="LASSOmin",graph_mode="LM",NrModules=5,Nr_bootstraps=1,
                               NrCores=2,corrClustNrIter=10)
 
 
