@@ -6,20 +6,14 @@
 \alias{TraRe-package}
 \title{Transcriptional Rewiring package for R.}
 \description{
-*TraRe* (Transcriptional Rewiring) is an R package which contains the necessary tools to carry out: Identification of module-based gene regulatory networks (GRN); score-based classification of these modules via a rewiring test; visualization of rewired modules to analyze condition-based GRN deregulation and drop out genes recovering via cliques methodology. For each tool, html report can be generated containing useful information about the generated GRN and statistical data about the performed tests. This tools have been developed considering sequenced data (RNA-Seq).
+TraRe (Transcriptional Rewiring) is an R package which contains the necessary tools to carry out several functions. 
+		Identification of module-based gene regulatory networks (GRN); score-based classification of these modules via 
+		a rewiring test; visualization of rewired modules to analyze condition-based GRN deregulation and drop out genes 
+		recovering via cliques methodology. For each tool, html report can be generated containing useful information about
+		the generated GRN and statistical data about the performed tests. This tools have been developed considering sequenced data (RNA-Seq).
 }
-\section{Description of TraRe}{
+\section{Available tools}{
 
-
-\emph{TraRe} (Transcriptional Rewiring) is an R package which contains the necessary tools
-to carry out: Identification of module-based gene regulatory networks (GRN); score-based
-classification of these modules via a rewiring test; visualization of rewired modules
-to analyze condition-based GRN deregulation and drop out genes recovering via cliques
-methodology. For each tool, html report can be generated containing useful information
-about the generated GRN and statistical data about the performed tests. This tools have
-been developed considering sequenced data (RNA-Seq).
-
-\emph{TraRe} offers the following tools
 
 \itemize{
 
@@ -70,12 +64,12 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Jesus De La Fuente Cedeño \email{jdelafuentec@unav.es} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID}) [copyright holder]
+\strong{Maintainer}: Jesus De La Fuente Cedeño \email{jdelafuentec@unav.es} (\href{https://orcid.org/0000-0003-1856-2469}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Mikel Hernaez \email{mhernaez@unav.es} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID}) [copyright holder, thesis advisor]
-  \item Charles Blatti \email{blatti@illinois.edu} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID}) [copyright holder]
+  \item Mikel Hernaez \email{mhernaez@unav.es} (\href{https://orcid.org/0000-0003-0443-2305}{ORCID}) [copyright holder, thesis advisor]
+  \item Charles Blatti \email{blatti@illinois.edu} (\href{https://orcid.org/0000-0002-4683-6271}{ORCID}) [copyright holder]
 }
 
 }

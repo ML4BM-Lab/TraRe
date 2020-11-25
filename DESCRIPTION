@@ -1,24 +1,28 @@
 Package: TraRe
 Title: Transcriptional Rewiring 
-Version: 1.3.0
+Version: 1.0.0
 URL: https://github.com/ubioinformat/TraRe/tree/master
 Authors@R: 
     c(person(given = "Jesus",
            family = "De La Fuente Cedeño",
            role = c("aut", "cre","cph"),
            email = "jdelafuentec@unav.es",
-           comment = c(ORCID = "YOUR-ORCID-ID")),
+           comment = c(ORCID = "0000-0003-1856-2469")),
     person(given = "Mikel",
            family = "Hernaez",
            role = c("aut", "cph","ths"),
            email = "mhernaez@unav.es",
-           comment = c(ORCID = "YOUR-ORCID-ID")),
+           comment = c(ORCID = "0000-0003-0443-2305")),
     person(given = "Charles",
            family = "Blatti",
            role = c("aut", "cph"),
            email = "blatti@illinois.edu",
-           comment = c(ORCID = "YOUR-ORCID-ID")))
-Description: *TraRe* (Transcriptional Rewiring) is an R package which contains the necessary tools to carry out: Identification of module-based gene regulatory networks (GRN); score-based classification of these modules via a rewiring test; visualization of rewired modules to analyze condition-based GRN deregulation and drop out genes recovering via cliques methodology. For each tool, html report can be generated containing useful information about the generated GRN and statistical data about the performed tests. This tools have been developed considering sequenced data (RNA-Seq).
+           comment = c(ORCID = "0000-0002-4683-6271")))
+Description: TraRe (Transcriptional Rewiring) is an R package which contains the necessary tools to carry out several functions. 
+		Identification of module-based gene regulatory networks (GRN); score-based classification of these modules via 
+		a rewiring test; visualization of rewired modules to analyze condition-based GRN deregulation and drop out genes 
+		recovering via cliques methodology. For each tool, html report can be generated containing useful information about
+		the generated GRN and statistical data about the performed tests. This tools have been developed considering sequenced data (RNA-Seq).
 Depends:
 	R (>= 4.0)
 Imports: 
@@ -38,12 +42,6 @@ Imports:
     	doParallel,
     	R.utils,
     	dqrng,
-	purrr,
-	RVenn,
-	eulerr,
-	biomaRt,
-	R.matlab,
-	colorspace,
 	parallel,
 	openxlsx
 License: MIT + file LICENSE
@@ -51,7 +49,7 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
-biocViews: GeneRegulation, RNASeq, GraphAndNetwork, Bayesian
+biocViews: GeneRegulation, RNASeq, GraphAndNetwork, Bayesian, GeneTarget, Classification
 Suggests: 
     knitr,
     rmarkdown,
