@@ -16,6 +16,7 @@
 #' @param orig_test_perms Initial permutations for first test (default: 100) .
 #' @param retest_thresh Threshold if a second test is performed (default: 0.08) .
 #' @param retest_perms Permutations if a second test is performed (default: 1000) .
+#' @param outdir Directory for the output folder to be located (default: working dir)
 #' @param nrcores Number of cores to run the parallelization within the rewiring test (default: 3).
 #'
 #'
@@ -38,9 +39,11 @@
 #'
 #' phenotype_info <- paste0(system.file("extdata",package="TraRe"),'/phenotype_rewiring_example.txt')
 #'
+#' outdir <- system.file("extdata",package="TraRe")
 #'
 #' prepared <- preparerewiring(name="example",linker_output,expr_matrix,gene_info,
-#'                             phenotype_info,final_signif_thresh=0.05,nrcores=1)
+#'                             phenotype_info,final_signif_thresh=0.05,nrcores=1,
+#'                             outdir=outdir)
 #'
 #'
 #' @export
@@ -56,6 +59,7 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
                            orig_test_perms=100,
                            retest_thresh=0.08,
                            retest_perms=1000,
+                           outdir=getwd(),
                            nrcores=3){
 
 
@@ -76,7 +80,7 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
 
 
   newdir<-paste(name,paste(final_signif_thresh,collapse="_"),sep="_")
-  outdir<-paste(getwd(),newdir,sep="/")
+  outdir<-paste(outdir,newdir,sep="/")
 
   #dir.create(file.path(outdir), showWarnings = FALSE)
 

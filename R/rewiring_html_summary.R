@@ -134,8 +134,8 @@ summarize_module<-function(norm_expr_mat_keep, runmoddata, name2idx, nonrespond_
     fg <- NET_compute_graph_all_VBSR(norm_expr_mat_keep,regidxs, targetidxs)
 
     # extract VBSR edge weights
-    orderweights = orderGraphWeights(fg, rownames(appendmat))
-    appendmat[orderweights$commonedges, "all-weights"] = orderweights$weights
+    orderweights <- orderGraphWeights(fg, rownames(appendmat))
+    appendmat[orderweights$commonedges, "all-weights"] <- orderweights$weights
 
     fg
 
@@ -150,8 +150,8 @@ summarize_module<-function(norm_expr_mat_keep, runmoddata, name2idx, nonrespond_
     rg <- NET_compute_graph_all_VBSR(norm_expr_mat_keep[, responder_idxs],regidxs, targetidxs)
 
     # extract VBSR edge weights
-    orderweights = orderGraphWeights(rg, rownames(appendmat))
-    appendmat[orderweights$commonedges, "respond-weights"] = orderweights$weights
+    orderweights <- orderGraphWeights(rg, rownames(appendmat))
+    appendmat[orderweights$commonedges, "respond-weights"] <- orderweights$weights
 
     rg
 
@@ -166,8 +166,8 @@ summarize_module<-function(norm_expr_mat_keep, runmoddata, name2idx, nonrespond_
     ng <- NET_compute_graph_all_VBSR(norm_expr_mat_keep[, nonrespond_idxs],regidxs, targetidxs)
 
     # extract VBSR edge weights
-    orderweights = orderGraphWeights(ng, rownames(appendmat))
-    appendmat[orderweights$commonedges, "nonresp-weights"] = orderweights$weights
+    orderweights <- orderGraphWeights(ng, rownames(appendmat))
+    appendmat[orderweights$commonedges, "nonresp-weights"] <- orderweights$weights
 
     ng
 
