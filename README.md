@@ -7,7 +7,7 @@ out genes recovering via cliques methodology. For each tool, html report can be 
 information about the generated GRN and statistical data about the performed tests. This tools have been 
 developed considering sequenced data (RNA-Seq).
 
-![TraRe Package](C:/Users/Jesus/Dropbox/PhD/TraRe/vignettes/TraRe.png)
+![TraRe Package](https://github.com/ubioinformat/TraRe/blob/Version_1_3_0/vignettes/Trare.png)
 
 # Installation 
 TraRe can be currently installed from Github usind the devtools package (we are currently working to deliver to CRAN and Bioconductor):
