@@ -125,26 +125,26 @@ all possible Gene Regulatory Networks.
 
 ```{r, eval=FALSE, warning=FALSE, collapse=TRUE}
 
-     # For this example, we are going to join drivers and targets from our github folder.
+ # For this example, we are going to join drivers and targets from our github folder.
 
-    drivers <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/tfs_linker_example.rds'))
-    targets <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/targets_linker_example.rds'))
+drivers <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/tfs_linker_example.rds'))
+targets <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/targets_linker_example.rds'))
 
-    lognorm_est_counts <- rbind(drivers,targets)
+lognorm_est_counts <- rbind(drivers,targets)
 
-    # We create the index for drivers and targets in the log-normalized gene expression matrix.
-    
-    R <- nrow(drivers)
-    P <- nrow(targets)
-    
-    regulator_filtered_idx <- seq_len(L)
-    target_filtered_idx <- L+c(P)
+# We create the index for drivers and targets in the log-normalized gene expression matrix.
+
+R <- nrow(drivers)
+P <- nrow(targets)
+
+regulator_filtered_idx <- seq_len(L)
+target_filtered_idx <- L+c(P)
 
 
-    # We recommend VBSR.
+# We recommend VBSR.
 
-    linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx,regulator_filtered_idx,
-                               link_mode="VBSR",graph_mode="VBSR",NrModules=100,Nr_bootstraps=10)
+linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx,regulator_filtered_idx,
+                           link_mode="VBSR",graph_mode="VBSR",NrModules=100,Nr_bootstraps=10)
 
 ```
 
@@ -166,32 +166,32 @@ In order to run the single GRN generation, there is a particular function that w
 
 ```{r,eval=FALSE,warning=FALSE,collapse=TRUE}
 
-    # Assume we have run the rewiring method and we have discovered a rewired module.
-    # After we have selected the drivers and targets from that modules, we can build
-    # a single GRN to study it separately.
+# Assume we have run the rewiring method and we have discovered a rewired module.
+# After we have selected the drivers and targets from that modules, we can build
+# a single GRN to study it separately.
 
-    # Imagine our rewired module consists of 500 driver genes and 4000 target genes.
+# Imagine our rewired module consists of 500 driver genes and 4000 target genes.
 
-    drivers <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/tfs_linker_example.rds'))
-    drivers <- drivers[seq_len(500),]
-    
-    targets <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/targets_linker_example.rds'))
-    targets <- targets[seq_len(4000),]
+drivers <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/tfs_linker_example.rds'))
+drivers <- drivers[seq_len(500),]
 
-    lognorm_est_counts <- as.matrix(rbind(drivers,targets)) #ensure is matrix-class
+targets <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/targets_linker_example.rds'))
+targets <- targets[seq_len(4000),]
 
-    # We create the index for drivers and targets in the log-normalized gene expression matrix.
-    
-    R <- nrow(drivers)
-    P <- nrow(targets)
-    
-    regulator_filtered_idx <- seq_len(R)
-    target_filtered_idx <- R+seq_len(P)
+lognorm_est_counts <- as.matrix(rbind(drivers,targets)) #ensure is matrix-class
 
-    # We recommend VBSR (rest of parameters are set by default)
+# We create the index for drivers and targets in the log-normalized gene expression matrix.
 
-    graph <- NET_run(lognorm_est_counts,target_filtered_idx,
-                      regulator_filtered_idx,graph_mode="VBSR")
+R <- nrow(drivers)
+P <- nrow(targets)
+
+regulator_filtered_idx <- seq_len(R)
+target_filtered_idx <- R+seq_len(P)
+
+# We recommend VBSR (rest of parameters are set by default)
+
+graph <- NET_run(lognorm_est_counts,target_filtered_idx,
+                  regulator_filtered_idx,graph_mode="VBSR")
 
 
 ```
@@ -228,16 +228,16 @@ You can find all these files at **jesusdfc/TraRe** repository.
 
 ```{r, eval=TRUE, warning=FALSE, collapse=TRUE}
 
- expr_matrix <- 'https://github.com/jesusdfc/TraRe/raw/master/expression_rewiring_example.txt'
+expr_matrix <- 'https://github.com/jesusdfc/TraRe/raw/master/expression_rewiring_example.txt'
 
- gene_info <- 'https://github.com/jesusdfc/TraRe/raw/master/geneinfo_rewiring_example.txt'
+gene_info <- 'https://github.com/jesusdfc/TraRe/raw/master/geneinfo_rewiring_example.txt'
 
- linker_output <-  'https://github.com/jesusdfc/TraRe/raw/master/linker_rewiring_example.rds'
- 
- phenotype_info <- 'https://github.com/jesusdfc/TraRe/raw/master/phenotype_rewiring_example.txt'
+linker_output <-  'https://github.com/jesusdfc/TraRe/raw/master/linker_rewiring_example.rds'
 
- prepared <- preparerewiring(name="Vignette",linker_output,expr_matrix,gene_info,
-                             phenotype_info,final_signif_thresh=0.05)
+phenotype_info <- 'https://github.com/jesusdfc/TraRe/raw/master/phenotype_rewiring_example.txt'
+
+prepared <- preparerewiring(name="Vignette",linker_output,expr_matrix,gene_info,
+                           phenotype_info,final_signif_thresh=0.05)
 
 
 ```
@@ -275,67 +275,67 @@ We provide two ways of building the layout for the plot, depending on the choice
 
 ```{r,eval=TRUE,warning=FALSE,collapse=TRUE}
 
-    # Assume we have run the rewiring method and the `NET_run()` method to generate the
-    # igraph object. We are going to generate and plot both layouts for the example.
-    # We are going to generate all the files we need except for the igraph object, which
-    # is included as an example file in this package.
+# Assume we have run the rewiring method and the `NET_run()` method to generate the
+# igraph object. We are going to generate and plot both layouts for the example.
+# We are going to generate all the files we need except for the igraph object, which
+# is included as an example file in this package.
 
 
-    # We load the igraph object that we generated from the `NET_run()` example.
-    # Note: the igraph object is inside the list `NET_run()` generates.
+# We load the igraph object that we generated from the `NET_run()` example.
+# Note: the igraph object is inside the list `NET_run()` generates.
 
-    graph <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/graph_netrun_example.rds'))
-    graph <- graph$graphs$VBSR
+graph <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/graph_netrun_example.rds'))
+graph <- graph$graphs$VBSR
 
-    # We first generate the normal layout for the plot.
-    # We need the drivers and target names. 
+# We first generate the normal layout for the plot.
+# We need the drivers and target names. 
 
-    drivers <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/tfs_linker_example.rds'))
-    targets <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/targets_linker_example.rds'))
+drivers <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/tfs_linker_example.rds'))
+targets <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/targets_linker_example.rds'))
 
-    # Note that the generated graph may not have the same drivers and targets we used
-    # for generating it, so we wil extract those genes and check in the gene_info file
-    # if they are drivers or targets.
-    
-    geneinfo <- url('https://github.com/jesusdfc/TraRe/raw/master/geneinfo_rewiring_example.txt')
-    geneinfo <- read.delim(file=geneinfo)[,c("uniq_isos","regulator")]
-    
-    R<-intersect(geneinfo[geneinfo$regulator==1,1],names(igraph::V(graph)))
-    P<-intersect(geneinfo[geneinfo$regulator==0,1],names(igraph::V(graph)))
-    
-    drivers_n <- rownames(drivers[R,])
-    targets_n <- rownames(targets[P,])
+# Note that the generated graph may not have the same drivers and targets we used
+# for generating it, so we wil extract those genes and check in the gene_info file
+# if they are drivers or targets.
 
-    # As for this example we are working at gene level (we dont have transcripts inside genes),
-    # we wont need namehash parameter (see param `namehash`)
+geneinfo <- url('https://github.com/jesusdfc/TraRe/raw/master/geneinfo_rewiring_example.txt')
+geneinfo <- read.delim(file=geneinfo)[,c("uniq_isos","regulator")]
 
-    normal_layout <- return_layout(drivers_n,targets_n)
+R<-intersect(geneinfo[geneinfo$regulator==1,1],names(igraph::V(graph)))
+P<-intersect(geneinfo[geneinfo$regulator==0,1],names(igraph::V(graph)))
 
-    # We need to separate our expression matrix by a binary phenotype. 
-    # This is what the clinical file is used for.
+drivers_n <- rownames(drivers[R,])
+targets_n <- rownames(targets[P,])
 
-    gnames <- c(drivers_n,targets_n)
-    expmat <-rbind(drivers,targets)
-    
-    clinic <- url('https://github.com/jesusdfc/TraRe/raw/master/phenotype_rewiring_example.txt')
-    clinic <- utils::read.delim(clinic)
-    
-    expmat_R <- expmat[,clinic$Sample.ID[clinic$Class=='R']]
-    expmat_NR <- expmat[,clinic$Sample.ID[clinic$Class=='NR']]
+# As for this example we are working at gene level (we dont have transcripts inside genes),
+# we wont need namehash parameter (see param `namehash`)
 
-    # We now generate the phenotype layout and the `varfile` we need for this layout.
-    # (I leave here a way to generate)
-    
-    varfile <- t(as.matrix(sapply(gnames,
-               function(x) c(stats::t.test(expmat_R[x,],expmat_NR[x,])$statistic,
-               if(x%in%drivers_n) 1 else 0))))
+normal_layout <- return_layout(drivers_n,targets_n)
 
-    colnames(varfile)<-c("t-stat","is-regulator")
+# We need to separate our expression matrix by a binary phenotype. 
+# This is what the clinical file is used for.
 
-    phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,varfile)
+gnames <- c(drivers_n,targets_n)
+expmat <-rbind(drivers,targets)
 
-    plot_igraph(graph,mytitle="Normal Layout",titlecol="black",mylayout=normal_layout)
-    plot_igraph(graph,mytitle="Phenotype Layout",titlecol="black",mylayout=phenotype_layout)
+clinic <- url('https://github.com/jesusdfc/TraRe/raw/master/phenotype_rewiring_example.txt')
+clinic <- utils::read.delim(clinic)
+
+expmat_R <- expmat[,clinic$Sample.ID[clinic$Class=='R']]
+expmat_NR <- expmat[,clinic$Sample.ID[clinic$Class=='NR']]
+
+# We now generate the phenotype layout and the `varfile` we need for this layout.
+# (I leave here a way to generate)
+
+varfile <- t(as.matrix(sapply(gnames,
+           function(x) c(stats::t.test(expmat_R[x,],expmat_NR[x,])$statistic,
+           if(x%in%drivers_n) 1 else 0))))
+
+colnames(varfile)<-c("t-stat","is-regulator")
+
+phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,varfile)
+
+plot_igraph(graph,mytitle="Normal Layout",titlecol="black",mylayout=normal_layout)
+plot_igraph(graph,mytitle="Phenotype Layout",titlecol="black",mylayout=phenotype_layout)
     
 
 ```
@@ -372,17 +372,17 @@ mandatory, the rest of them have default values.
 
 ```{r,eval=TRUE,warning=FALSE,collapse=TRUE}
 
- ## For this example, we are going to use a generated 'refinedsumm.rds' from the su2c dataset
- ## (see vignette of TraRe for more information), which is at the external data folder
- ## of this package.
+## For this example, we are going to use a generated 'refinedsumm.rds' from the su2c dataset
+## (see vignette of TraRe for more information), which is at the external data folder
+## of this package.
 
- gpath <- url('https://github.com/jesusdfc/TraRe/raw/master/Su2c_0.05/refinedsumm.rds')
+gpath <- url('https://github.com/jesusdfc/TraRe/raw/master/Su2c_0.05/refinedsumm.rds')
 
- ## We are going to use the drivers dataset from the external data folder as well.
- ## For more information about generatecliques() please check the help page of it.
+## We are going to use the drivers dataset from the external data folder as well.
+## For more information about generatecliques() please check the help page of it.
 
- dataset<- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/tfs_linker_example.rds'))
- excel_generation(gpath=gpath,dataset=dataset)
+dataset<- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/tfs_linker_example.rds'))
+excel_generation(gpath=gpath,dataset=dataset)
 
 ```
 
