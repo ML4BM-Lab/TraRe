@@ -26,10 +26,13 @@ heatmap, and its sorted by a hierarchical clustering for better interpretation.
 objectlist <- readRDS(file=paste0(system.file("extdata",package="TraRe"),
                       '/prepared_rewiring_example.rds'))
 
-\dontrun{
- runrewiring(ObjectList = objectlist)
- }
 
+## For the example, we are going to create the folder containing
+## the graphs, reports, etc, and then we are deleting them.
+## If you want to keep it, do not run the last line.
+
+runrewiring(ObjectList = objectlist)
+unlink(objectlist$outdir,recursive = TRUE)
 
 
 }

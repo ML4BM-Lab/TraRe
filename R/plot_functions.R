@@ -19,27 +19,25 @@
 #'    ## We are going to generate all the files we need except for the igraph object, which
 #'    ## is included as an example file in this package.
 #'
-#'
 #'    ## We load the igraph object that we generated from the `NET_run()` example.
 #'    ## Note: the igraph object is inside the list `NET_run()` generates.
 #'
-#'    graph <- readRDS(paste0(system.file("extdata",package="TraRe"),'/graph_netrun_example.rds'))
-#'
+#'    graph <- readRDS(paste0(system.file("extdata",package="TraRe"),
+#'                     '/graph_netrun_example.rds'))$graphs$VBSR
 #'
 #'    ## We first generate the normal layout for the plot.
 #'    ## We need the drivers and target names.
 #'
-#'    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
-#'    drivers_n <- rownames(drivers)[seq_len(5)]
+#'    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_linker_example.rds'))
+#'    drivers_n <- rownames(drivers)
 #'
 #'    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
-#'    targets_n <- rownames(targets)[seq_len(30)]
+#'    targets_n <- rownames(targets)
 #'
 #'    ## As for this example we are working at gene level (we dont have transcripts inside genes),
 #'    ## we will generate a dictionary with genes as keys and values (see param `namehash`)
 #'
-#'    namehash <- drivers_n
-#'    normal_layout <- return_layout(drivers_n,targets_n,namehash)
+#'    normal_layout <- return_layout(drivers_n,targets_n)
 #'
 #'    ## We now generate the phenotype layout and the `varfile` we ned for this layout.
 #'    ## (I leave here a way to generate) We need to separate our expression matrix by
@@ -48,8 +46,12 @@
 #'
 #'    gnames <- c(drivers_n,targets_n)
 #'    expmat <-rbind(drivers,targets)
-#'    expmat_R <- expmat[,seq_len(40)]
-#'    expmat_NR <- expmat[,40+seq_len(28)]
+#'
+#'    phenotype <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
+#'                                   '/phenotype_rewiring_example.txt'))
+#'
+#'    expmat_R <- expmat[,phenotype$Class=='R']
+#'    expmat_NR <- expmat[,phenotype$Class=='NR']
 #'
 #'
 #'    varfile <- t(as.matrix(sapply(gnames,
@@ -58,7 +60,7 @@
 #'
 #'    colnames(varfile)<-c("t-stat","is-regulator")
 #'
-#'    phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,namehash,varfile)
+#'    phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,varfile)
 #'
 #'    plot_igraph(graph,mytitle="Normal Layout",titlecol="black",mylayout=normal_layout)
 #'    plot_igraph(graph,mytitle="Phenotype Layout",titlecol="black",mylayout=phenotype_layout)
@@ -105,7 +107,7 @@ plot_igraph <- function(mygraph=NULL, mytitle="", titlecol="black", mylayout=NUL
                       mylayout$genesy[igraph::V(mygraph)$name]
        )
   )
-  graphics::title(paste0(mytitle, " ", sum(igraph::V(mygraph)$type==1), "&", sum(igraph::V(mygraph)$type==0)), cex.main = 5, col.main = titlecol)
+  graphics::title(paste0(mytitle, " ", sum(igraph::V(mygraph)$type==1), "&", sum(igraph::V(mygraph)$type==0)), cex.main = 2, col.main = titlecol)
   graphics::abline(h=0, col=grDevices::rgb(0,0,0,alpha=0.3))
 }
 #' @export
@@ -146,7 +148,7 @@ return_layout <- function(regs=NULL, targets=NULL, namehash=NULL){
 #' @param varfile two column file containing, gene names as rows,
 #' t-statistic from the differential expression analysis of the desired phenotype column and
 #' a boolean variable for regulator (1) - no regulator (0) column.
-return_layout_phenotype <- function(regs=NULL, targets=NULL, namehash=NULL,varfile=NULL){
+return_layout_phenotype <- function(regs=NULL, targets=NULL,varfile=NULL, namehash=NULL){
 
   if (is.null(regs)){
     stop("regulators field empty")
@@ -203,29 +205,6 @@ return_layout_phenotype <- function(regs=NULL, targets=NULL, namehash=NULL,varfi
   return(list(genesx=genesx, genesy=genesy, genesnames=genesnames))
 
 }
-# return_layout_phenotype <- function(regs, targets, namehash, nodesumm){
-#   vals = as.numeric(nodesumm[,"t-stat"])
-#   genesnames = rownames(nodesumm)[order(vals)]
-#   names(genesnames) = genesnames
-#
-#   genesx = 1:length(vals)
-#   names(genesx) = genesnames
-#
-#   orderedregs = names(genesx)[which(nodesumm[names(genesx),"is-regulator"]==1)]
-#   absval = max(abs(vals))
-#   genesy = signif(vals[order(vals)]/absval,3)
-#   names(genesy) = genesnames
-#   genesy[orderedregs] = genesy[orderedregs] + rep(c(2,-2),length(regs))[1:length(regs)]
-#
-#   genesnames[targets] = ""
-#   if (length(names(namehash)) == 0){
-#     names(namehash) = namehash
-#   }
-#   genesnames[regs] = namehash[regs]
-#
-#   return(list(genesx=genesx, genesy=genesy, genesnames=genesnames))
-# }
-
 #' @export
 #' @rdname plot_igraph
 #' @param graph igraph object

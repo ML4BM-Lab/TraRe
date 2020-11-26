@@ -54,23 +54,29 @@ Gene Regulatory Network inference via model selection. Consists of two phases,
 \code{LINKER_runPhase1()} and \code{LINKER_runPhase2()}. Help them for more information.
 }
 \examples{
-   ## For this example, we are going to join 15 drivers and 100 targets from the example folder.
+   ## For this example, we are going to join 60 drivers and
+   ## 200 targets genes from the example folder.
 
-   drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
+   drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_linker_example.rds'))
    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
 
-   lognorm_est_counts <- rbind(drivers[seq_len(15),],targets[seq_len(100),])
+   lognorm_est_counts <- as.matrix(rbind(drivers,targets))
 
    ## We create the index for drivers and targets in the log-normalized gene expression matrix.
-   L <- 15
-   regulator_filtered_idx <- seq_len(L)
-   target_filtered_idx <- L+c(seq_len(100))
+
+   R<-60
+   T<-200
+
+   regulator_filtered_idx <- seq_len(R)
+   target_filtered_idx <- R+c(seq_len(T))
 
 
-   ## We recommend VBSR.
+   ## We recommend to use the default values of the function.
+   ## For the sake of time, we will select faster (and worse) ones.
 
    linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx,regulator_filtered_idx,
-                              link_mode="VBSR",graph_mode="VBSR",NrModules=3,Nr_bootstraps=1)
+                              link_mode="LASSOmin",graph_mode="LM",NrModules=5,Nr_bootstraps=1,
+                              NrCores=2,corrClustNrIter=10)
 
 
 

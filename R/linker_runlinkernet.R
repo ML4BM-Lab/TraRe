@@ -25,17 +25,23 @@
 #'    ## a single GRN to study it separately.
 #'
 #'
-#'    ## Imagine our rewired module consists of 5 driver genes and 40 target genes.
+#'    ## For this example, we are going to join 60 drivers and
+#'    ## 200 targets genes from the example folder.
 #'
-#'    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
+#'    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_linker_example.rds'))
 #'    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
 #'
-#'    lognorm_est_counts <- rbind(drivers[seq_len(5),],targets[seq_len(30),])
-#'    regulator_filtered_idx <- seq_len(5)
-#'    target_filtered_idx <- 5+c(seq_len(30))
+#'    lognorm_est_counts <- as.matrix(rbind(drivers,targets))
+#'
+#'    ## We create the index for drivers and targets in the log-normalized gene expression matrix.
+#'
+#'    R<-60
+#'    T<-200
+#'
+#'    regulator_filtered_idx <- seq_len(R)
+#'    target_filtered_idx <- R+c(seq_len(T))
 #'
 #'    ## We recommend VBSR (rest of parameters are set by default)
-#'
 #'    graph <- NET_run(lognorm_est_counts,target_filtered_idx,
 #'                      regulator_filtered_idx,graph_mode="VBSR")
 #'
@@ -52,8 +58,8 @@ NET_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered_id
     stop("lognorm_est_counts field empty")
   }
 
-  if (!(is.matrix(lognorm_est_counts) | is.data.frame(lognorm_est_counts))){
-    stop("matrix or dataframe class is required")
+  if (!(is.matrix(lognorm_est_counts))){
+    stop("matrix class is required for input dataset")
   }
 
   if (class(lognorm_est_counts[1,1])!="numeric" & class(lognorm_est_counts[1,1])!="integer"){
@@ -82,35 +88,34 @@ NET_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered_id
     stop("targets and regulators index arrays must be numeric")
   }
 
-  # this will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
-  doParallel::registerDoParallel(NrCores)
-
   graphs<-list()
   for(j in seq_along(graph_mode)){
     graphs[[ graph_mode[j] ]] <- switch( graph_mode[j],
-                                         "VBSR" = NET_compute_graph_all_VBSR(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx),
-                                         "LASSOmin" = NET_compute_graph_all_LASSOmin(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx),
-                                         "LASSO1se" = NET_compute_graph_all_LASSO1se(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx),
-                                         "LM" = NET_compute_graph_all_LM(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx)
+                                         "VBSR" = NET_compute_graph_all_VBSR(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx,NrCores),
+                                         "LASSOmin" = NET_compute_graph_all_LASSOmin(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx,NrCores),
+                                         "LASSO1se" = NET_compute_graph_all_LASSO1se(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx,NrCores),
+                                         "LM" = NET_compute_graph_all_LM(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx,NrCores)
     )
 
     print(paste0("Graphs for (" ,graph_mode[j], ") computed!"))
   }
 
-  closeAllConnections()
   return(list(graphs=graphs))
 }
 #' @export
 #' @rdname NET_run
 #' @param alpha feature selection parameter in case of a LASSO model to be chosen.
-NET_compute_graph_all_LASSO1se<-function(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx, alpha=1-1e-06)
+NET_compute_graph_all_LASSO1se<-function(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx, alpha=1-1e-06,NrCores=1)
 {
 
   X<-lognorm_est_counts[regulator_filtered_idx,]
 
   driverMat<-matrix(data = NA, nrow = length(target_filtered_idx), ncol = length(regulator_filtered_idx))
 
-  doParallel::registerDoParallel(3)
+  # this will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
+  cl <- parallel::makeCluster(NrCores)
+  doParallel::registerDoParallel(cl)
+
   `%dopar%` <- foreach::`%dopar%`
 
   #compute the LASSO1se
@@ -125,6 +130,8 @@ NET_compute_graph_all_LASSO1se<-function(lognorm_est_counts, regulator_filtered_
       b_opt
     }
 
+  parallel::stopCluster(cl)
+
   rownames(driverMat)<-rownames(lognorm_est_counts)[target_filtered_idx]
   colnames(driverMat)<-rownames(lognorm_est_counts)[regulator_filtered_idx]
 
@@ -140,14 +147,16 @@ NET_compute_graph_all_LASSO1se<-function(lognorm_est_counts, regulator_filtered_
 }
 #' @export
 #' @rdname NET_run
-NET_compute_graph_all_LASSOmin<-function(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx, alpha=1-1e-06)
+NET_compute_graph_all_LASSOmin<-function(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx, alpha=1-1e-06,NrCores=1)
 {
 
   X<-lognorm_est_counts[regulator_filtered_idx,]
 
   driverMat<-matrix(data = NA, nrow = length(target_filtered_idx), ncol = length(regulator_filtered_idx))
 
-  doParallel::registerDoParallel(3)
+  # this will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
+  cl <- parallel::makeCluster(NrCores)
+  doParallel::registerDoParallel(cl)
   `%dopar%` <- foreach::`%dopar%`
 
   #compute the LASSOmin
@@ -162,6 +171,8 @@ NET_compute_graph_all_LASSOmin<-function(lognorm_est_counts, regulator_filtered_
       b_opt
     }
 
+  parallel::stopCluster(cl)
+
   rownames(driverMat)<-rownames(lognorm_est_counts)[target_filtered_idx]
   colnames(driverMat)<-rownames(lognorm_est_counts)[regulator_filtered_idx]
 
@@ -177,7 +188,7 @@ NET_compute_graph_all_LASSOmin<-function(lognorm_est_counts, regulator_filtered_
 }
 #' @export
 #' @rdname NET_run
-NET_compute_graph_all_LM<-function(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx)
+NET_compute_graph_all_LM<-function(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx,NrCores=1)
 {
   GEA_per_regulator<-list()
   i<-1
@@ -188,7 +199,9 @@ NET_compute_graph_all_LM<-function(lognorm_est_counts, regulator_filtered_idx, t
   NrTotalEdges<-length(target_filtered_idx)*length(regulator_filtered_idx)
   Pthre<-0.05/(NrTotalEdges)
 
-  doParallel::registerDoParallel(3)
+  # this will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
+  cl <- parallel::makeCluster(NrCores)
+  doParallel::registerDoParallel(cl)
   `%dopar%` <- foreach::`%dopar%`
 
   idx_gene<-NULL
@@ -206,6 +219,8 @@ NET_compute_graph_all_LM<-function(lognorm_est_counts, regulator_filtered_idx, t
       }
       driverVec
     }
+
+  parallel::stopCluster(cl)
 
   target_genes<-rownames(lognorm_est_counts)[target_filtered_idx]
   regulators<-rownames(lognorm_est_counts)[regulator_filtered_idx]
@@ -225,15 +240,16 @@ NET_compute_graph_all_LM<-function(lognorm_est_counts, regulator_filtered_idx, t
 }
 #' @export
 #' @rdname NET_run
-NET_compute_graph_all_VBSR<-function(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx)
+NET_compute_graph_all_VBSR<-function(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx,NrCores=1)
 {
 
   X<-lognorm_est_counts[regulator_filtered_idx,,drop=FALSE]
 
   driverMat<-matrix(data = NA, nrow = length(target_filtered_idx), ncol = length(regulator_filtered_idx))
 
-
-  doParallel::registerDoParallel(3)
+  # this will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
+  cl <- parallel::makeCluster(NrCores)
+  doParallel::registerDoParallel(cl)
   `%dopar%` <- foreach::`%dopar%`
 
   #compute the VBSR
@@ -255,6 +271,8 @@ NET_compute_graph_all_VBSR<-function(lognorm_est_counts, regulator_filtered_idx,
         }
       }
     }
+
+  parallel::stopCluster(cl)
 
   rownames(driverMat)<-rownames(lognorm_est_counts)[target_filtered_idx]
   colnames(driverMat)<-rownames(lognorm_est_counts)[regulator_filtered_idx]

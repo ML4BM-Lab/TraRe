@@ -11,7 +11,7 @@ runlinkernet_testmatrix<- function(){
                          target_filtered_idx=seq_len(15),
                          regulator_filtered_idx=15+seq_len(3)),error=conditionMessage)
 
-  RUnit::checkIdentical("matrix or dataframe class is required", obs)
+  RUnit::checkIdentical("matrix class is required for input dataset", obs)
 
   obs <-tryCatch(NET_run(lognorm_est_counts=matrix(vapply(seq_len(18),toString,FUN.VALUE = c("1")),6,3),
                          target_filtered_idx=seq_len(15),

@@ -50,13 +50,13 @@ rewiring_test = function(x, grp, perm = 500) {
 
   ## test stat
   T = sum(apply(utils::combn(numgrp, 2), 2, function(pair) {
-    as.vector((stats::cor(x[grp == pair[1], 1:p]) -
-                 stats::cor(x[grp == pair[2], 1:p]))^2)
+    as.vector((stats::cor(x[grp == pair[1], seq_len(p)]) -
+                 stats::cor(x[grp == pair[2], seq_len(p)]))^2)
   }))
 
   ## p
   T_star = rep(NA, perm)
-  for (j in 1:perm) {
+  for (j in seq_len(perm)) {
     grp_perm = sample(grp)
     T_star[j] = sum(apply(utils::combn(numgrp, 2), 2, function(pair) {
       as.vector((stats::cor(x[grp_perm == pair[1],]) -
@@ -87,13 +87,13 @@ rewiring_test_pair_detail = function(x, grp, perm = 500) {
 
   ## test stat
   T = sum(apply(utils::combn(numgrp, 2), 2, function(pair) {
-    as.vector((stats::cor(x[grp == pair[1], 1:p]) -
-                 stats::cor(x[grp == pair[2], 1:p]))^2)
+    as.vector((stats::cor(x[grp == pair[1], seq_len(p)]) -
+                 stats::cor(x[grp == pair[2], seq_len(p)]))^2)
   }))
 
   ## perm
   T_star = rep(NA, perm)
-  for (j in 1:perm) {
+  for (j in seq_len(perm)) {
     grp_perm = sample(grp)
     T_star[j] = sum(apply(utils::combn(numgrp, 2), 2, function(pair) {
       as.vector((stats::cor(x[grp_perm == pair[1],]) -

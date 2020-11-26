@@ -16,6 +16,8 @@
 #' @param orig_test_perms Initial permutations for first test (default: 100) .
 #' @param retest_thresh Threshold if a second test is performed (default: 0.08) .
 #' @param retest_perms Permutations if a second test is performed (default: 1000) .
+#' @param outdir Directory for the output folder to be located (default: working dir)
+#' @param nrcores Number of cores to run the parallelization within the rewiring test (default: 3).
 #'
 #'
 #' @return Return a list containing: LINKER's output, expression matrix, boolean array from phenotype file,
@@ -37,9 +39,11 @@
 #'
 #' phenotype_info <- paste0(system.file("extdata",package="TraRe"),'/phenotype_rewiring_example.txt')
 #'
+#' outdir <- system.file("extdata",package="TraRe")
 #'
 #' prepared <- preparerewiring(name="example",linker_output,expr_matrix,gene_info,
-#'                             phenotype_info,final_signif_thresh=0.001)
+#'                             phenotype_info,final_signif_thresh=0.05,nrcores=1,
+#'                             outdir=outdir)
 #'
 #'
 #' @export
@@ -54,7 +58,9 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
                            phenotype_class_vals_string_label='0,1',
                            orig_test_perms=100,
                            retest_thresh=0.08,
-                           retest_perms=1000){
+                           retest_perms=1000,
+                           outdir=getwd(),
+                           nrcores=3){
 
 
   #checks
@@ -74,7 +80,7 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
 
 
   newdir<-paste(name,paste(final_signif_thresh,collapse="_"),sep="_")
-  outdir<-paste(getwd(),newdir,sep="/")
+  outdir<-paste(outdir,newdir,sep="/")
 
   #dir.create(file.path(outdir), showWarnings = FALSE)
 
@@ -88,16 +94,30 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
     phenotype_class_vals <- unlist(strsplit(phenotype_class_vals_string, ","))
     phenotype_class_vals_label <- unlist(strsplit(phenotype_class_vals_string_label, ","))
 
-    # read in linker output
-    rundata <- readRDS(linker_saved_file[i]); #used outside
+    # read in linker output (check if it comes from web)
 
-    # read in expression matrix
+    if (substr(linker_saved_file[i],1,4)=='http'){
+      rundata<-readRDS(url(linker_saved_file[i]))
+    }else rundata <- readRDS(linker_saved_file[i]); #used outside
+
+    # read in expression matrix (check if it comes from web)
+    if (substr(expr_matrix_file[i],1,4)=='http'){
+      input_expr_mat <- as.matrix(utils::read.table(url(expr_matrix_file[i]), header = TRUE,
+                                                    row.names = 1, sep = "\t", quote = ""))
+    }else{
     input_expr_mat <- as.matrix(utils::read.table(expr_matrix_file[i], header = TRUE,
                                            row.names = 1, sep = "\t", quote = ""))
+    }
+
     methods::show(paste(c("Expression Matrix Size", dim(input_expr_mat))))
 
-    # read in gene info
-    gene_info_df <- utils::read.table(gene_info_file[i], header = TRUE, sep = "\t", quote = "")
+    # read in gene info (check if it comes from web)
+    if (substr(gene_info_file[i],1,4)=='http'){
+      gene_info_df <- utils::read.table(url(gene_info_file[i]), header = TRUE,
+                                        sep = "\t", quote = "")
+    }else{
+      gene_info_df <- utils::read.table(gene_info_file[i], header = TRUE, sep = "\t", quote = "")
+    }
     rownames(gene_info_df) <- gene_info_df[, 1]
     methods::show(paste(c("Gene Info Table Size", dim(gene_info_df))))
 
@@ -116,9 +136,15 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
     alltargs <- keepgenes[which(gene_info_df_keep[, regulator_info_col_name] == 0)]
     methods::show(paste(c("NumRegs and NumTargs", length(allregs), length(alltargs))))
 
-    # read in phenotype file
-    pheno_df <- utils::read.table(phenotype_file[i], header = TRUE, row.names = 1,
-                           sep = "\t", quote = "", stringsAsFactors = FALSE);
+    # read in phenotype file (check if it comes from web)
+    if (substr(phenotype_file[i],1,4)=='http'){
+      pheno_df <- utils::read.table(url(phenotype_file[i]), header = TRUE, row.names = 1,
+                                    sep = "\t", quote = "", stringsAsFactors = FALSE);
+    }else{
+
+      pheno_df <- utils::read.table(phenotype_file[i], header = TRUE, row.names = 1,
+                             sep = "\t", quote = "", stringsAsFactors = FALSE);
+    }
     methods::show(paste(c("Phenotype Table Size", dim(pheno_df))))
 
     # clean up phenotype column
@@ -128,17 +154,24 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
     names(responder) <- make.names(rownames(pheno_df))
     pheno_df <- cbind(pheno_df, responder)
 
-
     # find intesection of sample ids, keepsamps
     keepsamps <- intersect(colnames(norm_expr_mat_keep),
                            names(responder)[which(responder == 0 | responder == 1 )])
+    methods::show(paste(c("Sample Names:", keepsamps,length(keepsamps))))
 
 
     # keeplabels is numeric class id, 0 or 1, in keep samps order
     keeplabels <- as.numeric(responder[keepsamps]) #used outside
 
+    #check if NR/R proportions are similar to ensure property functioning of the method.
+    klzero <- sum(keeplabels==0)
+    klone <- sum(keeplabels==1)
+    if (min(klone,klzero)/max(klone,klzero)<0.8){
+      warning(paste0('phenotype samples proportions imbalance ',toString(c(klzero,klone)),' (<80%).'))
+    }
 
     class_counts <- as.numeric(table(keeplabels)) #used outside
+    methods::show(paste(c("Class Per Counts", class_counts)))
 
 
     rewobject$'rundata'<-rundata
@@ -161,6 +194,7 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
   rewobjects$'orig_test_perms'<-orig_test_perms
   rewobjects$'retest_thresh'<-retest_thresh
   rewobjects$'retest_perms'<-retest_perms
+  rewobjects$'NrCores'<-nrcores
 
   return (rewobjects)
 

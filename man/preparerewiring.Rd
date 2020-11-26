@@ -17,7 +17,9 @@ preparerewiring(
   phenotype_class_vals_string_label = "0,1",
   orig_test_perms = 100,
   retest_thresh = 0.08,
-  retest_perms = 1000
+  retest_perms = 1000,
+  outdir = getwd(),
+  nrcores = 3
 )
 }
 \arguments{
@@ -47,6 +49,10 @@ threshold will be \code{paste()} to the name folder.}
 \item{retest_thresh}{Threshold if a second test is performed (default: 0.08) .}
 
 \item{retest_perms}{Permutations if a second test is performed (default: 1000) .}
+
+\item{outdir}{Directory for the output folder to be located (default: working dir)}
+
+\item{nrcores}{Number of cores to run the parallelization within the rewiring test (default: 3).}
 }
 \value{
 Return a list containing: LINKER's output, expression matrix, boolean array from phenotype file,
@@ -71,9 +77,11 @@ gene_info <- paste0(system.file("extdata",package="TraRe"),'/geneinfo_rewiring_e
 
 phenotype_info <- paste0(system.file("extdata",package="TraRe"),'/phenotype_rewiring_example.txt')
 
+outdir <- system.file("extdata",package="TraRe")
 
 prepared <- preparerewiring(name="example",linker_output,expr_matrix,gene_info,
-                            phenotype_info,final_signif_thresh=0.001)
+                            phenotype_info,final_signif_thresh=0.05,nrcores=1,
+                            outdir=outdir)
 
 
 }
