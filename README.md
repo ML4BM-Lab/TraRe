@@ -4,13 +4,13 @@
 Identification of module-based gene regulatory networks (GRN); score-based classification of these modules 
 via a rewiring test; visualization of rewired modules to analyze condition-based GRN deregulation and drop 
 out genes recovering via cliques methodology. For each tool, html report can be generated containing useful 
-information about the generated GRN and statistical data about the performed tests. This tools have been 
+information about the generated GRN and statistical data about the performed tests. These tools have been 
 developed considering sequenced data (RNA-Seq).
 
 ![TraRe Package](https://github.com/ubioinformat/TraRe/blob/Version_1_3_0/vignettes/Trare.png)
 
 # Installation 
-TraRe can be currently installed from Github usind the devtools package (we are currently working to deliver to CRAN and Bioconductor):
+TraRe can be currently installed from Github using the devtools package (we are currently working to deliver it to Bioconductor):
 
 ```{r, eval=FALSE}
 
