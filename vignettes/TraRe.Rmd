@@ -7,7 +7,7 @@ output:
     toc: true
     fig_caption: true
 abstract: >
-  *TraRe* (Transcriptional Rewiring) is an R package which contains the necessary tools to carry out: Identification of module-based gene regulatory networks (GRN); score-based classification of these modules via a rewiring test; visualization of rewired modules to analyze condition-based GRN deregulation and drop out genes recovering via cliques methodology. For each tool, html report can be generated containing useful information about the generated GRN and statistical data about the performed tests. These tools have been developed considering sequenced data (RNA-Seq).
+  *TraRe* (Transcriptional Rewiring) is an R package which contains the necessary tools to carry out: Identification of module-based gene regulatory networks (GRN); score-based classification of these modules via a rewiring test; visualization of rewired modules to analyze condition-based GRN deregulation and drop out genes recovering via cliques methodology. For each tool, an html report can be generated containing useful information about the generated GRN and statistical data about the performed tests. These tools have been developed considering sequenced data (RNA-Seq).
 vignette: >
   %\VignetteIndexEntry{TraRe: Identification of conditions dependant Gene Regulatory Networks}
   %\VignetteEngine{knitr::rmarkdown}
@@ -42,25 +42,24 @@ devtools::install_github(repo="ubioinformat/TraRe")
 For fully understanding of how TraRe works, we will go through
 every tool it contains: 
 
-* LINKER, a way of inferring gene regulatory networks
-* Rewiring, for selecting important modules from LINKER subject to a phenotype condition
+* *LINKER*, a module-based method manner of inferring gene regulatory networks.
+* *Rewiring*, for selecting important modules from *LINKER* subject to a phenotype condition.
 * Visualization,for graphically displaying generated GRN from previous process.
 * Results, excel generation of useful information about drivers to targets relations from
 previous GRN.
 
-Along with every step description and explanation, we will be working with a SU2C (Stand Up 2 Cancer)
-prostate cancer data, containing 12971 genes ($\approx$ 2000 transcription factors or driver 
-genes) and 121 samples. Patients from this clinical case were treated with 
-Abiraterone (ABI) and ABI+Enzalutemide (ARSI). For the phenotype dependent rewiring, we will be 
-focusing on only ARSI patients (35). The pathway we will follow is:
+Along with every step description and explanation, we will be working with the Stand Up To Cancer (SU2C) clinical trial dataset containing 12971 genes ($\approx$ 2000 transcription factors or driver 
+genes) and 121 samples from metasatic castration resistant prostate cancer patients. Patients were divided into two groups depending on the treatment: 
+Abiraterone (ABI) and ABI-Enzalutemide (ARSI). For the phenotype dependent *Rewiring*, we will be 
+focusing on only ARSI patients (35 samples). The pathway we will follow is:
   
-* Run LINKER using the available gene expression matrix (GEM), 12971 genes and 121 samples, to generate all possible modules (GRN).
+* Run *LINKER* using the available gene expression matrix (GEM), 12971 genes and 121 samples, to generate all possible modules (GRN).
 
-* Run Rewiring test selecting the sample's (ARSI) phenotype (35 samples) to extract LINKER modules which expression can be separated very well according to the selected phenotype. Selected modules will be scored based on a hypergeometric test.
+* Run *Rewiring* test selecting the sample's (ARSI) phenotype (35 samples) to extract *LINKER* modules which expression can be separated very well according to the selected phenotype. Selected modules will be scored based on a hypergeometric test.
 
-* Run Visualization, generating GRN graphs of how the regulation process may change depending on the phenotype condition. (This step is included in the final Rewiring one).
+* Run Visualization, generating GRN graphs of how the regulation process may change depending on the phenotype condition. (This step is included at the end of the previous one).
 
-* Run Results, that generates an excel containing information about the driver-target relationships from previous generated GRN graphs, and a brief summary that may be useful for biological validation of GRN. (This step is also included in the final Rewiring one).
+* Run Results, that generates an excel containing information about the driver-target relationships from the previously generated GRN graphs, and a brief summary that may be useful for biological validation of GRN. (This step is also included at the end of *Rewiring*).
 
 The dataset we are working with is stored at the repository **jesusdfc/TraRe**. The data
 used for the examples within TraRe's package is only a subset of this one, in order
@@ -109,7 +108,7 @@ are "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.
 
 - **module_rep** Method selected for use. Default set to MEAN.
 
-- **NrModules** Number of modules that are a priori to be found (note that the final number of modules
+- **NrModules** Number of modules that are a *priori* to be found (note that the final number of modules
 discovered may differ from this value). By default, 100 modules.
 
 - **corrClustNrIter** output from preparedata(). By default, 100.
@@ -123,7 +122,7 @@ discovered may differ from this value). By default, 100 modules.
 
 We now run *LINKER* method below. This is the first step from 
 the pathway, running *LINKER* using the complete gene expression 
-matrix to generate all possible Gene Regulatory Networks.
+matrix to generate all possible GRN.
 
 ```{r, eval=FALSE, warning=FALSE, collapse=TRUE}
 
@@ -151,7 +150,7 @@ linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx,regulator_filt
 ```
 
 
-*LINKER* also provides a way of generating a single GRN from specified list of driver and target genes. This eases the task of analyzing relationships between drivers and targets by constraining all the provided genes to be only in a single GRN. Normally, this task will be done when we have previously confirm all these genes belong to one gene regulatory network. The way we do this is by running the *Rewiring* method, which we talk about in the next section. Here we bring all the necessary parameters and descriptions. 
+*LINKER* also provides a way of generating a single GRN from specified list of driver and target genes. This eases the task of analyzing relationships between drivers and targets by constraining all the provided genes to a single GRN. Normally, this task is done when we have previously confirm all these genes belong to one GRN. The way we do this is by running the *Rewiring* method, that will be explained in the next section. Find below the necessary parameters and descriptions of `NET_run()`.
 
 - **lognorm_est_counts** Matrix of log-normalized estimated counts of the gene expression
  data (Nr Genes x Nr samples)
@@ -202,9 +201,9 @@ Note that this step is included in the *Rewiring* method.
 
 # Rewiring GRN modules
 
-## Overview of rewiring method
+## Overview of Rewiring method
 
-* *Rewiring* step performs a permutation test over a certain condition to infer if that condition is producing any deregulation on our generated GRN. Bootstrapping plays an important role, as the non-convex nature of this biological events makes necessary to ensure that a certain behavior is repeated across bootstraps, and to confirm this event does not come from a particular realization. As bootstrapping has been performed in LINKER, this step will take advantage of them and will try to group highly scored modules, to infer modules similar behavior GRN across bootstraps. It will outputs a folder containing :
+* *Rewiring* step performs a permutation test over a certain condition to infer if that condition is producing any deregulation on our generated GRN. Bootstrapping plays an important role, as the non-convex nature of these biological events makes necessary to ensure that a certain behavior is repeated across bootstraps, and to confirm this event does not come from a particular realization. As bootstrapping has been performed in *LINKER*, this step will take advantage of them and will try to group highly scored modules, to infer modules similar behavior GRN across bootstraps. It will outputs a folder containing :
 
 * A correlation matrix in the form of a heatmap (sorted by hierarchical clustering to ease interpretation), containing similar highly scored modules.
 * A dendogram containing the relationships between modules, which have been used to sort the heatmap.
@@ -214,11 +213,11 @@ Note that this step is included in the *Rewiring* method.
 
 ## How to run rewiring on TraRe
 
-In order to run rewiring test, *Trare* provides two functions: a `preparerewiring()` function and a `runrewiring()` function. First one requires
+In order to run *Rewiring* test, *Trare* provides two functions: the `preparerewiring()` function and the `runrewiring()` function. First one requires
 
 
 - **name** Desired name of the folder which is generated. The chosen
-threshold will be `paste()` to the name folder.
+threshold will be `paste()` to the folder's name.
 - **linker_saved_file** Output file from linker function path.
 - **expr_matrix_file** Lognorm counts of the gene expression matrix path.
 - **gene_info_file** path of a two-column file containing genes and 'regulator' boolean variable.
@@ -226,12 +225,12 @@ threshold will be `paste()` to the name folder.
 - **final_signif_thresh** Significance threshold for the rewiring method. The lower the threshold, the restrictive the method.
 
 There are also other parameters that will remain by default. Please take
-a look at `preparerewiring()` function for more information. We now generate 
+a look at the `preparerewiring()` function for more information. We now generate 
 the `preparerewiring()` output.
 
 
-Note that here we will include the previous generated *LINKER's* output. 
-You can find all these files at **jesusdfc/TraRe** repository.
+Note that here we will include the previously generated *LINKER's* output. 
+These files can be found at **jesusdfc/TraRe** repository.
 
 ```{r, eval=TRUE, warning=FALSE, collapse=TRUE}
 
@@ -250,32 +249,30 @@ prepared <- preparerewiring(name="Vignette",linker_output,expr_matrix,gene_info,
 ```
 
 
-In order to run `runrewiring()`, we just call `runrewiring(prepared)`. It will create a folder on the specified output path with a generated html report containing the hierarchical clustering of the rewired modules, the rewired modules in the form of a heatmap and a report containing statistical information about the performed test.
+In order to run `runrewiring()`, we just call `runrewiring(prepared)`. It will create a folder on the specified output path with an html report containing the hierarchical clustering of the rewired modules, the rewired modules in the form of a heatmap and a report containing statistical information about the performed test.
 
 ![Rewiring Dendogram](mod_sim.VBSR.heatm.png){width=2400px,height=2400px}
 As shown in the heatmap, there a is a clear **Super Module** (SM). For a SM to exist
-, there are some requirements that have to be fulfilled within module's SM. This
-modules contains genes whose expression can be separated very well using the ARSI phenotype.
-A part from these, they have shown a similar behavior across bootstraps, with an score
-given by its hypergeometrical test. So these modules formed by `c(298,945,698,619,795,156,63,214,563)`
-are forming this SM. 
+there are some requirements that have to be fulfilled. First, These modules shall contain genes whose expression can be separated very well using the ARSI phenotype.
+Second, they have shown a similar behavior across bootstraps, with an score
+given by its hypergeometrical test. Therefore, there exist a SM formed by `c(298,945,698,619,795,156,63,214,563)` modules.
 
 ![Rewiring Hierarchical Clustering](mod_sim.VBSR.dendro.png){width=2400px,height=1200px}
 
 In the figure above the Hierarchical Clustering applied shows how the SM
-we are talking about has been selected. The current implementation of **Rewiring**
-method extract the first SM it finds and generate all the graph objects 
+we are talking about has been selected. The current implementation of *Rewiring*
+method pulls away the first SM it finds and generate all the graph objects 
 and figures we are showing in the next section.
 
 # Visualization of GRN 
 
 ## Overview
 
-This tool brings a graphical way of detecting condition-dependent deregulation on the selected rewired modules containing gene regulatory networks. Once we have selected a cluster of modules that across bootstraps have similar behavior as GRN, we can generate single GRNs of the genes that belong to those modules, filtering by samples that belong to the condition we want to evaluate. 
+This tool provides a graphical way of detecting condition-dependent GRN deregulation on the selected rewired modules. Once we have selected a cluster of modules which behave similar across bootstraps, we can constraint them to form a single GRN using `NET_Run()` and plot these GRN, filtering by samples we want to evaluate according to the phenotype condition. 
 
 ## Plot GRN in TraRe
 
-We provide two ways of building the layout for the plot, depending on the choice of a t.test to be evaluated over the generated GRN, for sorting target genes prior to plot the established relationship between these and drivers. On the one hand, `return_layout()` generates a regular layout in which there is no t.test, and target genes are sorted randomly in a line. On the other hand, `return_layout_phenotype()` performs a target gene level t.test which has as null hypothesis if samples separated by the selected condition are not deferentially expressed. From this analysis, the z-score is used to sort target genes and plot them describing a curve, when using `plot_igraph()` function. 
+We provide two ways of building the layout for the plot, depending on the choice of a t.test to be evaluated over the generated GRN, to sort target genes prior to plot the established relationship between these and drivers. On the one hand, `return_layout()` generates a regular layout in which there is no t.test, and target genes are sorted randomly in a line. On the other hand, `return_layout_phenotype()` performs a target gene level t.test which has as null hypothesis if samples separated by the selected condition are not deferentially expressed. From this analysis, the z-score is used to sort target genes and plot them describing a curve when using `plot_igraph()` function. 
 
 ```{r,eval=TRUE,warning=FALSE,collapse=TRUE}
 
@@ -344,10 +341,10 @@ plot_igraph(graph,mytitle="Phenotype Layout",titlecol="black",mylayout=phenotype
 
 ```
 
-For more information, refer to the help file of `plot_functions()`.
+For further information, please refer to the help file of `plot_functions()`.
 Note that this method is included in the *Rewiring* test; the generation
 of the graph objects depending on the phenotype is automated. Here we include
-the figures generated from the **Rewiring** step.
+the figures generated from the *Rewiring* step.
 
 ![Rewiring Hierarchical Clustering](igraphs.refined.graphs.png){width=1500px,height=750px}
 
@@ -356,9 +353,9 @@ the figures generated from the **Rewiring** step.
 
 ## Overview 
 
-* *Cliques:* From the chosen individual GRN, an excel file is generated containing drivers-targets relationships and cliques. The way LINKER works may lead TFs to be dropped out during the fitting process in the presence of highly correlated TFs which role in the GRN are very similar. Due to this, we propose a method based on cliques (Fully Connected Networks) to recover these dropped driver genes.
+* *Cliques:* From the chosen individual GRN, an excel file is generated containing drivers-targets relationships and cliques. The way *LINKER* works may lead TFs to be dropped out during the fitting process in the presence of highly correlated TFs whose roles in the GRN are very similar. Due to this, we propose a method based on cliques (Fully Connected Networks) to recover these dropped driver genes.
 
-From all previous analysis, we provide an informative way of looking at the generated GRN, the relationships they have within the network, easing a possible biological validation afterwards in silico analysis.
+From all previous analyses, we provide an informative way of looking at the generated GRN, the relationships they have within the network, easing a possible biological validation afterwards in silico analysis.
 
 # Generate file in TraRe
 
@@ -381,7 +378,7 @@ mandatory, the rest of them have default values.
 gpath <- url('https://github.com/jesusdfc/TraRe/raw/master/Su2c_0.05/refinedsumm.rds')
 
 ## We are going to use the drivers dataset from the external data folder as well.
-## For more information about generatecliques() please check the help page of it.
+## For more information about generatecliques() please check the corresponding help page.
 
 dataset<- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/tfs_linker_example.rds'))
 excel_generation(gpath=gpath,dataset=dataset)
@@ -389,7 +386,7 @@ excel_generation(gpath=gpath,dataset=dataset)
 ```
 
 We here include a brief example in order to finish the analysis for this SU2C prostate cancer 
-GEM After generating the plots where a possible deregulation from one phenotype to other
+GEM. After generating the plots where a possible deregulation from one phenotype to other
 may be appreciated, we can extract more specific driver to target information.
 
 ![Excel Generation](Excel.png){width=650 height=200px}
