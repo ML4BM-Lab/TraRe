@@ -272,7 +272,7 @@ runrewiring<- function(ObjectList){
                        decreasing = FALSE, index.return = TRUE)$ix
       write_tables_all(allstats[sortidxs, ],
                        tabletype = paste0(modmeth, "_mod_rewiring_scores"),
-                       filestr = "data", html_idxs = seq_len(dim(allstats)[1]),
+                       filestr = "data", html_idxs = seq_len(nrow(allstats)),
                        htmlinfo = indexpageinfo)
 
       # write module similarity table
@@ -280,7 +280,7 @@ runrewiring<- function(ObjectList){
                        decreasing = FALSE, index.return = TRUE)$ix
       write_tables_all(fisher_tbl[sortidxs, ],
                        tabletype = paste0(modmeth, "_sigmod_overlap"),
-                       filestr = "data", html_idxs = seq_len(dim(fisher_tbl)[1]),
+                       filestr = "data", html_idxs = seq_len(nrow(fisher_tbl)),
                        htmlinfo = indexpageinfo)
 
 
@@ -295,8 +295,8 @@ runrewiring<- function(ObjectList){
 
         clusmod_vec = unlist(strsplit(clusmod, "\\."))
         methods::show(clusmod_vec)
-        mregs <- unique(rundata$modules[[clusmod_vec[1]]][[as.numeric(clusmod_vec[2])]]$regulators)
-        mtargs <- unique(rundata$modules[[clusmod_vec[1]]][[as.numeric(clusmod_vec[2])]]$target_genes)
+        mregs <- unique(rundata$modules[[clusmod_vec[1]]][[as.numeric(clusmod_vec[3])]]$regulators)
+        mtargs <- unique(rundata$modules[[clusmod_vec[1]]][[as.numeric(clusmod_vec[3])]]$target_genes)
         supermod_regs_list <- c(supermod_regs_list, mregs)
         supermod_targs_list <- c(supermod_targs_list, mtargs)
       }
@@ -359,7 +359,7 @@ runrewiring<- function(ObjectList){
                                               rawsumm$nodesumm,
                                               rownames(norm_expr_mat_keep))
 
-          try(plot_igraph(rawsumm$full_graph, "68 Samples", "black", mylayout))
+          try(plot_igraph(rawsumm$full_graph, paste0(ncol(norm_expr_mat_keep), " Samples"), "black", mylayout))
           grDevices::dev.off()
 
           # write plot to index page
@@ -423,7 +423,7 @@ runrewiring<- function(ObjectList){
                                           rownames(norm_expr_mat_keep))
 
 
-      try(plot_igraph(refinedsumm$full_graph, paste0(dim(norm_expr_mat_keep)[2], " Samples"), "black", mylayout))
+      try(plot_igraph(refinedsumm$full_graph, paste0(ncol(norm_expr_mat_keep), " Samples"), "black", mylayout))
       try(plot_igraph(refinedsumm$nonresp_graph, paste0(length(nonrespond_idxs), " Phenotype1"), "darkviolet", mylayout))
       try(plot_igraph(refinedsumm$respond_graph, paste0(length(responder_idxs), " Phenotype2"), "darkgoldenrod", mylayout))
       grDevices::dev.off()
