@@ -283,8 +283,14 @@ runrewiring<- function(ObjectList){
                        filestr = "data", html_idxs = seq_len(nrow(fisher_tbl)),
                        htmlinfo = indexpageinfo)
 
+      #Check if more than one dataset is being analyzed,
+      #in which case only heatmap is available, so program
+      #finish here.
 
-      #stop("End of last version of TraRe")
+      if (length(ObjectList$'datasets')>1){
+        warning('Data comparison mode selected, only heatmap has been generated.')
+        return(1)
+        }
 
       # Create multiplicity table
       supermod_regs_list = NULL
@@ -353,7 +359,6 @@ runrewiring<- function(ObjectList){
 
           pname <- paste(sep = ".", "igraphs.raw.full_graph")
           grDevices::png(paste0(ObjectList$outdir, "/imgs/", pname, ".png"), 1500, 750)
-          graphics::par(mfrow = c(1, 3))
           mylayout <- return_layout_phenotype(rawrunmoddata$regulators,
                                               rawrunmoddata$target_genes,
                                               rawsumm$nodesumm,
