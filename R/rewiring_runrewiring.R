@@ -283,12 +283,12 @@ runrewiring<- function(ObjectList){
                        filestr = "data", html_idxs = seq_len(nrow(fisher_tbl)),
                        htmlinfo = indexpageinfo)
 
+
       #Check if more than one dataset is being analyzed,
       #in which case only heatmap is available, so program
       #finish here.
 
       if (length(ObjectList$'datasets')>1){
-        warning('Data comparison mode selected, only heatmap has been generated.')
         return(1)
         }
 
