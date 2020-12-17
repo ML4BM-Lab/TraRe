@@ -10,14 +10,10 @@ developed considering sequenced data (RNA-Seq).
 ![TraRe Package](https://github.com/ubioinformat/TraRe/blob/Version_1_3_0/vignettes/Trare.png)
 
 # Installation 
-TraRe can be currently installed from Github using the devtools package (we are currently working to deliver it to Bioconductor):
-
 ```{r, eval=FALSE}
 
-library(devtools)
+ if (!requireNamespace("BiocManager"))
+ install.packages("BiocManager")
+ BiocManager::install("MyPackage")
 
-if (!requireNamespace("devtools", quietly=TRUE))
-    install.packages("devtools")
-
-devtools::install_github(repo="ubioinformat/TraRe")
 ```
