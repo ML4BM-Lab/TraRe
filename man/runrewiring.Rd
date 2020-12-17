@@ -27,9 +27,12 @@ objectlist <- readRDS(file=paste0(system.file("extdata",package="TraRe"),
                       '/prepared_rewiring_example.rds'))
 
 
-## For the example, we are going to create the folder containing
-## the graphs, reports, etc, and then we are deleting them.
+## We are going to create the folder containing
+## the graphs, reports, etc, and then we are deleting it.
 ## If you want to keep it, do not run the last line.
+
+## We are modifying output directory for this example.
+objectlist$outdir <- paste(getwd(),'examplefolder',sep="/")
 
 runrewiring(ObjectList = objectlist)
 unlink(objectlist$outdir,recursive = TRUE)

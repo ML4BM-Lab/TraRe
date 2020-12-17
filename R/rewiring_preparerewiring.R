@@ -85,10 +85,11 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
   }
 
 
-  newdir<-paste(name,paste(final_signif_thresh,collapse="_"),sep="_")
-  outdir<-paste(outdir,newdir,sep="/")
+  #create folder name
+  foldername<-paste(name,paste(final_signif_thresh,collapse="_"),sep="_")
+  #concatenate with outdir path
+  outdir<-paste(outdir,foldername,sep="/")
 
-  #dir.create(file.path(outdir), showWarnings = FALSE)
 
   rewobjects<-list()
   rewobjects$'datasets'<-list()
@@ -111,8 +112,8 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
       input_expr_mat <- as.matrix(utils::read.table(url(expr_matrix_file[i]), header = TRUE,
                                                     row.names = 1, sep = "\t", quote = ""))
     }else{
-    input_expr_mat <- as.matrix(utils::read.table(expr_matrix_file[i], header = TRUE,
-                                           row.names = 1, sep = "\t", quote = ""))
+      input_expr_mat <- as.matrix(utils::read.table(expr_matrix_file[i], header = TRUE,
+                                                    row.names = 1, sep = "\t", quote = ""))
     }
 
     methods::show(paste(c("Expression Matrix Size", dim(input_expr_mat))))
@@ -149,7 +150,7 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
     }else{
 
       pheno_df <- utils::read.table(phenotype_file[i], header = TRUE, row.names = 1,
-                             sep = "\t", quote = "", stringsAsFactors = FALSE);
+                                    sep = "\t", quote = "", stringsAsFactors = FALSE);
     }
     methods::show(paste(c("Phenotype Table Size", dim(pheno_df))))
 
@@ -205,4 +206,3 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
   return (rewobjects)
 
 }
-
