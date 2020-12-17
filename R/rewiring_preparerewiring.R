@@ -78,6 +78,12 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
     stop("phenotype_file field required")
   }
 
+  #Check for comparison mode
+
+  if (length(linker_saved_file)>1){
+    warning('Data comparison mode selected, only heatmap will be generated.')
+  }
+
 
   newdir<-paste(name,paste(final_signif_thresh,collapse="_"),sep="_")
   outdir<-paste(outdir,newdir,sep="/")
