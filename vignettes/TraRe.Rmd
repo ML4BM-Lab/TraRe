@@ -32,7 +32,7 @@ TraRe can be currently installed from Github using the devtools package (we are 
 
  if (!requireNamespace("BiocManager"))
  install.packages("BiocManager")
- BiocManager::install("MyPackage")
+ BiocManager::install("TraRe")
 
 ```
 # Introduction

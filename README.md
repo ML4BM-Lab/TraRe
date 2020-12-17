@@ -14,6 +14,6 @@ developed considering sequenced data (RNA-Seq).
 
  if (!requireNamespace("BiocManager"))
  install.packages("BiocManager")
- BiocManager::install("MyPackage")
+ BiocManager::install("TraRe")
 
 ```
