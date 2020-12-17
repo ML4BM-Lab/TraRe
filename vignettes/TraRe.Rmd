@@ -30,12 +30,10 @@ TraRe can be currently installed from Github using the devtools package (we are 
 
 ```{r, eval=FALSE}
 
-library(devtools)
+ if (!requireNamespace("BiocManager"))
+ install.packages("BiocManager")
+ BiocManager::install("MyPackage")
 
-if (!requireNamespace("devtools", quietly=TRUE))
-    install.packages("devtools")
-
-devtools::install_github(repo="ubioinformat/TraRe")
 ```
 # Introduction
 
