@@ -4,21 +4,10 @@
 \alias{runrewiring}
 \title{GRN Modules Rewiring Method.}
 \usage{
-runrewiring(
-  ObjectList,
-  orig_test_perms = 100,
-  retest_thresh = 0.08,
-  retest_perms = 1000
-)
+runrewiring(ObjectList)
 }
 \arguments{
 \item{ObjectList}{Output from \code{preparerewiring()}containing some required parameters.}
-
-\item{orig_test_perms}{Initial permutations for first test (default: 100) .}
-
-\item{retest_thresh}{Threshold if a second test is performed (default: 1000) .}
-
-\item{retest_perms}{Permutations if a second test is performed (default: 0.08) .}
 }
 \value{
 It creates a folder (in the working directory) containing the files explained above.
@@ -33,17 +22,20 @@ heatmap, and its sorted by a hierarchical clustering for better interpretation.
 
 ## Lets assume that we have already generated the ObjectList, we will load it from
 ## the folder containing the examples files. After this, it is all straight forward.
-## For this example, we will use the default parameters (`orig_test_perms`,`retest_thresh`,
-## `retest_perms`)
-
 
 objectlist <- readRDS(file=paste0(system.file("extdata",package="TraRe"),
                       '/prepared_rewiring_example.rds'))
 
-\dontrun{
- runrewiring(ObjectList = objectlist)
- }
 
+## We are going to create the folder containing
+## the graphs, reports, etc, and then we are deleting it.
+## If you want to keep it, do not run the last line.
+
+## We are modifying output directory for this example.
+objectlist$outdir <- paste(getwd(),'examplefolder',sep="/")
+
+runrewiring(ObjectList = objectlist)
+unlink(objectlist$outdir,recursive = TRUE)
 
 
 }

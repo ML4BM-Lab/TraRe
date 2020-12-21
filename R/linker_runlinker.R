@@ -18,30 +18,36 @@
 #' @param Nr_bootstraps Number of bootstrap of Phase I. By default, 10.
 #' @param FDR The False Discovery Rate correction used for the enrichment analysis. By default, 0.05.
 #' @param NrCores Nr of computer cores for the parallel parts of the method. Note that the parallelization
-#' is NOT initialized in any of the functions. By default, 3.
+#' is NOT initialized in any of the functions. By default, 2.
 #'
 #'
 #' @return List containing the GRN raw results, GRN modules and GRN graphs.
 #'
 #' @examples
-#'    ## For this example, we are going to join 15 drivers and 100 targets from the example folder.
+#'    ## For this example, we are going to join 60 drivers and
+#'    ## 200 targets genes from the example folder.
 #'
-#'    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
+#'    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_linker_example.rds'))
 #'    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
 #'
-#'    lognorm_est_counts <- rbind(drivers[seq_len(15),],targets[seq_len(100),])
+#'    lognorm_est_counts <- as.matrix(rbind(drivers,targets))
 #'
 #'    ## We create the index for drivers and targets in the log-normalized gene expression matrix.
-#'    L <- 15
-#'    regulator_filtered_idx <- seq_len(L)
-#'    target_filtered_idx <- L+c(seq_len(100))
+#'
+#'    R<-60
+#'    T<-200
+#'
+#'    regulator_filtered_idx <- seq_len(R)
+#'    target_filtered_idx <- R+c(seq_len(T))
 #'
 #'
-#'    ## We recommend VBSR.
-#'    \dontrun{
+#'    ## We recommend to use the default values of the function.
+#'    ## For the sake of time, we will select faster (and worse) ones.
+#'
 #'    linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx,regulator_filtered_idx,
-#'                               link_mode="VBSR",graph_mode="VBSR",NrModules=3,Nr_bootstraps=1)
-#'    }
+#'                               link_mode="LASSOmin",graph_mode="LM",NrModules=5,Nr_bootstraps=1,
+#'                               NrCores=2,corrClustNrIter=10)
+#'
 #'
 #'
 #' @export
@@ -53,9 +59,47 @@ LINKER_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered
                      corrClustNrIter=100,
                      Nr_bootstraps=10,
                      FDR=0.05,
-                     NrCores=3)
-
+                     NrCores=1)
 {
+
+  #checks for lognorm_est_counts
+
+  if (is.null(lognorm_est_counts)){
+    stop("lognorm_est_counts field empty")
+  }
+
+  if (!(is.matrix(lognorm_est_counts))){
+    stop("matrix class is required for input dataset")
+  }
+
+  if (!is.numeric(lognorm_est_counts[1,1]) & !is.integer(lognorm_est_counts[1,1])){
+    stop("non-numeric values inside lognorm_est_counts variable")
+  }
+
+  if (is.null(rownames(lognorm_est_counts)) | is.null(colnames(lognorm_est_counts))){
+    stop("null field detected in row names or column names, check lognorm_est_counts matrix")
+  }
+
+  #checks for target and regulator filtered index
+
+  if (is.null(target_filtered_idx)){
+    stop("target_filtered_idx field empty")
+  }
+
+  if (is.null(regulator_filtered_idx)){
+    stop("regulator_filtered_idx field empty")
+  }
+
+  if (length(target_filtered_idx)+length(regulator_filtered_idx)!=nrow(lognorm_est_counts)){
+    stop("the total number of genes is not equal to the sum of target_filtered_idx and regulatory_filtered_idx lengths")
+  }
+
+  if (!(is.numeric(target_filtered_idx) & is.numeric(regulator_filtered_idx))){
+    stop("targets and regulators index arrays must be numeric")
+  }
+
+
+
   res<-list()
   modules<-list()
   graphs<-list()
@@ -71,7 +115,9 @@ LINKER_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered
     graphs[[ link_mode[i] ]]<-list()
     for(j in seq_along(graph_mode)){
       graphs[[ link_mode[i] ]][[ graph_mode[j] ]] <- LINKER_runPhase2(modules[[ link_mode[i] ]],
-                                                                                  lognorm_est_counts, mode=graph_mode[j])
+                                                                      lognorm_est_counts, mode=graph_mode[j],
+                                                                      NrCores=NrCores)
+
       print(paste0("Graphs for (",link_mode[i],",",graph_mode[j], ") computed!"))
     }
 

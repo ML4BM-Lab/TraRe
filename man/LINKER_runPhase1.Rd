@@ -18,10 +18,10 @@ LINKER_runPhase1(
   Lambda = 1e-04,
   alpha = 1 - 1e-06,
   pmax = 10,
-  mode = "LASSO",
+  mode = "VBSR",
   used_method = "MEAN",
-  NrCores = 3,
-  corrClustNrIter = 21,
+  NrCores = 1,
+  corrClustNrIter = 100,
   Nr_bootstraps = 1
 )
 
@@ -34,7 +34,13 @@ LINKER_init(
   Parameters
 )
 
-LINKER_ReassignGenesToClusters(Data, RegulatorData, Beta, Clusters)
+LINKER_ReassignGenesToClusters(
+  Data,
+  RegulatorData,
+  Beta,
+  Clusters,
+  NrCores = 1
+)
 
 LINKER_corrClust(LINKERinit)
 
@@ -55,7 +61,8 @@ LINKER_LearnRegulatoryPrograms(
   alpha,
   pmax,
   mode,
-  used_method = "MEAN"
+  used_method = "MEAN",
+  NrCores = 1
 )
 }
 \arguments{
@@ -76,16 +83,16 @@ discovered may differ from this value). By default, 100 modules.}
 \item{pmax}{Maximum numbers of regulators that we want.}
 
 \item{mode}{Chosen method(s) to link module eigengenes to regulators. The available options are
-"VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
+"VBSR", "LASSOmin", "LASSO1se" and "LM". Default set to "VBSR"}
 
 \item{used_method}{Method selected for use. Default set to MEAN.}
 
 \item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that the parallelization
-is NOT initialized in any of the functions. By default, 3.}
+is NOT initialized in any of the functions. By default, 2.}
 
 \item{corrClustNrIter}{Number of iteration for the phase I part of the method.}
 
-\item{Nr_bootstraps}{Number of bootstrap of Phase I. By default, 10.}
+\item{Nr_bootstraps}{Number of bootstrap of Phase I. By default, 1.}
 
 \item{MA_matrix_Var}{Matrix of log-normalized estimated counts of the gene expression data, centered and scaled, containing
 only the train samples.}
@@ -128,25 +135,25 @@ fits the selected model with the test data. \code{LINKER_LearnRegulatoryPrograms
 \examples{
 
    ## This example is very similar to the `LINKER_run()` function.
-   ## Again, we are going to join drivers and targets to create the working dataset.
+   ## Again, we are going to join drivers and targets genes to create the working dataset.
 
-   drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
+   drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_linker_example.rds'))
    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
 
    lognorm_est_counts <- rbind(drivers,targets)
-
    ## We create the index for drivers and targets in the log-normalized gene expression matrix.
-   L <- dim(drivers)[1]
-   regulator_filtered_idx <- 1:L
-   target_filtered_idx <- L+c(1:dim(targets)[1])
 
+   R<-60
+   T<-200
 
-   ## We recommend VBSR.
-   \dontrun{
+   regulator_filtered_idx <- seq_len(R)
+   target_filtered_idx <- R+c(seq_len(T))
+
+   ## We recommend to use the default values of the function.
+   ## For the sake of time, we will select faster (and worse) ones.
+
    linkeroutput <- LINKER_runPhase1(lognorm_est_counts,target_filtered_idx,
-                                    regulator_filtered_idx, NrModules=50)
-   }
-
-
+                                    regulator_filtered_idx, NrModules=2,mode='LASSOmin',
+                                    NrCores=2, corrClustNrIter=10,Nr_bootstraps=1)
 
 }

@@ -2,9 +2,12 @@
 % Please edit documentation in R/rewiring_stats_functions.R
 \name{rewiring_test}
 \alias{rewiring_test}
+\alias{rewiring_test_pair_detail}
 \title{Generate stats for the rewiring method.}
 \usage{
 rewiring_test(x, grp, perm = 500)
+
+rewiring_test_pair_detail(x, grp, perm = 500)
 }
 \arguments{
 \item{x}{data matrix containing subjects as rows and genes as columns.}

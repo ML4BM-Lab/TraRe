@@ -8,11 +8,11 @@
 \title{Cliques generation and plot displaying.}
 \usage{
 generatecliques(
-  dataset,
-  method,
-  correlationth,
-  sparsecorrmatrix,
-  numcliques,
+  dataset = NULL,
+  method = "pearson",
+  correlationth = 0.6,
+  sparsecorrmatrix = TRUE,
+  numcliques = "All",
   mandatorygenes = c(),
   selection = 1
 )
@@ -26,15 +26,15 @@ selectmethod(selection, ggoutput, pdoutput)
 \arguments{
 \item{dataset}{input expression file with genes as rows and samples as columns.}
 
-\item{method}{method to use in the correlation matrix generation (see stats:cor).}
+\item{method}{method to use in the correlation matrix generation (see stats:cor). Default: "pearson"}
 
-\item{correlationth}{threshold to consider edge exists.}
+\item{correlationth}{threshold to consider edge exists. Default: 0.6}
 
-\item{sparsecorrmatrix}{boolean variable specifying whether to set to 0 values below threshold or not.}
+\item{sparsecorrmatrix}{boolean variable specifying whether to set to 0 values below threshold or not. Default: TRUE}
 
-\item{numcliques}{number of cliques to be generated.}
+\item{numcliques}{number of cliques to be generated. Default: 'All'}
 
-\item{mandatorygenes}{array of gene names which is mandatory to include in the returned cliques.}
+\item{mandatorygenes}{array of gene names which is mandatory to include in the returned cliques. Default: c() (none)}
 
 \item{selection}{integer selecting method. The available options are: 1 - Maximize Genes/Clique,
 2 - Maximize Median Correlation Value/Clique, 3- Maximize Avg Variance Correlation Value/Clique or
@@ -73,12 +73,11 @@ per clique.
 
    ## For this example, we will only work with the driver genes of a example dataset.
 
-   dataset <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
+   dataset <- readRDS(paste0(system.file("extdata",package="TraRe"),
+                      '/tfs_linker_example_eg.rds'))
 
-   ## Lets select the first method (its set by default) and we dont want to fix any genes
-   ## (no mandatory genes)
+   ## Lets select the generated dataset, as the rest of parameters are set by default.
 
-   clioutput <- generatecliques(dataset = dataset,method = "pearson",correlationth=0.6,
-                               sparsecorrmatrix = TRUE,numcliques = 'All')
+   clioutput <- generatecliques(dataset = dataset)
 
 }

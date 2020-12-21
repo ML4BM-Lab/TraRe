@@ -4,7 +4,13 @@
 \alias{create_html_summary}
 \title{Create HTML summary}
 \usage{
-create_html_summary(rfiles, tagstr, mapfile, outdir = getwd(), evidfile)
+create_html_summary(
+  rfiles,
+  tagstr,
+  mapfile,
+  outdir = paste0(getwd(), "/"),
+  evidfile
+)
 }
 \arguments{
 \item{rfiles, }{character vector of the string file names where results of linker
@@ -53,10 +59,7 @@ provided).
                       '/Tumor_OV50_intersectBed.weighted_evidence.txt')
 
    rfiles <- c(paste0(system.file("extdata",package="TraRe"),'/ChIP',
-                      '/Tumor_OV50.tar8855_reg638.VBSR.m100_b10.rds'),
-
-               paste0(system.file("extdata",package="TraRe"),'/ChIP',
-                      '/Tumor_OV50.tar8855_reg638.VBSR.single_gene.rds'))
+                      '/Tumor_OV50.tar8855_reg638.VBSR.m100_b10.rds'))
 
    tagstr <- "Tumor_OV50.tar8855_reg638"
 
@@ -64,12 +67,12 @@ provided).
                       '/Tumor_OV50.gene_info.txt')
 
    ## We are going to create a folder for this example
+   ## If u want to keep create_html_summary output,
+   ## do not run the last line.
 
-   \dontrun{
-   dir.create(paste0(getwd(),'/summaryfolder'),showWarnings=FALSE)
-   outdir <- paste0(getwd(),'/summaryfolder/')
+   ##By default, the output directory will be paste0(getwd(),'/')
 
+   create_html_summary(rfiles,tagstr,mapfile,evidfile=evidpath)
+   unlink(paste0(getwd(),'/',tagstr),recursive = TRUE)
 
-   create_html_summary(rfiles,tagstr,mapfile,outdir,evidpath)
-   }
 }

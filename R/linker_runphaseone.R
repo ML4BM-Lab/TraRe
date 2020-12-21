@@ -14,11 +14,11 @@
 #' @param target_filtered_idx Index of the target genes on the lognorm_est_counts matrix.
 #' @param regulator_filtered_idx Index of the regulatory genes on the lognorm_est_counts matrix.
 #' @param mode Chosen method(s) to link module eigengenes to regulators. The available options are
-#' "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.
+#' "VBSR", "LASSOmin", "LASSO1se" and "LM". Default set to "VBSR"
 #' @param used_method Method selected for use. Default set to MEAN.
-#' @param Nr_bootstraps Number of bootstrap of Phase I. By default, 10.
+#' @param Nr_bootstraps Number of bootstrap of Phase I. By default, 1.
 #' @param NrCores Nr of computer cores for the parallel parts of the method. Note that the parallelization
-#' is NOT initialized in any of the functions. By default, 3.
+#' is NOT initialized in any of the functions. By default, 2.
 #' @param Lambda Lambda variable for Lasso models.
 #' @param alpha Alpha variable for Lasso models.
 #' @param pmax Maximum numbers of regulators that we want.
@@ -29,35 +29,36 @@
 #' @examples
 #'
 #'    ## This example is very similar to the `LINKER_run()` function.
-#'    ## Again, we are going to join drivers and targets to create the working dataset.
+#'    ## Again, we are going to join drivers and targets genes to create the working dataset.
 #'
-#'    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_cliques_example.rds'))
+#'    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_linker_example.rds'))
 #'    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
 #'
 #'    lognorm_est_counts <- rbind(drivers,targets)
-#'
 #'    ## We create the index for drivers and targets in the log-normalized gene expression matrix.
-#'    L <- dim(drivers)[1]
-#'    regulator_filtered_idx <- 1:L
-#'    target_filtered_idx <- L+c(1:dim(targets)[1])
 #'
+#'    R<-60
+#'    T<-200
 #'
-#'    ## We recommend VBSR.
-#'    \dontrun{
+#'    regulator_filtered_idx <- seq_len(R)
+#'    target_filtered_idx <- R+c(seq_len(T))
+#'
+#'    ## We recommend to use the default values of the function.
+#'    ## For the sake of time, we will select faster (and worse) ones.
+#'
 #'    linkeroutput <- LINKER_runPhase1(lognorm_est_counts,target_filtered_idx,
-#'                                     regulator_filtered_idx, NrModules=50)
-#'    }
-#'
-#'
+#'                                     regulator_filtered_idx, NrModules=2,mode='LASSOmin',
+#'                                     NrCores=2, corrClustNrIter=10,Nr_bootstraps=1)
 #'
 #' @export LINKER_runPhase1
 
 LINKER_runPhase1<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, NrModules,
                            Lambda=0.0001, alpha=1-1e-06,
-                           pmax=10, mode="LASSO", used_method="MEAN",
-                           NrCores=3, corrClustNrIter=21,
+                           pmax=10, mode="VBSR", used_method="MEAN",
+                           NrCores=1, corrClustNrIter=100,
                            Nr_bootstraps=1)
 {
+
 
   # Creating the parameters structure
   Parameters <- list(Lambda=Lambda,pmax=pmax,alpha=alpha, mode=mode, used_method=used_method)
@@ -91,8 +92,6 @@ LINKER_runPhase1<-function(lognorm_est_counts, target_filtered_idx, regulator_fi
 
     print(apply(EvaluateTestSet[[boost_idx]], 2, mean))
   }
-
-
   return(list(bootstrapResults=bootstrap_results,bootstrapTestStats=EvaluateTestSet))
 
 }
@@ -138,8 +137,6 @@ LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, NrCores=3, corr
       }
 
     }
-
-
 
 
     ModuleVectors<-rnd_cent
@@ -196,7 +193,7 @@ LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, NrCores=3, corr
 #' only the train samples.
 #' @param Beta Coefficient on which the decision of reassigning genes is based.
 #' @param Clusters Number of modules that are a priori to be found (note that the final number of modules discovered may differ from this value).
-LINKER_ReassignGenesToClusters <- function(Data,RegulatorData,Beta,Clusters){
+LINKER_ReassignGenesToClusters <- function(Data,RegulatorData,Beta,Clusters,NrCores=1){
 
   MIN_NUM_GENES_PER_MODULE<-2
 
@@ -215,8 +212,13 @@ LINKER_ReassignGenesToClusters <- function(Data,RegulatorData,Beta,Clusters){
   ModuleVectors = Beta %*% X1
   GeneNames = rownames(Data)
 
-  #reassigning genes:
+
+  # this will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
+  cl <- parallel::makeCluster(NrCores)
+  doParallel::registerDoParallel(cl)
   `%dopar%` <- foreach::`%dopar%`
+
+  #reassigning genes:
   nc <- foreach::foreach(i = seq_len(NrGenes), .combine = c) %dopar% {
     OldModule = Clusters[i]
     CurrentGeneVector = Data[i,,drop=FALSE]
@@ -233,6 +235,7 @@ LINKER_ReassignGenesToClusters <- function(Data,RegulatorData,Beta,Clusters){
     NewClusters = MaxPosition
 
   }
+  parallel::stopCluster(cl)
 
   # Remove cluster with too few genes. Avoids singularities. Could be solved imposing priors. future work
   for(i in unique(nc)){
@@ -281,9 +284,6 @@ LINKER_corrClust <- function(LINKERinit){
   Parameters<-LINKERinit$Parameters
   NrCores<-LINKERinit$NrCores
 
-  # this will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
-  doParallel::registerDoParallel(cores=NrCores)
-
   RegulatorData_rownames=rownames(RegulatorData)
   Data_rownames=rownames(Data)
 
@@ -291,20 +291,20 @@ LINKER_corrClust <- function(LINKERinit){
   # We want to end with the regulatory programs, hence we loop for Reassign, regulatory
 
   #STEP 1:  learning the regulatory program for each cluster
-  regulatoryPrograms <- LINKER_LearnRegulatoryPrograms(Data,Clusters,RegulatorData,Lambda=Parameters$Lambda,alpha=Parameters$alpha,pmax=Parameters$pmax, mode=Parameters$mode, used_method=Parameters$used_method)
+  regulatoryPrograms <- LINKER_LearnRegulatoryPrograms(Data,Clusters,RegulatorData,Lambda=Parameters$Lambda,alpha=Parameters$alpha,pmax=Parameters$pmax, mode=Parameters$mode, used_method=Parameters$used_method,NrCores=NrCores)
 
   jj<-1
   while (jj < NrIterations){
 
     #STEP 2: reassigning genes based on closed match to new regulatory programs
-    ReassignGenesToClusters <- LINKER_ReassignGenesToClusters(Data,RegulatorData,regulatoryPrograms$Beta,Clusters)
+    ReassignGenesToClusters <- LINKER_ReassignGenesToClusters(Data,RegulatorData,regulatoryPrograms$Beta,Clusters,NrCores=NrCores)
     jj<-jj+1
 
     NrReassignGenes = ReassignGenesToClusters$NrReassignGenes
     Clusters = ReassignGenesToClusters$Clusters
 
     #STEP 1:  learning the regulatory program for each cluster
-    regulatoryPrograms <- LINKER_LearnRegulatoryPrograms(Data,Clusters,RegulatorData,Lambda=Parameters$Lambda,alpha=Parameters$alpha,pmax=Parameters$pmax, mode=Parameters$mode, used_method=Parameters$used_method)
+    regulatoryPrograms <- LINKER_LearnRegulatoryPrograms(Data,Clusters,RegulatorData,Lambda=Parameters$Lambda,alpha=Parameters$alpha,pmax=Parameters$pmax, mode=Parameters$mode, used_method=Parameters$used_method,NrCores=NrCores)
 
   }
 
@@ -342,7 +342,7 @@ LINKER_extract_modules<-function(results){
 
 
       Module_target_genes_full_name<-boot_results$AllGenes[which(boot_results$ModuleMembership[,]==boot_idx[Module_number])]
-      Module_target_gene_list<-sapply(Module_target_genes_full_name, function(x) strsplit(x, "\\|"))
+      Module_target_gene_list<-vapply(Module_target_genes_full_name, function(x) strsplit(x, "\\|"),FUN.VALUE = list(""))
       if(length(Module_target_gene_list[[1]])==1)
       {
         #NOT FULL GENECODE NAME, ONLY ONE NAME PER GENE!
@@ -350,7 +350,7 @@ LINKER_extract_modules<-function(results){
       }
       else{
         #FULL GENECODE ANNOTATION!
-        Module_target_genes<-sapply(Module_target_gene_list, function(x) x[[6]])
+        Module_target_genes<-vapply(Module_target_gene_list, function(x) x[[6]],FUN.VALUE = "")
         Module_target_genes<-unname(Module_target_genes)
       }
 
@@ -359,7 +359,7 @@ LINKER_extract_modules<-function(results){
       if(length(Modules_regulators_full_name)==0){
         next;
       }
-      Modules_regulators_list<-sapply(Modules_regulators_full_name, function(x) strsplit(x, "\\|"))
+      Modules_regulators_list<-vapply(Modules_regulators_full_name, function(x) strsplit(x, "\\|"),FUN.VALUE = list(""))
       if(length(Modules_regulators_list[[1]])==1)
       {
         #NOT FULL GENECODE NAME, ONLY ONE NAME PER GENE!
@@ -367,7 +367,7 @@ LINKER_extract_modules<-function(results){
       }
       else{
         #FULL GENECODE ANNOTATION!
-        Modules_regulators<-sapply(Modules_regulators_list, function(x) x[[6]])
+        Modules_regulators<-vapply(Modules_regulators_list, function(x) x[[6]],FUN.VALUE = "")
         Modules_regulators<-unname(Modules_regulators)
       }
 
@@ -480,7 +480,7 @@ LINKER_EvaluateTestSet <- function(LINKERresults,MA_Data_TestSet,RegulatorData_T
 #' @param Data Matrix of log-normalized estimated counts of the gene expression data, centered and scaled, containing
 #' only the train samples.
 #' @param Clusters Clusters generated from the linkerinit function.
-LINKER_LearnRegulatoryPrograms<-function(Data,Clusters,RegulatorData,Lambda,alpha,pmax, mode, used_method="MEAN"){
+LINKER_LearnRegulatoryPrograms<-function(Data,Clusters,RegulatorData,Lambda,alpha,pmax, mode, used_method="MEAN",NrCores=1){
 
   RegulatorData_rownames=rownames(RegulatorData)
   Data_rownames=rownames(Data)
@@ -493,7 +493,11 @@ LINKER_LearnRegulatoryPrograms<-function(Data,Clusters,RegulatorData,Lambda,alph
   ClusterIDs = sort(ClusterIDs, decreasing = FALSE)
   cnt <- seq_len(NrClusters)
 
+  # this will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
+  cl <- parallel::makeCluster(NrCores)
+  doParallel::registerDoParallel(cl)
   `%dopar%` <- foreach::`%dopar%`
+
   BetaY_all <- foreach::foreach(i=seq_len(NrClusters),.combine=cbind,.init=list(list(),list(),list()),.packages = c("vbsr","glmnet","igraph")) %dopar% {
 
     CurrentClusterPositions = which(Clusters %in% ClusterIDs[i])
@@ -591,6 +595,9 @@ LINKER_LearnRegulatoryPrograms<-function(Data,Clusters,RegulatorData,Lambda,alph
 
     list(b_opt,y, b_o[1])
   }
+
+  #close open connection
+  parallel::stopCluster(cl)
 
   tmpPos=NrClusters+1
 

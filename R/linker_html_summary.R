@@ -39,10 +39,7 @@
 #'                       '/Tumor_OV50_intersectBed.weighted_evidence.txt')
 #'
 #'    rfiles <- c(paste0(system.file("extdata",package="TraRe"),'/ChIP',
-#'                       '/Tumor_OV50.tar8855_reg638.VBSR.m100_b10.rds'),
-#'
-#'                paste0(system.file("extdata",package="TraRe"),'/ChIP',
-#'                       '/Tumor_OV50.tar8855_reg638.VBSR.single_gene.rds'))
+#'                       '/Tumor_OV50.tar8855_reg638.VBSR.m100_b10.rds'))
 #'
 #'    tagstr <- "Tumor_OV50.tar8855_reg638"
 #'
@@ -50,16 +47,17 @@
 #'                       '/Tumor_OV50.gene_info.txt')
 #'
 #'    ## We are going to create a folder for this example
+#'    ## If u want to keep create_html_summary output,
+#'    ## do not run the last line.
 #'
-#'    \dontrun{
-#'    dir.create(paste0(getwd(),'/summaryfolder'),showWarnings=FALSE)
-#'    outdir <- paste0(getwd(),'/summaryfolder/')
+#'    ##By default, the output directory will be paste0(getwd(),'/')
 #'
+#'    create_html_summary(rfiles,tagstr,mapfile,evidfile=evidpath)
+#'    unlink(paste0(getwd(),'/',tagstr),recursive = TRUE)
 #'
-#'    create_html_summary(rfiles,tagstr,mapfile,outdir,evidpath)
-#'    }
 #' @export
-create_html_summary <- function(rfiles,tagstr,mapfile,outdir = getwd(),evidfile){
+create_html_summary <- function(rfiles,tagstr,mapfile,outdir = paste0(getwd(),'/'),evidfile){
+
   runinfo <- list()
   runinfo$rfiles <- rfiles
   runinfo$tagstr <- tagstr
@@ -71,7 +69,7 @@ create_html_summary <- function(rfiles,tagstr,mapfile,outdir = getwd(),evidfile)
 
   methods::show(paste0("Loading id conversion table: ", runinfo$mapfile, "..."))
   iso_table <- as.matrix(utils::read.table(runinfo$mapfile, header = TRUE, sep = "\t",
-                                    quote = ""))
+                                           quote = ""))
   rownames(iso_table) <- iso_table[, "uniq_isos"]
   all_reg_genes <- iso_table[which(iso_table[, "regulator"] == 1),
                              "iso_gnames"]
@@ -85,7 +83,7 @@ create_html_summary <- function(rfiles,tagstr,mapfile,outdir = getwd(),evidfile)
   htmlinfo <- linker_create_index_page(outdir = runinfo$outdir,
                                        runtag = runinfo$tagstr,
                                        indexpath = indexpath,
-                                       codedir = paste0(system.file("extdata",package="TraRe"),'/'))
+                                       codedir = paste0(system.file("extdata",package="TraRe"),'/RewiringReport/'))
 
   # write gene info stats
   write(paste0("<br>", length(all_tar_genes), " target isoforms covering ",
@@ -100,8 +98,8 @@ create_html_summary <- function(rfiles,tagstr,mapfile,outdir = getwd(),evidfile)
   if (file.exists(runinfo$evidfile)){
     methods::show(paste0("Loading chip evidence table: ", runinfo$evidfile, "..."))
     weighted_chip_evidence <- as.matrix(utils::read.table(runinfo$evidfile, header = TRUE,
-                                                   row.names = 1, sep = "\t",
-                                                   quote = ""))
+                                                          row.names = 1, sep = "\t",
+                                                          quote = ""))
     methods::show("chip evidence regulators: ")
     showfirstlast(rownames(weighted_chip_evidence))
     methods::show("chip evidence regulators: ")
@@ -110,7 +108,7 @@ create_html_summary <- function(rfiles,tagstr,mapfile,outdir = getwd(),evidfile)
     binary_chip_evidence[binary_chip_evidence > 1] <- 1
     binary_chip_summary <- table(as.numeric(binary_chip_evidence))
     methods::show(signif(binary_chip_summary / ( dim(weighted_chip_evidence)[1] *
-                  dim(weighted_chip_evidence)[2]) * 100, 3))
+                                                   dim(weighted_chip_evidence)[2]) * 100, 3))
 
     nonzeroregs <- sum(rowSums(binary_chip_evidence) >= 0)
     nonzerotargs <- sum(colSums(binary_chip_evidence) !=
@@ -140,7 +138,6 @@ create_html_summary <- function(rfiles,tagstr,mapfile,outdir = getwd(),evidfile)
   allsummaries <- NULL
 
   for (rfile in runinfo$rfiles){
-    # rfile <- runinfo$rfiles[1]
 
     methods::show(paste0("Processing ", rfile, "..."))
     rundata <- readRDS(rfile)
@@ -177,18 +174,18 @@ create_html_summary <- function(rfiles,tagstr,mapfile,outdir = getwd(),evidfile)
           rungraphs <- rundata$graphs[[mymodmeth]][[graphmeth]]
         }
         final_summary <- linker_summarize_rungraphs(rungraphs = rungraphs,
-                                             iso_table = iso_table,
-                                             weighted_chip_evidence = weighted_chip_evidence,
-                                             graphstr = graphstr,
-                                             runinfo = runinfo,
-                                             htmlinfo = htmlinfo)
+                                                    iso_table = iso_table,
+                                                    weighted_chip_evidence = weighted_chip_evidence,
+                                                    graphstr = graphstr,
+                                                    runinfo = runinfo,
+                                                    htmlinfo = htmlinfo)
         labeled_table <- cbind(runtypestr, mymodmeth, graphmeth, final_summary)
         allsummaries <- rbind(allsummaries, labeled_table)
         resultspath <- paste0(htmlinfo$txtstr,
                               runinfo$tagstr, ".all_summaries.txt")
         methods::show(paste0("Writing table: ", resultspath))
         utils::write.table(allsummaries, paste0(htmlinfo$htmldir, resultspath),
-                    sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+                           sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
       } # end graphmeth
     } # end modmeth
   } # end rfile
