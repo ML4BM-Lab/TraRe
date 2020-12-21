@@ -1,8 +1,12 @@
 excel_generation_tests <- function(){
 
+  obs <-tryCatch(excel_generation(),error=conditionMessage)
+
+  RUnit::checkIdentical('Path to the graph object must be specified', obs)
+
   obs <-tryCatch(excel_generation('Not working path'),error=conditionMessage)
 
-  RUnit::checkIdentical('refinedsumm.rds in the specified folder must exist', obs)
+  RUnit::checkIdentical('graph object in the specified folder must exist', obs)
 
   workingpath <- system.file('extdata',package='TraRe')
 
