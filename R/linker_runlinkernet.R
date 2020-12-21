@@ -62,7 +62,7 @@ NET_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered_id
     stop("matrix class is required for input dataset")
   }
 
-  if (class(lognorm_est_counts[1,1])!="numeric" & class(lognorm_est_counts[1,1])!="integer"){
+  if (!is.numeric(lognorm_est_counts[1,1]) & !is.numeric(lognorm_est_counts[1,1])){
     stop("non-numeric values inside lognorm_est_counts variable")
   }
 
@@ -263,7 +263,7 @@ NET_compute_graph_all_VBSR<-function(lognorm_est_counts, regulator_filtered_idx,
       if(length(unique(y))==1){rep(0, length(regulator_filtered_idx))}
       else{
         res<-try(vbsr::vbsr(y,t(X),n_orderings = 15,family='normal'))
-        if(class(res)=="try-error"){rep(0, length(regulator_filtered_idx))}
+        if(inherits(res,'try-error')){rep(0, length(regulator_filtered_idx))}
         else{
           betas<-res$beta
           betas[res$pval > 0.05/(length(target_filtered_idx)*length(regulator_filtered_idx))]<-0

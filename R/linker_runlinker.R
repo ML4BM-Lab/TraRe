@@ -72,7 +72,7 @@ LINKER_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered
     stop("matrix class is required for input dataset")
   }
 
-  if (class(lognorm_est_counts[1,1])!="numeric" & class(lognorm_est_counts[1,1])!="integer"){
+  if (!is.numeric(lognorm_est_counts[1,1]) & !is.integer(lognorm_est_counts[1,1])){
     stop("non-numeric values inside lognorm_est_counts variable")
   }
 

@@ -18,3 +18,7 @@ Changes in Version 0.99.3
  + excel_generation function added
  + vignette file updated
 
+Changes in Version 0.99.4
+ ------------------
+ + class() functions removed.
+

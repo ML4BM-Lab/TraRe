@@ -38,11 +38,15 @@ excel_generation <- function(gpath = NULL, wpath = getwd(), cliquesbool=TRUE, ..
   if (is.null(gpath)){
     stop('Path to the graph object must be specified')
   }
-  if (!any(class(gpath)==c('url','connection'))){
-    if (!file.exists(gpath)){
-      stop('graph object in the specified folder must exist')
+
+  if (inherits(try(summary(gpath)$class,TRUE),'try-error')){ #check for url object
+    if (inherits(try(url(gpath),TRUE),'try-error')){ #check for weburl
+      if (!file.exists(gpath)){ #check if local url exists
+        stop('graph object in the specified folder must exist')
+      }
     }
   }
+
   if (!is.logical(cliquesbool)){
     stop('non-logical variable pass to this cliquesbool argument')
   }

@@ -54,7 +54,7 @@ generatecliques<-function(dataset=NULL,method="pearson",correlationth=0.6,sparse
     stop("matrix or dataframe class is required")
   }
 
-  if (class(dataset[1,1])!="numeric"){
+  if (!is.numeric(dataset[1,1])){
     stop("non-numeric values inside dataset variable")
   }
 
