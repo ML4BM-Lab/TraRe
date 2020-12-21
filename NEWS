@@ -22,3 +22,7 @@ Changes in Version 0.99.4
  ------------------
  + class() functions removed.
 
+Changes in Version 0.99.5
+ ------------------
+ + openxlsx to xlsx library changed
+

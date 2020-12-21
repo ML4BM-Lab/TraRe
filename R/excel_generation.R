@@ -138,18 +138,11 @@ excel_generation <- function(gpath = NULL, wpath = getwd(), cliquesbool=TRUE, ..
 
   }
 
-
   # Export to xlsx ------------------------------------------------------------
 
-  # Create the object
-  excelwb <- openxlsx::createWorkbook()
-  openxlsx::addWorksheet(excelwb, "Table")
-  openxlsx::addWorksheet(excelwb, "Summary")
-
   # Write the data
-  openxlsx::writeData(excelwb, "Table", excel, startRow = 1, startCol = 1)
-  openxlsx::writeData(excelwb, "Summary", sumXOR, startRow = 1, startCol = 1,rowNames = TRUE)
-
-  openxlsx::saveWorkbook(excelwb, file = paste0(wpath,'/grnsumm.xlsx'),
-               overwrite = TRUE)
+  xlsx::write.xlsx(excel, file = paste0(wpath,'/grnsumm.xlsx'), sheetName="Table",
+                   col.names=TRUE, row.names=FALSE, append=FALSE)
+  xlsx::write.xlsx(sumXOR, file = paste0(wpath,'/grnsumm.xlsx'), sheetName="Summary",
+                   col.names=TRUE, row.names=TRUE, append=FALSE)
 }
