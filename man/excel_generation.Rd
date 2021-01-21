@@ -4,12 +4,17 @@
 \alias{excel_generation}
 \title{Excel generation}
 \usage{
-excel_generation(gpath = NULL, wpath = getwd(), cliquesbool = TRUE, ...)
+excel_generation(
+  gpath = NULL,
+  wpath = paste0(tempdir(), "/grnsumm.xlsx"),
+  cliquesbool = TRUE,
+  ...
+)
 }
 \arguments{
 \item{gpath}{path to the graph object ('refinedsumm.rds'). (RDS format)}
 
-\item{wpath}{writing path, where the excel file ('grnsumm.xlx') will be saved. (Default: working directory)}
+\item{wpath}{writing path, where the excel file will be saved. (Default: temp directory)}
 
 \item{cliquesbool}{indicating if cliques method should be added to the summary table. (Default: TRUE)}
 
@@ -33,12 +38,13 @@ the fitting process of the LINKER method.
 ## of this package.
 
 gpath <- paste0(system.file('extdata',package='TraRe'),'/refinedsumm.rds')
-wpath <- system.file('extdata',package='TraRe')
+wpath <- paste0(system.file('extdata',package='TraRe'),'/grnsumm.xlsx')
 
 ## We are going to use the drivers dataset from the external data folder as well.
 ## For more information about generatecliques() please check the help page of it.
 
-dataset<-readRDS(paste0(wpath,'/tfs_linker_example_eg.rds'))
+dataset<-readRDS(paste0(system.file('extdata',package='TraRe')
+                 ,'/tfs_linker_example_eg.rds'))
 excel_generation(gpath=gpath,wpath=wpath,dataset=dataset)
 
 

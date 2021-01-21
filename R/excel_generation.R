@@ -9,7 +9,7 @@
 #'
 #'
 #' @param gpath path to the graph object ('refinedsumm.rds'). (RDS format)
-#' @param wpath writing path, where the excel file ('grnsumm.xlx') will be saved. (Default: working directory)
+#' @param wpath writing path, where the excel file will be saved. (Default: temp directory)
 #' @param cliquesbool indicating if cliques method should be added to the summary table. (Default: TRUE)
 #' @param ... every argument you should pass to generatecliques() in case cliquesbool is TRUE.
 #'
@@ -22,18 +22,19 @@
 #' ## of this package.
 #'
 #' gpath <- paste0(system.file('extdata',package='TraRe'),'/refinedsumm.rds')
-#' wpath <- system.file('extdata',package='TraRe')
+#' wpath <- paste0(system.file('extdata',package='TraRe'),'/grnsumm.xlsx')
 #'
 #' ## We are going to use the drivers dataset from the external data folder as well.
 #' ## For more information about generatecliques() please check the help page of it.
 #'
-#' dataset<-readRDS(paste0(wpath,'/tfs_linker_example_eg.rds'))
+#' dataset<-readRDS(paste0(system.file('extdata',package='TraRe')
+#'                  ,'/tfs_linker_example_eg.rds'))
 #' excel_generation(gpath=gpath,wpath=wpath,dataset=dataset)
 #'
 #'
 #' @export
 
-excel_generation <- function(gpath = NULL, wpath = getwd(), cliquesbool=TRUE, ...){
+excel_generation <- function(gpath = NULL, wpath = paste0(tempdir(),'/grnsumm.xlsx'), cliquesbool=TRUE, ...){
 
   if (is.null(gpath)){
     stop('Path to the graph object must be specified')
@@ -76,14 +77,9 @@ excel_generation <- function(gpath = NULL, wpath = getwd(), cliquesbool=TRUE, ..
   NR <- rep(0,L)
 
   # Fill the table
-  for(i in seq_along(list_final)){
-    if (list_final[i]%in%list_edges_NR){
-      NR[i] <- 1
-    }
-    if(list_final[i]%in%list_edges_R){
-      R[i] <- 1
-    }
-  }
+  NR[list_final %in% list_edges_NR] <- 1
+  R[list_final %in% list_edges_R] <- 1
+
   signature <- as.integer(xor(NR,R))
 
   # Create Data Frame
@@ -97,9 +93,7 @@ excel_generation <- function(gpath = NULL, wpath = getwd(), cliquesbool=TRUE, ..
   drivers_xor_sum <- vapply(drivers_xor,sum,FUN.VALUE = c(1))
 
   # Normalization
-  normalized_sum <- vapply(names(drivers_xor),
-                           function(x) round(drivers_xor_sum[x]/length(drivers_xor[[x]]),2),
-                           FUN.VALUE = c(1.0))
+  normalized_sum <- round(drivers_xor_sum / lengths(drivers_xor))
 
   if (cliquesbool){
 
@@ -112,9 +106,11 @@ excel_generation <- function(gpath = NULL, wpath = getwd(), cliquesbool=TRUE, ..
     names(Cliques) <- Driv
 
     for (x in CliquesObject$cliques){
-      for (y in Driv[Driv%in%x]){
-        Cliques[[y]]<-setdiff(x,y)
-      }
+     for (y in Driv[Driv%in%x]){
+
+       Cliques[[y]]<-setdiff(x,y)
+
+     }
     }
 
     Cliques<- vapply(Cliques,
@@ -141,8 +137,8 @@ excel_generation <- function(gpath = NULL, wpath = getwd(), cliquesbool=TRUE, ..
   # Export to xlsx ------------------------------------------------------------
 
   # Write the data
-  xlsx::write.xlsx(excel, file = paste0(wpath,'/grnsumm.xlsx'), sheetName="Table",
+  xlsx::write.xlsx(excel, file = wpath, sheetName="Table",
                    col.names=TRUE, row.names=FALSE, append=FALSE)
-  xlsx::write.xlsx(sumXOR, file = paste0(wpath,'/grnsumm.xlsx'), sheetName="Summary",
+  xlsx::write.xlsx(sumXOR, file = wpath, sheetName="Summary",
                    col.names=TRUE, row.names=TRUE, append=FALSE)
 }

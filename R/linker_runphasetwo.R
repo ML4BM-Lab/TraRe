@@ -53,7 +53,8 @@ LINKER_runPhase2<-function(modules,Data,NrCores, mode="VBSR",alpha=1-1e-06)
   bp_g<-list()
   i<-1
 
-  # this will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
+  # this will register nr of cores/threads, keep this here so
+  # the user can decide how many cores based on their hardware.
   cl <- parallel::makeCluster(NrCores)
   doParallel::registerDoParallel(cl)
   `%dopar%` <- foreach::`%dopar%`
@@ -95,17 +96,17 @@ LINKER_runPhase2<-function(modules,Data,NrCores, mode="VBSR",alpha=1-1e-06)
         }
         else if(mode=="LASSOmin")
         {
-          fit = glmnet::cv.glmnet(t(X), y, alpha = alpha)
+          fit <- glmnet::cv.glmnet(t(X), y, alpha = alpha)
 
-          b_o = stats::coef(fit,s = fit$lambda.min)
+          b_o <- stats::coef(fit,s = fit$lambda.min)
           b_opt <- c(b_o[2:length(b_o)]) # removing the intercept.
           driverMat[idx_gene,]<-b_opt
         }
         else if(mode=="LASSO1se")
         {
-          fit = glmnet::cv.glmnet(t(X), y, alpha = alpha)
+          fit <- glmnet::cv.glmnet(t(X), y, alpha = alpha)
 
-          b_o = stats::coef(fit,s = fit$lambda.1se)
+          b_o <- stats::coef(fit,s = fit$lambda.1se)
           b_opt <- c(b_o[2:length(b_o)]) # removing the intercept.
           driverMat[idx_gene,]<-b_opt
         }
@@ -114,7 +115,7 @@ LINKER_runPhase2<-function(modules,Data,NrCores, mode="VBSR",alpha=1-1e-06)
           for(idx_regs in seq_along(regulators))
           {
             x<-t(X)[,idx_regs]
-            fit = stats::lm(y~x)
+            fit <- stats::lm(y~x)
             s<-summary(fit)
             driverMat[idx_gene,idx_regs]<-s$coefficients[2,"Pr(>|t|)"]<0.05/(length(targetgenes)*length(regulators))
           }

@@ -8,6 +8,8 @@ LINKER_run(
   lognorm_est_counts,
   target_filtered_idx,
   regulator_filtered_idx,
+  nassay = 1,
+  regulator = "regulator",
   link_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
   graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
   module_rep = "MEAN",
@@ -20,11 +22,20 @@ LINKER_run(
 }
 \arguments{
 \item{lognorm_est_counts}{Matrix of log-normalized estimated counts of the gene expression
-data (Nr Genes x Nr samples)}
+data (Nr Genes x Nr samples) or SummarizedExperiment object.}
 
-\item{target_filtered_idx}{Index of the target genes on the lognorm_est_counts matrix.}
+\item{target_filtered_idx}{Index array of the target genes on the lognorm_est_counts matrix if
+SummarizedExperiment object is not provided.}
 
-\item{regulator_filtered_idx}{Index of the regulatory genes on the lognorm_est_counts matrix.}
+\item{regulator_filtered_idx}{Index array of the regulatory genes on the lognorm_est_counts matrix if
+SummarizedExperiment object is not provided.}
+
+\item{nassay}{if SummarizedExperiment object is passed as input to lognorm_est_counts, name of the
+assay containing the desired matrix. Default: 1 (first item in assay's list).}
+
+\item{regulator}{if SummarizedExperiment object is passed as input to lognorm_est_counts, name of the
+rowData() variable to build target_filtered_idx and regulator_filtered_idx. This variable must be one
+for driver genes and zero for target genes. Default: 'regulator'}
 
 \item{link_mode}{Chosen method(s) to link module eigengenes to regulators. The available options are
 "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
@@ -74,7 +85,8 @@ Gene Regulatory Network inference via model selection. Consists of two phases,
    ## We recommend to use the default values of the function.
    ## For the sake of time, we will select faster (and worse) ones.
 
-   linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx,regulator_filtered_idx,
+   linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx=target_filtered_idx,
+                              regulator_filtered_idx=regulator_filtered_idx,
                               link_mode="LASSOmin",graph_mode="LM",NrModules=5,Nr_bootstraps=1,
                               NrCores=2,corrClustNrIter=10)
 

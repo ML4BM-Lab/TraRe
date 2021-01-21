@@ -26,7 +26,7 @@ library(TraRe)
 ```
 
 # Installation 
-TraRe can be currently installed from Github using the devtools package (we are currently working to deliver it to Bioconductor):
+TraRe can be currently installed from Bioconductor:
 
 ```{r, eval=FALSE}
 
@@ -46,12 +46,12 @@ every tool it contains:
 * Results, excel generation of useful information about drivers to targets relations from
 previous GRN.
 
-Along with every step description and explanation, we will be working with the Stand Up To Cancer (SU2C) clinical trial dataset containing 12971 genes ($\approx$ 2000 transcription factors or driver 
+Along with every step description and explanation, we will be working with a subset of the Stand Up To Cancer (SU2C) clinical trial dataset containing 1.2k genes ($\approx$ 200 transcription factors or driver 
 genes) and 121 samples from metasatic castration resistant prostate cancer patients. Patients were divided into two groups depending on the treatment: 
 Abiraterone (ABI) and ABI-Enzalutemide (ARSI). For the phenotype dependent *Rewiring*, we will be 
 focusing on only ARSI patients (35 samples). The pathway we will follow is:
   
-* Run *LINKER* using the available gene expression matrix (GEM), 12971 genes and 121 samples, to generate all possible modules (GRN).
+* Run *LINKER* using the available gene expression matrix (GEM), 1200 genes and 121 samples, to generate all possible modules (GRN).
 
 * Run *Rewiring* test selecting the sample's (ARSI) phenotype (35 samples) to extract *LINKER* modules which expression can be separated very well according to the selected phenotype. Selected modules will be scored based on a hypergeometric test.
 
@@ -59,10 +59,26 @@ focusing on only ARSI patients (35 samples). The pathway we will follow is:
 
 * Run Results, that generates an excel containing information about the driver-target relationships from the previously generated GRN graphs, and a brief summary that may be useful for biological validation of GRN. (This step is also included at the end of *Rewiring*).
 
-The dataset we are working with is stored at the repository **jesusdfc/TraRe**. The data
-used for the examples within TraRe's package is only a subset of this one, in order
-to fulfill the space requirements of the package. We consider important to use a real dataset
-for a proper understanding of TraRe's results.
+#Data 
+
+The dataset we are working with is located at TraRe's package folder. The complete SU2C dataset
+contains about 13000 genes, but we will be using this subset in order to fulfill the space 
+requirements of the package. We consider important to use a real dataset for a proper understanding 
+of TraRe's results.
+
+TraRe mainly require three type of gene-related files:
+
+* Gene expression matrix: We will be working with a 
+log-applied and MRM-normalized gene expression matrix, lognorm_est_counts.
+
+* Gene info dataframe: As information about transcription factors is required 
+for these methods, we will use a dataframe containing a boolean variable with
+this information. '1's for the driver genes, '0's for the non-driver genes. This variable
+will be called 'regulator'.
+
+* Phenotype dataframe: As our GRN are phenotype dependant, this file will indicate whether samples
+are Responders 'R' or NonResponders 'NR'. 
+
 
 # LINKER : Generating Gene Regulatory Networks
 
@@ -79,7 +95,7 @@ B runs of this step using a different set of samples (sub-sampling
 without replacement) with a different random initialization in order
 to explore more broadly the set of potentially valid modules. Thus, at 
 the end of this step the method has generated
-K  B modules of similarly regulated genes, each of them with their
+K * B modules of similarly regulated genes, each of them with their
 associated regulators.  During Phase II  the
 proposed method generates, for each module, a bipartite graph that links the individual target genes to their associated regulators. 
 
@@ -93,57 +109,80 @@ in question was an outlier in the corresponding module.
 *LINKER* generates, from an initial RNA-Seq dataset where drivers (Transcription Factors) and targets genes are provided, GRN modules in three different forms: as raw results, from the phase I output modules; as modules from the phase II output modules and in the form of bipartite graphs, where drivers and targets relationships are defined. Here we include all the parameters and their description. For more information, please refer to the help section of `LINKER_run()`.
 
 - **lognorm_est_counts** Matrix of log-normalized estimated counts of the gene expression data (Nr Genes x Nr samples).
-
-- **target_filtered_idx** Index of the target genes on the lognorm_est_counts matrix.
-
-- **regulator_filtered_idx** Index of the regulatory genes on the lognorm_est_counts matrix.
-
+- **nassay** if SummarizedExperiment object is passed as input to lognorm_est_counts, name of the
+   assay containing the desired matrix. Default: 0
+- **regulator** if SummarizedExperiment object is passed as input to lognorm_est_counts, name of the
+   rowData() variable to build target_filtered_idx and regulator_filtered_idx. This variable must be one
+   for driver genes and zero for target genes. If not specified, target and regulator indexes must be provided.
+- **target_filtered_idx** Index array of the target genes on the lognorm_est_counts matrix.
+- **regulator_filtered_idx** Index array of the regulatory genes on the lognorm_est_counts matrix.
 - **link_mode** Chosen method(s) to link module eigengenes to regulators. The available options are
-"VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.
-
+   "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.
 - **graph_mode** Chosen method(s) to generate the edges in the bipartite graph. The available options
-are "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.
-
+   are "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.
 - **module_rep** Method selected for use. Default set to MEAN.
-
-- **NrModules** Number of modules that are a *priori* to be found (note that the final number of modules
-discovered may differ from this value). By default, 100 modules.
-
+- **NrModules** Number of modules that are a priori to be found (note that the final number of modules
+   discovered may differ from this value). By default, 100 modules.
 - **corrClustNrIter** output from preparedata(). By default, 100.
-
 - **Nr_bootstraps** Number of bootstrap of Phase I. By default, 10.
-
 - **FDR** The False Discovery Rate correction used for the enrichment analysis. By default, 0.05.
-
 - **NrCores** Nr of computer cores for the parallel parts of the method. Note that the parallelization
- is NOT initialized in any of the functions. By default, 2.
+  is NOT initialized in any of the functions. By default, 2.
 
 We now run *LINKER* method below. This is the first step from 
 the pathway, running *LINKER* using the complete gene expression 
 matrix to generate all possible GRN.
 
-```{r, eval=FALSE, warning=FALSE, collapse=TRUE}
+```{r, eval=TRUE, warning=FALSE, collapse=TRUE}
 
- # For this example, we are going to join drivers and targets from our github folder.
+# For this example, we are going to join 200 drivers and 1000 targets from our package's folder.
 
-drivers <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/tfs_linker_example.rds'))
-targets <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/targets_linker_example.rds'))
+lognorm_est_counts <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
+                                               '/VignetteFiles/expression_rewiring_vignette.txt'))
+lognorm_est_counts <- as.matrix(lognorm_est_counts)
 
-lognorm_est_counts <- rbind(drivers,targets)
+# Here we have two options: we can create the index and pass them to run LINKER method or 
+# we can work with Summarized experiments.
+# In order to create index, in this example regulators are placed in the first 200 positions.
 
-# We create the index for drivers and targets in the log-normalized gene expression matrix.
+R <- 200
+P <- 1000
 
-R <- nrow(drivers)
-P <- nrow(targets)
+regulator_filtered_idx <- seq_len(R) #1:200
+target_filtered_idx <- R+seq(P) #201:1200
 
-regulator_filtered_idx <- seq_len(L)
-target_filtered_idx <- L+c(P)
+# If a SummarizedExperiment is desired to be provided,
+# the expression matrix should be saved as an assay and 
+# gene info should be located in SummarizedExperiment::rowData(). 
+# From this object, target and regulators indexes will be automatically 
+# generated.
+
+geneinfo <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
+               '/geneinfo_rewiring_example.txt'),row.names = 1)
+
+# We have to make sure geneinfo and lognorm
+# have same rows (same genes).
+
+geneinfo <- geneinfo[rownames(lognorm_est_counts),,drop=F]
+
+# Now we can generate the SE object.
+SeObject <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = lognorm_est_counts),
+                                                       rowData = geneinfo)
 
 
 # We recommend VBSR.
+# For the sake of time, we will be running only 1 bootstrap, but the following results
+# will show a 10 bootstrap LINKER run.
 
-linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx,regulator_filtered_idx,
-                           link_mode="VBSR",graph_mode="VBSR",NrModules=100,Nr_bootstraps=10)
+#Regular expression matrix
+#linkeroutput <- LINKER_run(lognorm_est_counts = lognorm_est_counts,
+#                           target_filtered_idx = target_filtered_idx,
+#                           regulator_filtered_idx = regulator_filtered_idx,link_mode="VBSR",
+#                           graph_mode="VBSR",NrModules=100,Nr_bootstraps=1)
+
+#SummarizedExperiment
+linkeroutput <- LINKER_run(lognorm_est_counts = SeObject,link_mode="VBSR",
+                           graph_mode="VBSR",NrModules=100,Nr_bootstraps=1)
 
 ```
 
@@ -163,34 +202,33 @@ the parallelization is NOT initialized in any of the functions. By default, 3.
 
 In order to run the single GRN generation, there is a particular function that works very similar to the main *LINKER* one. Here is an example, which is also in the help section of `NET_run()`.
 
-```{r,eval=FALSE,warning=FALSE,collapse=TRUE}
+```{r,eval=TRUE,warning=FALSE,collapse=TRUE}
 
 # Assume we have run the rewiring method and we have discovered a rewired module.
 # After we have selected the drivers and targets from that modules, we can build
 # a single GRN to study it separately.
 
-# Imagine our rewired module consists of 500 driver genes and 4000 target genes.
+# Imagine our rewired module consists of 200 driver genes and 1000 target genes.
+# We will be using same lognorm_est_counts we have already generated
 
-drivers <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/tfs_linker_example.rds'))
-drivers <- drivers[seq_len(500),]
+# Same as before, we can provide indexes or built a SummarizedExperiment and pass it to NET_run()
+# We will be using same indexes we have already generated.
 
-targets <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/targets_linker_example.rds'))
-targets <- targets[seq_len(4000),]
+# As SeObject has been already generated, we can directly provide it to NET_run()
+# Here we rewind that, if not SummarizedExperiment is passed, lognorm_est_counts will
+# be the expression matrix, and target_filtered_idx and regulator_filtered_idx wil be
+# the ones we have just generated for the example.
 
-lognorm_est_counts <- as.matrix(rbind(drivers,targets)) #ensure is matrix-class
+# Again, we recommend VBSR
 
-# We create the index for drivers and targets in the log-normalized gene expression matrix.
+#Regular expression matrix
+#graph <- NET_run(lognorm_est_counts = lognorm_est_counts,
+#                 target_filtered_idx = target_filtered_idx,
+#                 regulator_filtered_idx = regulator_filtered_idx,
+#                 graph_mode="VBSR")
 
-R <- nrow(drivers)
-P <- nrow(targets)
-
-regulator_filtered_idx <- seq_len(R)
-target_filtered_idx <- R+seq_len(P)
-
-# We recommend VBSR (rest of parameters are set by default)
-
-graph <- NET_run(lognorm_est_counts,target_filtered_idx,
-                  regulator_filtered_idx,graph_mode="VBSR")
+#SummarizedExperiment
+graph <- NET_run(lognorm_est_counts = SeObject,graph_mode="VBSR")
 
 
 ```
@@ -232,16 +270,68 @@ These files can be found at **jesusdfc/TraRe** repository.
 
 ```{r, eval=TRUE, warning=FALSE, collapse=TRUE}
 
-expr_matrix <- 'https://github.com/jesusdfc/TraRe/raw/master/expression_rewiring_example.txt'
 
-gene_info <- 'https://github.com/jesusdfc/TraRe/raw/master/geneinfo_rewiring_example.txt'
+# In order to prepare the rewiring, we can provide individual files path:
+lognorm_est_counts_p <- paste0(system.file("extdata",package="TraRe"),
+               '/VignetteFiles/expression_rewiring_vignette.txt')
 
-linker_output <-  'https://github.com/jesusdfc/TraRe/raw/master/linker_rewiring_example.rds'
+gene_info_p <- paste0(system.file("extdata",package="TraRe"),
+               '/geneinfo_rewiring_example.txt')
 
-phenotype_info <- 'https://github.com/jesusdfc/TraRe/raw/master/phenotype_rewiring_example.txt'
+linker_output_p <-  paste0(system.file("extdata",package="TraRe"),
+               '/VignetteFiles/linker_output_vignette.rds')
 
-prepared <- preparerewiring(name="Vignette",linker_output,expr_matrix,gene_info,
-                           phenotype_info,final_signif_thresh=0.05)
+phenotype_p <- paste0(system.file("extdata",package="TraRe"),
+               '/phenotype_rewiring_example.txt')
+
+# Or we can provide a SummarizedExperiment containing expression matrix,
+# gene info (as rowData) and phenotype info (colData) plus the linker output.
+
+
+# We are going to reload geneinfo, this time having old geneinfo rownames 
+# as a new column, as preparerewiring will place that column into rownames, 
+# so we dont have to use the row.names=1 in the read.delim
+
+geneinfo <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
+               '/geneinfo_rewiring_example.txt'))
+
+# We again make sure they have same features (genes)
+geneinfo <- geneinfo[geneinfo$uniq_isos%in%rownames(lognorm_est_counts),]
+
+# We also load phenotype
+phenotype<- utils::read.delim(phenotype_p)
+
+
+# select only samples from the phenotype file.
+lognorm_est_counts <- lognorm_est_counts[,phenotype$Sample.ID]
+
+PrepareSEObject <- SummarizedExperiment::SummarizedExperiment(assays=list(counts=lognorm_est_counts),
+                                                              rowData = geneinfo,
+                                                              colData = phenotype)
+
+# This file is stored in the VignettesFiles TraRe's package folder.
+PrepareSEObject_p <- paste0(system.file("extdata",package="TraRe"),
+               '/VignetteFiles/SEObject.rds')
+
+
+# We can now generate the prepare rewiring file:
+# With individual paths
+
+#prepared <- preparerewiring(name="Vignette",linker_output_p = linker_output_p,
+#                           lognorm_est_counts_p = lognorm_est_counts_p,gene_info_p = gene_info_p,
+#                           phenotype_p=phenotype_p,final_signif_thresh=0.05)
+
+# or with a SummarizedExperiment object
+
+prepared <- preparerewiring(name="Vignette",linker_output_p = linker_output_p,
+                           SEObject_p = PrepareSEObject_p,final_signif_thresh=0.05)
+
+# NOTE: The reason why we are working with paths instead of files is that
+# rewiring is allowed to compare more than 1 dataset, so it is easier 
+# to provide a vector of paths that a complex structure of files.
+
+# This is, we can provide , for instance, a vector of 2 SummarizedExperiments
+# that will be compared. SEObject_p = C(SEObject1,SEObject2)..
 
 
 ```
@@ -283,21 +373,25 @@ We provide two ways of building the layout for the plot, depending on the choice
 # We load the igraph object that we generated from the `NET_run()` example.
 # Note: the igraph object is inside the list `NET_run()` generates.
 
-graph <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/graph_netrun_example.rds'))
+graph <- readRDS(paste0(system.file("extdata",package="TraRe"),
+               '/VignetteFiles/graph_netrun_vignette.rds'))
 graph <- graph$graphs$VBSR
 
 # We first generate the normal layout for the plot.
 # We need the drivers and target names. 
 
-drivers <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/tfs_linker_example.rds'))
-targets <- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/targets_linker_example.rds'))
+lognorm_est_counts <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
+                                        '/VignetteFiles/expression_rewiring_vignette.txt'))
+
+drivers <- lognorm_est_counts[seq(200),]
+targets <- lognorm_est_counts[200+seq(1000),]
 
 # Note that the generated graph may not have the same drivers and targets we used
 # for generating it, so we wil extract those genes and check in the gene_info file
 # if they are drivers or targets.
 
-geneinfo <- url('https://github.com/jesusdfc/TraRe/raw/master/geneinfo_rewiring_example.txt')
-geneinfo <- read.delim(file=geneinfo)[,c("uniq_isos","regulator")]
+geneinfo <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
+                                    '/geneinfo_rewiring_example.txt'))
 
 R<-intersect(geneinfo[geneinfo$regulator==1,1],names(igraph::V(graph)))
 P<-intersect(geneinfo[geneinfo$regulator==0,1],names(igraph::V(graph)))
@@ -316,8 +410,8 @@ normal_layout <- return_layout(drivers_n,targets_n)
 gnames <- c(drivers_n,targets_n)
 expmat <-rbind(drivers,targets)
 
-clinic <- url('https://github.com/jesusdfc/TraRe/raw/master/phenotype_rewiring_example.txt')
-clinic <- utils::read.delim(clinic)
+clinic <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
+                            '/phenotype_rewiring_example.txt'))
 
 expmat_R <- expmat[,clinic$Sample.ID[clinic$Class=='R']]
 expmat_NR <- expmat[,clinic$Sample.ID[clinic$Class=='NR']]
@@ -342,7 +436,8 @@ plot_igraph(graph,mytitle="Phenotype Layout",titlecol="black",mylayout=phenotype
 For further information, please refer to the help file of `plot_functions()`.
 Note that this method is included in the *Rewiring* test; the generation
 of the graph objects depending on the phenotype is automated. Here we include
-the figures generated from the *Rewiring* step.
+the figures generated from the *Rewiring* step. This figures will be located in the 
+folder generated by `runrewiring()`.
 
 ![Rewiring Hierarchical Clustering](igraphs.refined.graphs.png){width=1500px,height=750px}
 
@@ -373,12 +468,15 @@ mandatory, the rest of them have default values.
 ## (see vignette of TraRe for more information), which is at the external data folder
 ## of this package.
 
-gpath <- url('https://github.com/jesusdfc/TraRe/raw/master/Su2c_0.05/refinedsumm.rds')
+gpath <- paste0(system.file("extdata",package="TraRe"),
+                       '/refinedsumm.rds')
 
-## We are going to use the drivers dataset from the external data folder as well.
+## We are going to use 1k driver genes from the TraRe's installation folder.
 ## For more information about generatecliques() please check the corresponding help page.
 
-dataset<- readRDS(url('https://github.com/jesusdfc/TraRe/raw/master/tfs_linker_example.rds'))
+dataset<- readRDS(paste0(system.file("extdata",package="TraRe"),
+                       '/tfs_linker_example_eg.rds'))
+
 excel_generation(gpath=gpath,dataset=dataset)
 
 ```

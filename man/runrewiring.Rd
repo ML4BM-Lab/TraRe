@@ -10,7 +10,7 @@ runrewiring(ObjectList)
 \item{ObjectList}{Output from \code{preparerewiring()}containing some required parameters.}
 }
 \value{
-It creates a folder (in the working directory) containing the files explained above.
+It creates a folder (in tempdir() by default) containing the files explained above.
 }
 \description{
 Gene Regulatory Network modules Rewiring method. It performs a permutation test,
