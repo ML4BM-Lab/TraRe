@@ -9,6 +9,7 @@
 \usage{
 generatecliques(
   dataset = NULL,
+  nassay = 1,
   method = "pearson",
   correlationth = 0.6,
   sparsecorrmatrix = TRUE,
@@ -25,6 +26,9 @@ selectmethod(selection, ggoutput, pdoutput)
 }
 \arguments{
 \item{dataset}{input expression file with genes as rows and samples as columns.}
+
+\item{nassay}{if SummarizedExperiment object is passed as input to dataset, name of the assay containing
+the desired matrix. Default: 0}
 
 \item{method}{method to use in the correlation matrix generation (see stats:cor). Default: "pearson"}
 

@@ -14,6 +14,8 @@ LINKER_runPhase1(
   lognorm_est_counts,
   target_filtered_idx,
   regulator_filtered_idx,
+  nassay = 1,
+  regulator = "regulator",
   NrModules,
   Lambda = 1e-04,
   alpha = 1 - 1e-06,
@@ -69,9 +71,18 @@ LINKER_LearnRegulatoryPrograms(
 \item{lognorm_est_counts}{Matrix of log-normalized estimated counts of the gene expression
 data (Nr Genes x Nr samples)}
 
-\item{target_filtered_idx}{Index of the target genes on the lognorm_est_counts matrix.}
+\item{target_filtered_idx}{Index array of the target genes on the lognorm_est_counts matrix if
+SummarizedExperiment object is not provided.}
 
-\item{regulator_filtered_idx}{Index of the regulatory genes on the lognorm_est_counts matrix.}
+\item{regulator_filtered_idx}{Index array of the regulatory genes on the lognorm_est_counts matrix if
+SummarizedExperiment object is not provided.}
+
+\item{nassay}{if SummarizedExperiment object is passed as input to lognorm_est_counts, name of the
+assay containing the desired matrix. Default: 1 (first item in assay's list).}
+
+\item{regulator}{if SummarizedExperiment object is passed as input to lognorm_est_counts, name of the
+rowData() variable to build target_filtered_idx and regulator_filtered_idx. This variable must be one
+for driver genes and zero for target genes. Default: 'regulator'}
 
 \item{NrModules}{Number of modules that are a priori to be found (note that the final number of modules
 discovered may differ from this value). By default, 100 modules.}
@@ -152,8 +163,8 @@ fits the selected model with the test data. \code{LINKER_LearnRegulatoryPrograms
    ## We recommend to use the default values of the function.
    ## For the sake of time, we will select faster (and worse) ones.
 
-   linkeroutput <- LINKER_runPhase1(lognorm_est_counts,target_filtered_idx,
-                                    regulator_filtered_idx, NrModules=2,mode='LASSOmin',
-                                    NrCores=2, corrClustNrIter=10,Nr_bootstraps=1)
+   linkeroutput <- LINKER_runPhase1(lognorm_est_counts,target_filtered_idx=target_filtered_idx,
+                                    regulator_filtered_idx=regulator_filtered_idx, NrModules=2,
+                                    mode='LASSOmin',NrCores=2, corrClustNrIter=10,Nr_bootstraps=1)
 
 }

@@ -46,6 +46,3 @@
 #' @keywords internal
 #' @name TraRe
 "_PACKAGE"
-
-
-

@@ -8,7 +8,7 @@ create_html_summary(
   rfiles,
   tagstr,
   mapfile,
-  outdir = paste0(getwd(), "/"),
+  outdir = paste0(tempdir(), "/"),
   evidfile
 )
 }
@@ -70,7 +70,8 @@ provided).
    ## If u want to keep create_html_summary output,
    ## do not run the last line.
 
-   ##By default, the output directory will be paste0(getwd(),'/')
+   ##By default, the output directory will be paste0(tempdir(),'/')
+   ##For this example, we will generate it in the working directory.
 
    create_html_summary(rfiles,tagstr,mapfile,evidfile=evidpath)
    unlink(paste0(getwd(),'/',tagstr),recursive = TRUE)

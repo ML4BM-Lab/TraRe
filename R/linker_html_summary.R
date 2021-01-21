@@ -50,13 +50,14 @@
 #'    ## If u want to keep create_html_summary output,
 #'    ## do not run the last line.
 #'
-#'    ##By default, the output directory will be paste0(getwd(),'/')
+#'    ##By default, the output directory will be paste0(tempdir(),'/')
+#'    ##For this example, we will generate it in the working directory.
 #'
 #'    create_html_summary(rfiles,tagstr,mapfile,evidfile=evidpath)
 #'    unlink(paste0(getwd(),'/',tagstr),recursive = TRUE)
 #'
 #' @export
-create_html_summary <- function(rfiles,tagstr,mapfile,outdir = paste0(getwd(),'/'),evidfile){
+create_html_summary <- function(rfiles,tagstr,mapfile,outdir = paste0(tempdir(),'/'),evidfile){
 
   runinfo <- list()
   runinfo$rfiles <- rfiles
@@ -67,7 +68,7 @@ create_html_summary <- function(rfiles,tagstr,mapfile,outdir = paste0(getwd(),'/
 
   #################### load information on gene identifiers ####################
 
-  methods::show(paste0("Loading id conversion table: ", runinfo$mapfile, "..."))
+  message("Loading id conversion table: ", runinfo$mapfile, "...")
   iso_table <- as.matrix(utils::read.table(runinfo$mapfile, header = TRUE, sep = "\t",
                                            quote = ""))
   rownames(iso_table) <- iso_table[, "uniq_isos"]
@@ -96,13 +97,13 @@ create_html_summary <- function(rfiles,tagstr,mapfile,outdir = paste0(getwd(),'/
   ################# load information on chip evidence, if exists ###############
   weighted_chip_evidence <- NULL
   if (file.exists(runinfo$evidfile)){
-    methods::show(paste0("Loading chip evidence table: ", runinfo$evidfile, "..."))
+    message("Loading chip evidence table: ", runinfo$evidfile, "...")
     weighted_chip_evidence <- as.matrix(utils::read.table(runinfo$evidfile, header = TRUE,
                                                           row.names = 1, sep = "\t",
                                                           quote = ""))
-    methods::show("chip evidence regulators: ")
+    message("chip evidence regulators: ")
     showfirstlast(rownames(weighted_chip_evidence))
-    methods::show("chip evidence regulators: ")
+    message("chip evidence regulators: ")
     showfirstlast(colnames(weighted_chip_evidence))
     binary_chip_evidence <- weighted_chip_evidence
     binary_chip_evidence[binary_chip_evidence > 1] <- 1
@@ -139,7 +140,7 @@ create_html_summary <- function(rfiles,tagstr,mapfile,outdir = paste0(getwd(),'/
 
   for (rfile in runinfo$rfiles){
 
-    methods::show(paste0("Processing ", rfile, "..."))
+    message("Processing ", rfile, "...")
     rundata <- readRDS(rfile)
 
     runinfo$nboots <- 1
@@ -167,10 +168,10 @@ create_html_summary <- function(rfiles,tagstr,mapfile,outdir = paste0(getwd(),'/
                           graphmeth)
 
         if (runtypestr == "single_gene"){
-          methods::show(paste0("****************Single Gene Network ", graphmeth))
+          message("****************Single Gene Network ", graphmeth)
           rungraphs <- list(rundata$graphs[[graphmeth]])
         } else {
-          methods::show(paste0("****************", mymodmeth, " Method: ", graphmeth))
+          message("****************", mymodmeth, " Method: ", graphmeth)
           rungraphs <- rundata$graphs[[mymodmeth]][[graphmeth]]
         }
         final_summary <- linker_summarize_rungraphs(rungraphs = rungraphs,
@@ -183,7 +184,7 @@ create_html_summary <- function(rfiles,tagstr,mapfile,outdir = paste0(getwd(),'/
         allsummaries <- rbind(allsummaries, labeled_table)
         resultspath <- paste0(htmlinfo$txtstr,
                               runinfo$tagstr, ".all_summaries.txt")
-        methods::show(paste0("Writing table: ", resultspath))
+        message("Writing table: ", resultspath)
         utils::write.table(allsummaries, paste0(htmlinfo$htmldir, resultspath),
                            sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
       } # end graphmeth

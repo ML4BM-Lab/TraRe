@@ -26,3 +26,10 @@ Changes in Version 0.99.5
  ------------------
  + openxlsx to xlsx library changed
 
+Changes in Version 0.99.6
+ ------------------
+ + vignette files are locally available (instead of github)
+ + SummarizedExperiment objects are allowed to use
+ + code style and structure has been improved
+
+

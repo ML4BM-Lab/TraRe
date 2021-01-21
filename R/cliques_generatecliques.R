@@ -12,6 +12,8 @@
 #' per clique.
 #'
 #' @param dataset input expression file with genes as rows and samples as columns.
+#' @param nassay if SummarizedExperiment object is passed as input to dataset, name of the assay containing
+#' the desired matrix. Default: 0
 #' @param method method to use in the correlation matrix generation (see stats:cor). Default: "pearson"
 #' @param correlationth threshold to consider edge exists. Default: 0.6
 #' @param sparsecorrmatrix boolean variable specifying whether to set to 0 values below threshold or not. Default: TRUE
@@ -44,7 +46,15 @@
 #'    clioutput <- generatecliques(dataset = dataset)
 #'
 #' @export generatecliques
-generatecliques<-function(dataset=NULL,method="pearson",correlationth=0.6,sparsecorrmatrix=TRUE,numcliques='All',mandatorygenes=c(),selection=1){ #All but the last one to print it in a different way.
+generatecliques<-function(dataset=NULL,nassay=1,method="pearson",correlationth=0.6,sparsecorrmatrix=TRUE,numcliques='All',mandatorygenes=c(),selection=1){ #All but the last one to print it in a different way.
+
+  #Check for SummarizedExperiment Object
+
+  if (inherits(dataset,'SummarizedExperiment')){
+    dataset <- SummarizedExperiment::assays(dataset)[[nassay]]
+  }
+
+  #Unit Tests
 
   if (is.null(dataset)){
     stop("dataset field empty")
@@ -58,17 +68,17 @@ generatecliques<-function(dataset=NULL,method="pearson",correlationth=0.6,sparse
     stop("non-numeric values inside dataset variable")
   }
 
-  methods::show("Preparing data")
+  message("Preparing data")
   pdobject <- preparedata(dataset,method)
 
-  methods::show("Generating graph")
+  message("Generating graph")
   ggobject <- generategraph(correlationth,sparsecorrmatrix,pdobject)
 
-  methods::show("Selecting method")
+  message("Selecting method")
   #return(selectmethod(selection,ggobject,pdobject))
   smobject <- selectmethod(selection,ggobject,pdobject)
 
-  methods::show("Generate Datasets")
+  message("Generate Datasets")
 
   ml<-smobject$cliques
 
@@ -187,7 +197,7 @@ preparedata <- function(dataset,method){
 #' @param pdoutput output from preparedata().
 generategraph<-function(correlationth,sparsecorrmatrix,pdoutput){
 
-  methods::show("Generating groups of highly correlated genes and singleton communities")
+  message("Generating groups of highly correlated genes and singleton communities")
 
   #Get the names of high correlated and non- high correlated
 
@@ -197,7 +207,7 @@ generategraph<-function(correlationth,sparsecorrmatrix,pdoutput){
 
   #Generate the correlation matrix
 
-  methods::show('Creating the matrix')
+  message('Creating the matrix')
   highcorg_g <-pdoutput$mat[highcorrg_n,highcorrg_n]
 
   #generate sparse matrix

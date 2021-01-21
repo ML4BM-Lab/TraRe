@@ -43,7 +43,8 @@ Imports:
     	R.utils,
     	dqrng,
 	parallel,
-	xlsx
+	xlsx,
+	SummarizedExperiment
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

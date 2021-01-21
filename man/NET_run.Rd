@@ -12,6 +12,8 @@ NET_run(
   lognorm_est_counts,
   target_filtered_idx,
   regulator_filtered_idx,
+  nassay = 1,
+  regulator = "regulator",
   graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
   FDR = 0.05,
   NrCores = 1
@@ -51,9 +53,18 @@ NET_compute_graph_all_VBSR(
 \item{lognorm_est_counts}{Matrix of log-normalized estimated counts of the gene expression
 data (Nr Genes x Nr samples)}
 
-\item{target_filtered_idx}{Index of the target genes on the lognorm_est_counts matrix.}
+\item{target_filtered_idx}{Index array of the target genes on the lognorm_est_counts matrix if
+SummarizedExperiment object is not provided.}
 
-\item{regulator_filtered_idx}{Index of the regulatory genes on the lognorm_est_counts matrix.}
+\item{regulator_filtered_idx}{Index array of the regulatory genes on the lognorm_est_counts matrix if
+SummarizedExperiment object is not provided.}
+
+\item{nassay}{if SummarizedExperiment object is passed as input to lognorm_est_counts, name of the
+assay containing the desired matrix. Default: 1 (first item in assay's list).}
+
+\item{regulator}{if SummarizedExperiment object is passed as input to lognorm_est_counts, name of the
+rowData() variable to build target_filtered_idx and regulator_filtered_idx. This variable must be one
+for driver genes and zero for target genes. Default: 'regulator'}
 
 \item{graph_mode}{Chosen method(s) to generate the edges in the bipartite graph. The available options are "VBSR",
 "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
@@ -98,7 +109,7 @@ uses a linear model and \code{NET_compute_graph_all_VBSR()} uses a Variational B
    target_filtered_idx <- R+c(seq_len(T))
 
    ## We recommend VBSR (rest of parameters are set by default)
-   graph <- NET_run(lognorm_est_counts,target_filtered_idx,
-                     regulator_filtered_idx,graph_mode="VBSR")
+   graph <- NET_run(lognorm_est_counts,target_filtered_idx=target_filtered_idx,
+                     regulator_filtered_idx=regulator_filtered_idx,graph_mode="VBSR")
 
 }

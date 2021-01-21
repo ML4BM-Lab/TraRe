@@ -6,10 +6,12 @@
 \usage{
 preparerewiring(
   name = "defaultname",
-  linker_saved_file = NULL,
-  expr_matrix_file = NULL,
-  gene_info_file = NULL,
-  phenotype_file = NULL,
+  linker_output_p,
+  lognorm_est_counts_p = NULL,
+  SEObject_p = NULL,
+  gene_info_p = NULL,
+  phenotype_p = NULL,
+  nassays = 1,
   final_signif_thresh = 0.001,
   regulator_info_col_name = "regulator",
   phenotype_col_name = "Class",
@@ -18,7 +20,7 @@ preparerewiring(
   orig_test_perms = 100,
   retest_thresh = 0.08,
   retest_perms = 1000,
-  outdir = getwd(),
+  outdir = tempdir(),
   nrcores = 3
 )
 }
@@ -26,23 +28,27 @@ preparerewiring(
 \item{name}{Desired name of the folder which is generated. The chosen
 threshold will be \code{paste()} to the name folder.}
 
-\item{linker_saved_file}{Output file from linker function path.}
+\item{linker_output_p}{Output file from linker function path.}
 
-\item{expr_matrix_file}{Lognorm counts of the gene expression matrix path.}
+\item{lognorm_est_counts_p}{Lognorm counts of the gene expression matrix path.}
 
-\item{gene_info_file}{path of a two-column file containing genes and 'regulator' boolean variable.}
+\item{SEObject_p}{SummarizedExperiment objects path.}
 
-\item{phenotype_file}{path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).}
+\item{gene_info_p}{path of a two-column file containing genes and 'regulator' boolean variable.}
+
+\item{phenotype_p}{path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).}
+
+\item{nassays}{name of assays in case SummarizedObject is provided.}
 
 \item{final_signif_thresh}{Significance threshold for the rewiring method. The lower the threshold, the restrictive the method.}
 
-\item{regulator_info_col_name}{Column name of the gene_info_file. By default, 'regulator'.}
+\item{regulator_info_col_name}{Column name of the gene_info_p. By default, 'regulator'.}
 
-\item{phenotype_col_name}{Column name of the phenotype_file. By default, 'Class'.}
+\item{phenotype_col_name}{Column name of the phenotype_p. By default, 'Class'.}
 
-\item{phenotype_class_vals_string}{Boolean terms of the phenotype_file at the 'Class' column. By default, (NR,R).}
+\item{phenotype_class_vals_string}{Boolean terms of the phenotype_p at the 'Class' column. By default, (NR,R).}
 
-\item{phenotype_class_vals_string_label}{Boolean terms of the phenotype_file values at the 'Class' column. By default (0,1)}
+\item{phenotype_class_vals_string_label}{Boolean terms of the phenotype_p values at the 'Class' column. By default (0,1)}
 
 \item{orig_test_perms}{Initial permutations for first test (default: 100) .}
 
@@ -50,7 +56,7 @@ threshold will be \code{paste()} to the name folder.}
 
 \item{retest_perms}{Permutations if a second test is performed (default: 1000) .}
 
-\item{outdir}{Directory for the output folder to be located (default: working dir)}
+\item{outdir}{Directory for the output folder to be located (default: tempdir())}
 
 \item{nrcores}{Number of cores to run the parallelization within the rewiring test (default: 3).}
 }
@@ -69,19 +75,21 @@ Prepare neccessary files for running \code{runrewiring()}
 ## is desired, paths will be given as arrays. (i.e. linker_output <- c(path1,path2))
 
 
-linker_output <- paste0(system.file("extdata",package="TraRe"),'/linker_rewiring_example.rds')
+linker_output_p <- paste0(system.file("extdata",package="TraRe"),'/linker_rewiring_example.rds')
 
-expr_matrix <- paste0(system.file("extdata",package="TraRe"), '/expression_rewiring_example.txt')
+lognorm_est_counts_p <- paste0(system.file("extdata",package="TraRe"),
+                        '/expression_rewiring_example.txt')
 
-gene_info <- paste0(system.file("extdata",package="TraRe"),'/geneinfo_rewiring_example.txt')
+gene_info_p <- paste0(system.file("extdata",package="TraRe"),'/geneinfo_rewiring_example.txt')
 
-phenotype_info <- paste0(system.file("extdata",package="TraRe"),'/phenotype_rewiring_example.txt')
+phenotype_p <- paste0(system.file("extdata",package="TraRe"),'/phenotype_rewiring_example.txt')
 
 outdir <- system.file("extdata",package="TraRe")
 
-prepared <- preparerewiring(name="example",linker_output,expr_matrix,gene_info,
-                            phenotype_info,final_signif_thresh=0.05,nrcores=1,
-                            outdir=outdir)
+prepared <- preparerewiring(name="example",linker_output_p=linker_output_p,
+                            lognorm_est_counts_p=lognorm_est_counts_p,gene_info_p=gene_info_p,
+                            phenotype_p=phenotype_p,final_signif_thresh=0.05,
+                            nrcores=1,outdir=outdir)
 
 
 }
