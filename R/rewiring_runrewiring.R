@@ -7,7 +7,7 @@
 #'
 #' @param ObjectList Output from `preparerewiring()`containing some required parameters.
 #'
-#' @return It creates a folder (in the working directory) containing the files explained above.
+#' @return It creates a folder (in tempdir() by default) containing the files explained above.
 #'
 #' @examples
 #'
@@ -58,7 +58,7 @@ runrewiring<- function(ObjectList){
   #we create rundata and combine the modules of both parsers.
 
   for (modmeth in names(ObjectList$'datasets'[[1]]$rundata$modules)) { #VBSR
-    methods::show(paste(c("ModuleMethod", modmeth)))
+    message("ModuleMethod ", modmeth)
     allstats <- NULL
     statsnames <- c("module-method", "module-index", "orig-pval",
                     "revised-pvalue", "num-targets", "num-regulators",
@@ -69,7 +69,7 @@ runrewiring<- function(ObjectList){
 
 
       modmeth_i<-paste(modmeth,i)
-      methods::show(paste('VBSR:',i))
+      message('VBSR: ',i)
 
       rundata<-ObjectList$'datasets'[[i]]$rundata
       norm_expr_mat_keep<-ObjectList$'datasets'[[i]]$norm_expr_mat_keep
@@ -158,7 +158,7 @@ runrewiring<- function(ObjectList){
     all_modules <- names(module_membership_list)
 
     methods::show(paste(c("Significant Modules: ", all_modules)))
-    if (!length(all_modules)) return(methods::show('No significant modules found.'))
+    if (!length(all_modules)) return(message('No significant modules found.'))
 
     #save significant modules as .txt
     utils::write.table(all_modules,file=paste(outdir,
@@ -299,7 +299,7 @@ runrewiring<- function(ObjectList){
     supermod_regs_list = NULL
     supermod_targs_list = NULL
 
-    methods::show('Selecting biggest supermodule.')
+    message('Selecting biggest supermodule.')
     for (clusmod in clusters$clusters[[1]]) { #select only the first big supermodule
 
       clusmod_vec = unlist(strsplit(clusmod, "\\."))
@@ -344,7 +344,7 @@ runrewiring<- function(ObjectList){
 
     rawrunmoddata <- list(regulators = names(reg_multiplicity), target_genes = names(targ_multiplicity))
 
-    methods::show('Generating raw graph')
+    message('Generating raw graph')
     rawsumm <- summarize_module(norm_expr_mat_keep, rawrunmoddata, name2idx, nonrespond_idxs, responder_idxs)
 
     rawsummary <- function(cut=FALSE){
@@ -408,7 +408,7 @@ runrewiring<- function(ObjectList){
                                                          "1")],
                               target_genes = refinedmod[(gene_info_df_keep[refinedmod, regulator_info_col_name] ==
                                                            "0")])
-    methods::show('Generating refined graph')
+    message('Generating refined graph')
     refinedsumm <- summarize_module(norm_expr_mat_keep, refinedrunmoddata, name2idx, nonrespond_idxs, responder_idxs)
 
     # summary of refined

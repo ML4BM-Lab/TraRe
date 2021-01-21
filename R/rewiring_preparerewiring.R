@@ -4,19 +4,21 @@
 #'
 #' @param name Desired name of the folder which is generated. The chosen
 #' threshold will be `paste()` to the name folder.
-#' @param linker_saved_file Output file from linker function path.
-#' @param expr_matrix_file Lognorm counts of the gene expression matrix path.
-#' @param gene_info_file path of a two-column file containing genes and 'regulator' boolean variable.
-#' @param phenotype_file path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).
+#' @param linker_output_p Output file from linker function path.
+#' @param lognorm_est_counts_p Lognorm counts of the gene expression matrix path.
+#' @param SEObject_p SummarizedExperiment objects path.
+#' @param gene_info_p path of a two-column file containing genes and 'regulator' boolean variable.
+#' @param phenotype_p path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).
+#' @param nassays name of assays in case SummarizedObject is provided.
 #' @param final_signif_thresh Significance threshold for the rewiring method. The lower the threshold, the restrictive the method.
-#' @param regulator_info_col_name Column name of the gene_info_file. By default, 'regulator'.
-#' @param phenotype_col_name Column name of the phenotype_file. By default, 'Class'.
-#' @param phenotype_class_vals_string Boolean terms of the phenotype_file at the 'Class' column. By default, (NR,R).
-#' @param phenotype_class_vals_string_label Boolean terms of the phenotype_file values at the 'Class' column. By default (0,1)
+#' @param regulator_info_col_name Column name of the gene_info_p. By default, 'regulator'.
+#' @param phenotype_col_name Column name of the phenotype_p. By default, 'Class'.
+#' @param phenotype_class_vals_string Boolean terms of the phenotype_p at the 'Class' column. By default, (NR,R).
+#' @param phenotype_class_vals_string_label Boolean terms of the phenotype_p values at the 'Class' column. By default (0,1)
 #' @param orig_test_perms Initial permutations for first test (default: 100) .
 #' @param retest_thresh Threshold if a second test is performed (default: 0.08) .
 #' @param retest_perms Permutations if a second test is performed (default: 1000) .
-#' @param outdir Directory for the output folder to be located (default: working dir)
+#' @param outdir Directory for the output folder to be located (default: tempdir())
 #' @param nrcores Number of cores to run the parallelization within the rewiring test (default: 3).
 #'
 #'
@@ -31,26 +33,30 @@
 #' ## is desired, paths will be given as arrays. (i.e. linker_output <- c(path1,path2))
 #'
 #'
-#' linker_output <- paste0(system.file("extdata",package="TraRe"),'/linker_rewiring_example.rds')
+#' linker_output_p <- paste0(system.file("extdata",package="TraRe"),'/linker_rewiring_example.rds')
 #'
-#' expr_matrix <- paste0(system.file("extdata",package="TraRe"), '/expression_rewiring_example.txt')
+#' lognorm_est_counts_p <- paste0(system.file("extdata",package="TraRe"),
+#'                         '/expression_rewiring_example.txt')
 #'
-#' gene_info <- paste0(system.file("extdata",package="TraRe"),'/geneinfo_rewiring_example.txt')
+#' gene_info_p <- paste0(system.file("extdata",package="TraRe"),'/geneinfo_rewiring_example.txt')
 #'
-#' phenotype_info <- paste0(system.file("extdata",package="TraRe"),'/phenotype_rewiring_example.txt')
+#' phenotype_p <- paste0(system.file("extdata",package="TraRe"),'/phenotype_rewiring_example.txt')
 #'
 #' outdir <- system.file("extdata",package="TraRe")
 #'
-#' prepared <- preparerewiring(name="example",linker_output,expr_matrix,gene_info,
-#'                             phenotype_info,final_signif_thresh=0.05,nrcores=1,
-#'                             outdir=outdir)
+#' prepared <- preparerewiring(name="example",linker_output_p=linker_output_p,
+#'                             lognorm_est_counts_p=lognorm_est_counts_p,gene_info_p=gene_info_p,
+#'                             phenotype_p=phenotype_p,final_signif_thresh=0.05,
+#'                             nrcores=1,outdir=outdir)
 #'
 #'
 #' @export
-preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
-                           expr_matrix_file=NULL,
-                           gene_info_file=NULL,
-                           phenotype_file=NULL,
+preparerewiring<- function(name="defaultname",linker_output_p,
+                           lognorm_est_counts_p=NULL,
+                           SEObject_p=NULL,
+                           gene_info_p=NULL,
+                           phenotype_p=NULL,
+                           nassays=1,
                            final_signif_thresh=0.001,
                            regulator_info_col_name='regulator',
                            phenotype_col_name='Class',
@@ -59,81 +65,90 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
                            orig_test_perms=100,
                            retest_thresh=0.08,
                            retest_perms=1000,
-                           outdir=getwd(),
+                           outdir=tempdir(),
                            nrcores=3){
-
 
   #checks
 
-  if (is.null(linker_saved_file)){
-    stop("linker_saved_file field required")
+  if (is.null(linker_output_p)){
+    stop("linker_output_p field required")
   }
-  if (is.null(expr_matrix_file)){
-    stop("expr_matrix_file field required")
-  }
-  if (is.null(gene_info_file)){
-    stop("gene_info_file field required")
-  }
-  if (is.null(phenotype_file)){
-    stop("phenotype_file field required")
+
+  #check if SummarizedObject has been provided.
+  se <- TRUE
+  if (is.null(SEObject_p)){
+    se <- FALSE
+
+    if (is.null(lognorm_est_counts_p)){
+      stop("lognorm_est_counts_p field required")
+    }
+
+    if (is.null(gene_info_p)){
+      stop("gene_info_p field required")
+    }
+    if (is.null(phenotype_p)){
+      stop("phenotype_p field required")
+    }
+
   }
 
   #Check for comparison mode
 
-  if (length(linker_saved_file)>1){
+  if (length(linker_output_p)>1){
     warning('Data comparison mode selected, only heatmap will be generated.')
   }
 
-
   #create folder name
   foldername<-paste(name,paste(final_signif_thresh,collapse="_"),sep="_")
+
   #concatenate with outdir path
   outdir<-paste(outdir,foldername,sep="/")
-
 
   rewobjects<-list()
   rewobjects$'datasets'<-list()
 
-  for (i in seq_along(linker_saved_file)){
+  for (i in seq_along(linker_output_p)){
 
     rewobject<-list()
 
     phenotype_class_vals <- unlist(strsplit(phenotype_class_vals_string, ","))
     phenotype_class_vals_label <- unlist(strsplit(phenotype_class_vals_string_label, ","))
 
-    # read in linker output (check if it comes from web)
+    # read in linker output
+    rundata<-readRDS(linker_output_p[i])
 
-    if (substr(linker_saved_file[i],1,4)=='http'){
-      rundata<-readRDS(url(linker_saved_file[i]))
-    }else rundata <- readRDS(linker_saved_file[i]); #used outside
+    if (se){ # check for SummarizedExperiment
 
-    # read in expression matrix (check if it comes from web)
-    if (substr(expr_matrix_file[i],1,4)=='http'){
-      input_expr_mat <- as.matrix(utils::read.table(url(expr_matrix_file[i]), header = TRUE,
-                                                    row.names = 1, sep = "\t", quote = ""))
+      seobject <- readRDS(SEObject_p[i])
+      input_expr_mat <- SummarizedExperiment::assays(seobject)[[nassays[i]]]
+
     }else{
-      input_expr_mat <- as.matrix(utils::read.table(expr_matrix_file[i], header = TRUE,
-                                                    row.names = 1, sep = "\t", quote = ""))
-    }
 
+      input_expr_mat <- as.matrix(utils::read.delim(lognorm_est_counts_p[i]))
+    }
     methods::show(paste(c("Expression Matrix Size", dim(input_expr_mat))))
 
-    # read in gene info (check if it comes from web)
-    if (substr(gene_info_file[i],1,4)=='http'){
-      gene_info_df <- utils::read.table(url(gene_info_file[i]), header = TRUE,
-                                        sep = "\t", quote = "")
+    # read in gene info
+    if (se){
+
+      gene_info_df <- SummarizedExperiment::rowData(seobject)
+
     }else{
-      gene_info_df <- utils::read.table(gene_info_file[i], header = TRUE, sep = "\t", quote = "")
+
+      gene_info_df <- utils::read.delim(gene_info_p[i])
+
+
     }
+
     rownames(gene_info_df) <- gene_info_df[, 1]
     methods::show(paste(c("Gene Info Table Size", dim(gene_info_df))))
 
     # find intersection of genes
     keepgenes <- intersect(rownames(input_expr_mat), rownames(gene_info_df))
-    methods::show(paste(c("NumGenes Kept", length(keepgenes))))
+    message("NumGenes Kept ", length(keepgenes))
 
-    norm_expr_mat_keep <- input_expr_mat[keepgenes, ] #used outside
-    #show(norm_expr_mat_keep)
+
+    norm_expr_mat_keep <- input_expr_mat[keepgenes, ]
     gene_info_df_keep <- gene_info_df[keepgenes, ]
     name2idx <- seq_len(nrow(norm_expr_mat_keep))
     names(name2idx) <- rownames(norm_expr_mat_keep)
@@ -143,15 +158,17 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
     alltargs <- keepgenes[which(gene_info_df_keep[, regulator_info_col_name] == 0)]
     methods::show(paste(c("NumRegs and NumTargs", length(allregs), length(alltargs))))
 
-    # read in phenotype file (check if it comes from web)
-    if (substr(phenotype_file[i],1,4)=='http'){
-      pheno_df <- utils::read.table(url(phenotype_file[i]), header = TRUE, row.names = 1,
-                                    sep = "\t", quote = "", stringsAsFactors = FALSE);
+    # read in phenotype file
+    if (se){
+
+      pheno_df <- SummarizedExperiment::colData(seobject)
+
     }else{
 
-      pheno_df <- utils::read.table(phenotype_file[i], header = TRUE, row.names = 1,
-                                    sep = "\t", quote = "", stringsAsFactors = FALSE);
+    pheno_df <- utils::read.delim(phenotype_p[i],row.names = 1)
+
     }
+
     methods::show(paste(c("Phenotype Table Size", dim(pheno_df))))
 
     # clean up phenotype column
@@ -173,11 +190,12 @@ preparerewiring<- function(name="defaultname",linker_saved_file=NULL,
     #check if NR/R proportions are similar to ensure property functioning of the method.
     klzero <- sum(keeplabels==0)
     klone <- sum(keeplabels==1)
+
     if (min(klone,klzero)/max(klone,klzero)<0.8){
       warning(paste0('phenotype samples proportions imbalance ',toString(c(klzero,klone)),' (<80%).'))
     }
 
-    class_counts <- as.numeric(table(keeplabels)) #used outside
+    class_counts <- as.numeric(table(keeplabels))
     methods::show(paste(c("Class Per Counts", class_counts)))
 
 

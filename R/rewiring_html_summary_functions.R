@@ -75,7 +75,7 @@ write_tables_all <- function(mytab, tabletype="table",
                                            txtstr="txts/")){
   htmlpath = paste0(filestr, "_", tabletype, ".html")
   resultspath = paste0(htmlinfo$txtstr, filestr, "_", tabletype, ".txt")
-  methods::show(paste0("Writing table: ", resultspath))
+  message("Writing table: ", resultspath)
   utils::write.table(mytab, paste0(htmlinfo$htmldir, resultspath), sep='\t',
               row.names=FALSE, col.names=TRUE, quote=FALSE)
   write(paste0('<a href = "',htmlpath,'" target="_blank">',

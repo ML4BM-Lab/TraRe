@@ -7,14 +7,20 @@
 #'
 #' @param lognorm_est_counts Matrix of log-normalized estimated counts of the gene expression
 #' data (Nr Genes x Nr samples)
-#' @param target_filtered_idx Index of the target genes on the lognorm_est_counts matrix.
-#' @param regulator_filtered_idx Index of the regulatory genes on the lognorm_est_counts matrix.
+#' @param target_filtered_idx Index array of the target genes on the lognorm_est_counts matrix if
+#' SummarizedExperiment object is not provided.
+#' @param regulator_filtered_idx Index array of the regulatory genes on the lognorm_est_counts matrix if
+#' SummarizedExperiment object is not provided.
+#' @param nassay if SummarizedExperiment object is passed as input to lognorm_est_counts, name of the
+#' assay containing the desired matrix. Default: 1 (first item in assay's list).
+#' @param regulator if SummarizedExperiment object is passed as input to lognorm_est_counts, name of the
+#' rowData() variable to build target_filtered_idx and regulator_filtered_idx. This variable must be one
+#' for driver genes and zero for target genes. Default: 'regulator'
 #' @param graph_mode Chosen method(s) to generate the edges in the bipartite graph. The available options are "VBSR",
 #' "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.
 #' @param FDR The False Discovery Rate correction used for the enrichment analysis. By default, 0.05.
 #' @param NrCores Nr of computer cores for the parallel parts of the method. Note that
 #' the parallelization is NOT initialized in any of the functions. By default, 3.
-#'
 #'
 #' @return List containing the GRN graphs.
 #'
@@ -42,15 +48,32 @@
 #'    target_filtered_idx <- R+c(seq_len(T))
 #'
 #'    ## We recommend VBSR (rest of parameters are set by default)
-#'    graph <- NET_run(lognorm_est_counts,target_filtered_idx,
-#'                      regulator_filtered_idx,graph_mode="VBSR")
+#'    graph <- NET_run(lognorm_est_counts,target_filtered_idx=target_filtered_idx,
+#'                      regulator_filtered_idx=regulator_filtered_idx,graph_mode="VBSR")
 #'
 #' @export NET_run
 NET_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx,
+                  nassay=1, regulator='regulator',
                   graph_mode=c("VBSR", "LASSOmin", "LASSO1se", "LM"),
                   FDR=0.05,
                   NrCores=1)
 {
+  #Check for SummarizedExperiment Object
+
+  if (inherits(lognorm_est_counts,'SummarizedExperiment')){
+
+    #Generate target and regulator indexes
+    genenames <- rownames(lognorm_est_counts)
+    geneinfo <- SummarizedExperiment::rowData(lognorm_est_counts)
+
+    target_filtered_idx <- which(genenames%in%rownames(geneinfo)[geneinfo$regulator==0])
+    regulator_filtered_idx <- which(genenames%in%rownames(geneinfo)[geneinfo$regulator==1])
+
+    #Get lognorm_est_counts expression matrix.
+    lognorm_est_counts <- SummarizedExperiment::assays(lognorm_est_counts)[[nassay]]
+
+
+  }
 
   #checks for lognorm_est_counts
 
@@ -97,7 +120,7 @@ NET_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered_id
                                          "LM" = NET_compute_graph_all_LM(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx,NrCores)
     )
 
-    print(paste0("Graphs for (" ,graph_mode[j], ") computed!"))
+    message("Graphs for (" ,graph_mode[j], ") computed!")
   }
 
   return(list(graphs=graphs))

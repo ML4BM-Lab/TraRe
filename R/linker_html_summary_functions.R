@@ -14,7 +14,7 @@ linker_summarize_rungraphs <- function(rungraphs = NULL, iso_table = NULL,
                                                ntargets = "5",
                                                nboots = "10")){
 
-  methods::show(paste0("Processing ", graphstr, " graph method ..."))
+  message("Processing ", graphstr, " graph method ...")
   write(paste0("<br><br><b>", graphstr, "</b><br><br>"),
         file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
 
@@ -55,7 +55,7 @@ linker_summarize_rungraphs <- function(rungraphs = NULL, iso_table = NULL,
                                    htmlinfo = htmlinfo)
 
   # summarize edge results
-  methods::show(paste0("Summarizing ", graphstr, " graph method ..."))
+  message("Summarizing ", graphstr, " graph method ...")
   ngraphmods <- length(rungraphs)
   myweights <- as.numeric(edgesinfo[, "weight"])
   myevidence <- as.numeric(edgesinfo[, "chip-evidence"])
@@ -81,7 +81,7 @@ linker_summarize_rungraphs <- function(rungraphs = NULL, iso_table = NULL,
     evid_weight_raw <- rbind(evid_weight_raw, c(0, -1))
   }
   evidence_by_weight_final <- cumSumTable(evid_weight_raw)
-  methods::show(evidence_by_weight_final)
+  message(evidence_by_weight_final)
 
   summary_final <- cbind(rownames(evidence_by_weight_final),
                          evidence_by_weight_final)
@@ -125,7 +125,7 @@ linker_create_index_page <- function(outdir="./", runtag="run", codedir="./",
 genetable_summary <- function(filter, filterNeigh, tabletype,
                               nboots = 10, minsupport = 4, edgesinfo,
                               graphstr, htmlinfo){
-  methods::show(paste0(tabletype, " processing..."))
+  message(tabletype, " processing...")
   mygids <- unique(edgesinfo[, filter])
   # only extract top 1000 targets
   if (tabletype == "targets"){
@@ -159,29 +159,29 @@ genetable_summary <- function(filter, filterNeigh, tabletype,
 
 edgeinfo_from_graphs <- function(rungraphs, iso_table, weighted_chip_evidence){
 
-  methods::show("Extracting edges from all graphs...")
+  message("Extracting edges from all graphs...")
   edgelist_list <- lapply(rungraphs, extract_edge_strings_from_graph)
   edgestable <- table(unlist(edgelist_list))
 
   reg_origids <- unlist(lapply(strsplit(names(edgestable), "\\|\\|"), "[[", 2))
   tar_origids <- unlist(lapply(strsplit(names(edgestable), "\\|\\|"), "[[", 1))
-  methods::show("reg_origids: ")
+  message("reg_origids: ")
   showfirstlast(reg_origids)
-  methods::show("tar_origids: ")
+  message("tar_origids: ")
   showfirstlast(tar_origids)
 
   # get gene ids
   reg_gids <- as.character(iso_table[reg_origids, "iso_ensgs"])
   tar_gids <- as.character(iso_table[tar_origids, "iso_ensgs"])
-  methods::show("reg_gids: ")
+  message("reg_gids: ")
   showfirstlast(reg_gids)
-  methods::show("tar_gids: ")
+  message("tar_gids: ")
   showfirstlast(tar_gids)
 
   # get chip evidence
   raw_evidence <- rep(-1, length(edgestable))
   if (!is.null(weighted_chip_evidence)){
-    methods::show(c("...Extracting chip evidence"))
+    message("...Extracting chip evidence")
     raw_evidence <- weighted_chip_evidence[cbind(gsub("-", ".", reg_gids),
                                                  gsub("-", ".", tar_gids))]
   }
@@ -252,7 +252,7 @@ write_tables_all <- function(mytab, tabletype="table",
                                            txtstr = "txts/")){
   htmlpath <- paste0(filestr, "_", tabletype, ".html")
   resultspath <- paste0(htmlinfo$txtstr, filestr, "_", tabletype, ".txt")
-  methods::show(paste0("Writing table: ", resultspath))
+  message("Writing table: ", resultspath)
   utils::write.table(mytab, paste0(htmlinfo$htmldir, resultspath), sep = "\t",
               row.names = F, col.names = T, quote = F)
   write(paste0('<a href = "', htmlpath, '" target="_blank">',
