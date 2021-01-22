@@ -75,18 +75,18 @@ Prepare neccessary files for running \code{runrewiring()}
 ## is desired, paths will be given as arrays. (i.e. linker_output <- c(path1,path2))
 
 
-linker_output_p <- paste0(system.file("extdata",package="TraRe"),'/linker_rewiring_example.rds')
+linker_output_p <- paste0(system.file('extdata',package='TraRe'),'/linker_rewiring_example.rds')
 
-lognorm_est_counts_p <- paste0(system.file("extdata",package="TraRe"),
+lognorm_est_counts_p <- paste0(system.file('extdata',package='TraRe'),
                         '/expression_rewiring_example.txt')
 
-gene_info_p <- paste0(system.file("extdata",package="TraRe"),'/geneinfo_rewiring_example.txt')
+gene_info_p <- paste0(system.file('extdata',package='TraRe'),'/geneinfo_rewiring_example.txt')
 
-phenotype_p <- paste0(system.file("extdata",package="TraRe"),'/phenotype_rewiring_example.txt')
+phenotype_p <- paste0(system.file('extdata',package='TraRe'),'/phenotype_rewiring_example.txt')
 
-outdir <- system.file("extdata",package="TraRe")
+outdir <- system.file('extdata',package='TraRe')
 
-prepared <- preparerewiring(name="example",linker_output_p=linker_output_p,
+prepared <- preparerewiring(name='example',linker_output_p=linker_output_p,
                             lognorm_est_counts_p=lognorm_est_counts_p,gene_info_p=gene_info_p,
                             phenotype_p=phenotype_p,final_signif_thresh=0.05,
                             nrcores=1,outdir=outdir)
