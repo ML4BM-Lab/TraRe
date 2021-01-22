@@ -38,10 +38,10 @@ rowData() variable to build target_filtered_idx and regulator_filtered_idx. This
 for driver genes and zero for target genes. Default: 'regulator'}
 
 \item{link_mode}{Chosen method(s) to link module eigengenes to regulators. The available options are
-"VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
+'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. By default, all methods are chosen.}
 
 \item{graph_mode}{Chosen method(s) to generate the edges in the bipartite graph. The available options
-are "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
+are 'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. By default, all methods are chosen.}
 
 \item{module_rep}{Method selected for use. Default set to MEAN.}
 
@@ -68,8 +68,8 @@ Gene Regulatory Network inference via model selection. Consists of two phases,
    ## For this example, we are going to join 60 drivers and
    ## 200 targets genes from the example folder.
 
-   drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_linker_example.rds'))
-   targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
+   drivers <- readRDS(paste0(system.file('extdata',package='TraRe'),'/tfs_linker_example.rds'))
+   targets <- readRDS(paste0(system.file('extdata',package='TraRe'),'/targets_linker_example.rds'))
 
    lognorm_est_counts <- as.matrix(rbind(drivers,targets))
 
@@ -87,7 +87,7 @@ Gene Regulatory Network inference via model selection. Consists of two phases,
 
    linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx=target_filtered_idx,
                               regulator_filtered_idx=regulator_filtered_idx,
-                              link_mode="LASSOmin",graph_mode="LM",NrModules=5,Nr_bootstraps=1,
+                              link_mode='LASSOmin',graph_mode='LM',NrModules=5,Nr_bootstraps=1,
                               NrCores=2,corrClustNrIter=10)
 
 

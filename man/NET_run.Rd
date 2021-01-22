@@ -66,8 +66,8 @@ assay containing the desired matrix. Default: 1 (first item in assay's list).}
 rowData() variable to build target_filtered_idx and regulator_filtered_idx. This variable must be one
 for driver genes and zero for target genes. Default: 'regulator'}
 
-\item{graph_mode}{Chosen method(s) to generate the edges in the bipartite graph. The available options are "VBSR",
-"LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
+\item{graph_mode}{Chosen method(s) to generate the edges in the bipartite graph. The available options are 'VBSR',
+'LASSOmin', 'LASSO1se' and 'LM'. By default, all methods are chosen.}
 
 \item{FDR}{The False Discovery Rate correction used for the enrichment analysis. By default, 0.05.}
 
@@ -95,8 +95,8 @@ uses a linear model and \code{NET_compute_graph_all_VBSR()} uses a Variational B
    ## For this example, we are going to join 60 drivers and
    ## 200 targets genes from the example folder.
 
-   drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_linker_example.rds'))
-   targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
+   drivers <- readRDS(paste0(system.file('extdata',package='TraRe'),'/tfs_linker_example.rds'))
+   targets <- readRDS(paste0(system.file('extdata',package='TraRe'),'/targets_linker_example.rds'))
 
    lognorm_est_counts <- as.matrix(rbind(drivers,targets))
 
@@ -110,6 +110,6 @@ uses a linear model and \code{NET_compute_graph_all_VBSR()} uses a Variational B
 
    ## We recommend VBSR (rest of parameters are set by default)
    graph <- NET_run(lognorm_est_counts,target_filtered_idx=target_filtered_idx,
-                     regulator_filtered_idx=regulator_filtered_idx,graph_mode="VBSR")
+                     regulator_filtered_idx=regulator_filtered_idx,graph_mode='VBSR')
 
 }

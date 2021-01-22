@@ -15,9 +15,9 @@
 #' rowData() variable to build target_filtered_idx and regulator_filtered_idx. This variable must be one
 #' for driver genes and zero for target genes. Default: 'regulator'
 #' @param link_mode Chosen method(s) to link module eigengenes to regulators. The available options are
-#' "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.
+#' 'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. By default, all methods are chosen.
 #' @param graph_mode Chosen method(s) to generate the edges in the bipartite graph. The available options
-#' are "VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.
+#' are 'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. By default, all methods are chosen.
 #' @param module_rep Method selected for use. Default set to MEAN.
 #' @param NrModules Number of modules that are a priori to be found (note that the final number of modules
 #' discovered may differ from this value). By default, 100 modules.
@@ -34,8 +34,8 @@
 #'    ## For this example, we are going to join 60 drivers and
 #'    ## 200 targets genes from the example folder.
 #'
-#'    drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_linker_example.rds'))
-#'    targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
+#'    drivers <- readRDS(paste0(system.file('extdata',package='TraRe'),'/tfs_linker_example.rds'))
+#'    targets <- readRDS(paste0(system.file('extdata',package='TraRe'),'/targets_linker_example.rds'))
 #'
 #'    lognorm_est_counts <- as.matrix(rbind(drivers,targets))
 #'
@@ -53,114 +53,102 @@
 #'
 #'    linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx=target_filtered_idx,
 #'                               regulator_filtered_idx=regulator_filtered_idx,
-#'                               link_mode="LASSOmin",graph_mode="LM",NrModules=5,Nr_bootstraps=1,
+#'                               link_mode='LASSOmin',graph_mode='LM',NrModules=5,Nr_bootstraps=1,
 #'                               NrCores=2,corrClustNrIter=10)
 #'
 #'
 #'
 #' @export
-LINKER_run<-function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx,
-                     nassay=1, regulator='regulator',
-                     link_mode=c("VBSR", "LASSOmin", "LASSO1se", "LM"),
-                     graph_mode=c("VBSR", "LASSOmin", "LASSO1se", "LM"),
-                     module_rep="MEAN",
-                     NrModules=100,
-                     corrClustNrIter=100,
-                     Nr_bootstraps=10,
-                     FDR=0.05,
-                     NrCores=1)
-{
-
-  #Check for SummarizedExperiment Object
-
-  if (inherits(lognorm_est_counts,'SummarizedExperiment')){
-
-    #Generate target and regulator indexes
-    genenames <- rownames(lognorm_est_counts)
-    geneinfo <- SummarizedExperiment::rowData(lognorm_est_counts)
-
-    target_filtered_idx <- which(genenames%in%rownames(geneinfo)[geneinfo$regulator==0])
-    regulator_filtered_idx <- which(genenames%in%rownames(geneinfo)[geneinfo$regulator==1])
-
-    #Get lognorm_est_counts expression matrix.
-    lognorm_est_counts <- SummarizedExperiment::assays(lognorm_est_counts)[[nassay]]
-
-  }
-
-  #checks for lognorm_est_counts
-
-  if (is.null(lognorm_est_counts)){
-    stop("lognorm_est_counts field empty")
-  }
-
-  if (!(is.matrix(lognorm_est_counts))){
-    stop("matrix class is required for input dataset")
-  }
-
-  if (!is.numeric(lognorm_est_counts[1,1]) & !is.integer(lognorm_est_counts[1,1])){
-    stop("non-numeric values inside lognorm_est_counts variable")
-  }
-
-  if (is.null(rownames(lognorm_est_counts)) | is.null(colnames(lognorm_est_counts))){
-    stop("null field detected in row names or column names, check lognorm_est_counts matrix")
-  }
-
-  #checks for target and regulator filtered index
-
-  if (is.null(target_filtered_idx)){
-    stop("target_filtered_idx field empty")
-  }
-
-  if (is.null(regulator_filtered_idx)){
-    stop("regulator_filtered_idx field empty")
-  }
-
-  if (length(target_filtered_idx)+length(regulator_filtered_idx)!=nrow(lognorm_est_counts)){
-    stop("the total number of genes is not equal to the sum of target_filtered_idx and regulatory_filtered_idx lengths")
-  }
-
-  if (!(is.numeric(target_filtered_idx) & is.numeric(regulator_filtered_idx))){
-    stop("targets and regulators index arrays must be numeric")
-  }
-
-  #Link modes
-
-  res <- lapply(seq_along(link_mode),
-
-          function(x)  LINKER_runPhase1(lognorm_est_counts=lognorm_est_counts,
-                       target_filtered_idx=target_filtered_idx,
-                       regulator_filtered_idx=regulator_filtered_idx,
-                       NrModules=NrModules,NrCores=NrCores,
-                       mode=link_mode[x], used_method=module_rep,
-                       corrClustNrIter=corrClustNrIter,Nr_bootstraps=Nr_bootstraps))
-
-   names(res) <- link_mode
-
-   modules <- lapply(seq_along(link_mode),
-
-              function(x) LINKER_extract_modules(res[[x]]))
-
-   names(modules) <- link_mode
-
-   message("Link modes completed!")
-
-   #Graphs
-
-   graphs <- lapply(link_mode, function(x){
-
-                     lapply(graph_mode,function(y){
-
-                               LINKER_runPhase2(modules[[x]],
-                               lognorm_est_counts, mode=y,
-                               NrCores=NrCores)
-
-                          })})
-
-   names(graphs) <- link_mode #Set names for link_mode
-   graphs <- lapply(graphs,function(x) stats::setNames(x,graph_mode)) #Set names for graph_mode
-
-   message("Graphs computed!")
-
-
-  return(list(raw_results=res,modules=modules,graphs=graphs))
+LINKER_run <- function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, nassay = 1, regulator = "regulator", 
+    link_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"), graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"), 
+    module_rep = "MEAN", NrModules = 100, corrClustNrIter = 100, Nr_bootstraps = 10, FDR = 0.05, NrCores = 1) {
+    
+    # Check for SummarizedExperiment Object
+    
+    if (inherits(lognorm_est_counts, "SummarizedExperiment")) {
+        
+        # Generate target and regulator indexes
+        genenames <- rownames(lognorm_est_counts)
+        geneinfo <- SummarizedExperiment::rowData(lognorm_est_counts)
+        
+        target_filtered_idx <- which(genenames %in% rownames(geneinfo)[geneinfo$regulator == 0])
+        regulator_filtered_idx <- which(genenames %in% rownames(geneinfo)[geneinfo$regulator == 1])
+        
+        # Get lognorm_est_counts expression matrix.
+        lognorm_est_counts <- SummarizedExperiment::assays(lognorm_est_counts)[[nassay]]
+        
+    }
+    
+    # checks for lognorm_est_counts
+    
+    if (is.null(lognorm_est_counts)) {
+        stop("lognorm_est_counts field empty")
+    }
+    
+    if (!(is.matrix(lognorm_est_counts))) {
+        stop("matrix class is required for input dataset")
+    }
+    
+    if (!is.numeric(lognorm_est_counts[1, 1]) & !is.integer(lognorm_est_counts[1, 1])) {
+        stop("non-numeric values inside lognorm_est_counts variable")
+    }
+    
+    if (is.null(rownames(lognorm_est_counts)) | is.null(colnames(lognorm_est_counts))) {
+        stop("null field detected in row names or column names, check lognorm_est_counts matrix")
+    }
+    
+    # checks for target and regulator filtered index
+    
+    if (is.null(target_filtered_idx)) {
+        stop("target_filtered_idx field empty")
+    }
+    
+    if (is.null(regulator_filtered_idx)) {
+        stop("regulator_filtered_idx field empty")
+    }
+    
+    if (length(target_filtered_idx) + length(regulator_filtered_idx) != nrow(lognorm_est_counts)) {
+        stop("the total number of genes is not equal to the sum of target_filtered_idx and regulatory_filtered_idx lengths")
+    }
+    
+    if (!(is.numeric(target_filtered_idx) & is.numeric(regulator_filtered_idx))) {
+        stop("targets and regulators index arrays must be numeric")
+    }
+    
+    # Link modes
+    
+    res <- lapply(seq_along(link_mode), function(x) {
+        LINKER_runPhase1(lognorm_est_counts = lognorm_est_counts, target_filtered_idx = target_filtered_idx, 
+            regulator_filtered_idx = regulator_filtered_idx, NrModules = NrModules, NrCores = NrCores, mode = link_mode[x], 
+            used_method = module_rep, corrClustNrIter = corrClustNrIter, Nr_bootstraps = Nr_bootstraps)
+    })
+    
+    names(res) <- link_mode
+    
+    modules <- lapply(seq_along(link_mode), function(x) {
+        LINKER_extract_modules(res[[x]])
+    })
+    
+    names(modules) <- link_mode
+    
+    message("Link modes completed!")
+    
+    # Graphs
+    
+    graphs <- lapply(link_mode, function(x) {
+        
+        lapply(graph_mode, function(y) {
+            
+            LINKER_runPhase2(modules[[x]], lognorm_est_counts, mode = y, NrCores = NrCores)
+            
+        })
+    })
+    
+    names(graphs) <- link_mode  #Set names for link_mode
+    graphs <- lapply(graphs, function(x) stats::setNames(x, graph_mode))  #Set names for graph_mode
+    
+    message("Graphs computed!")
+    
+    
+    return(list(raw_results = res, modules = modules, graphs = graphs))
 }

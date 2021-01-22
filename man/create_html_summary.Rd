@@ -15,25 +15,25 @@ create_html_summary(
 \arguments{
 \item{rfiles, }{character vector of the string file names where results of linker
 runs have been saved using saveRDS, e.g., linkerResult <- LINKER_run(...),
-saveRDS(linkerResult, file = "StringFileName").}
+saveRDS(linkerResult, file = 'StringFileName').}
 
 \item{tagstr, }{a string name to tag related html summary results}
 
 \item{mapfile, }{a string name of file that contains identifier and regulator status information, must contain the columns
-"uniq_isos" - contains name of rows in LINKER_run \code{lognorm_est_counts} input matrix
-"iso_ensts" - transcript ids, but can be left blank
-"iso_ensgs" - contains gene identifiers that match identifiers available in the evidfile
-"iso_ensgvs" - versioned gene identifiers, can be left blank
-"iso_gnames" - gene name for display
-"iso_descs" - extra information about row, can be left blank
-"filtered" - whether to include row, can be left blank
-"regulator" - whether row is regulator or target (has values 1 or 0 respectively)}
+'uniq_isos' - contains name of rows in LINKER_run \code{lognorm_est_counts} input matrix
+'iso_ensts' - transcript ids, but can be left blank
+'iso_ensgs' - contains gene identifiers that match identifiers available in the evidfile
+'iso_ensgvs' - versioned gene identifiers, can be left blank
+'iso_gnames' - gene name for display
+'iso_descs' - extra information about row, can be left blank
+'filtered' - whether to include row, can be left blank
+'regulator' - whether row is regulator or target (has values 1 or 0 respectively)}
 
 \item{outdir, }{a string name of directory location to save html}
 
 \item{evidfile, }{a string name of file that contain ChIP evidence information, must be a matrix where
-the column names are the "iso_ensgs" names of the targets
-the row names are the "iso_ensgs" names of the regulators
+the column names are the 'iso_ensgs' names of the targets
+the row names are the 'iso_ensgs' names of the regulators
 the matrix values are
 -1: meaning that information is missing, the regulator was not chipped, or the gene names were not mapped
 0: meaning that the ChIP'ed regulator did not have a peak in the targets genomic region (gene body +/- 20KB)
@@ -55,15 +55,15 @@ provided).
    ## `create_html_summary()` only needs the paths, so thats what
    ## we are giving it.
 
-   evidpath <- paste0(system.file("extdata",package="TraRe"),'/ChIP',
+   evidpath <- paste0(system.file('extdata',package='TraRe'),'/ChIP',
                       '/Tumor_OV50_intersectBed.weighted_evidence.txt')
 
-   rfiles <- c(paste0(system.file("extdata",package="TraRe"),'/ChIP',
+   rfiles <- c(paste0(system.file('extdata',package='TraRe'),'/ChIP',
                       '/Tumor_OV50.tar8855_reg638.VBSR.m100_b10.rds'))
 
-   tagstr <- "Tumor_OV50.tar8855_reg638"
+   tagstr <- 'Tumor_OV50.tar8855_reg638'
 
-   mapfile <- paste0(system.file("extdata",package="TraRe"),'/ChIP',
+   mapfile <- paste0(system.file('extdata',package='TraRe'),'/ChIP',
                       '/Tumor_OV50.gene_info.txt')
 
    ## We are going to create a folder for this example

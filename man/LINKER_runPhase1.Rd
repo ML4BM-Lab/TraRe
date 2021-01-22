@@ -94,7 +94,7 @@ discovered may differ from this value). By default, 100 modules.}
 \item{pmax}{Maximum numbers of regulators that we want.}
 
 \item{mode}{Chosen method(s) to link module eigengenes to regulators. The available options are
-"VBSR", "LASSOmin", "LASSO1se" and "LM". Default set to "VBSR"}
+'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. Default set to 'VBSR'}
 
 \item{used_method}{Method selected for use. Default set to MEAN.}
 
@@ -148,8 +148,8 @@ fits the selected model with the test data. \code{LINKER_LearnRegulatoryPrograms
    ## This example is very similar to the `LINKER_run()` function.
    ## Again, we are going to join drivers and targets genes to create the working dataset.
 
-   drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_linker_example.rds'))
-   targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
+   drivers <- readRDS(paste0(system.file('extdata',package='TraRe'),'/tfs_linker_example.rds'))
+   targets <- readRDS(paste0(system.file('extdata',package='TraRe'),'/targets_linker_example.rds'))
 
    lognorm_est_counts <- rbind(drivers,targets)
    ## We create the index for drivers and targets in the log-normalized gene expression matrix.
