@@ -16,7 +16,7 @@ data (Nr Genes x Nr samples)}
 is NOT initialized in any of the functions. By default, 2.}
 
 \item{mode}{Chosen method(s) to link module eigengenes to regulators. The available options are
-"VBSR", "LASSOmin", "LASSO1se" and "LM". By default, all methods are chosen.}
+'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. By default, all methods are chosen.}
 
 \item{alpha}{alpha parameter if a LASSO model is chosen.}
 }
@@ -33,15 +33,15 @@ two graph nodes within the same set are adjacent.
    ## We are going to proceed in the same manner as in the `liner_runphaseone()` example
    ## but we start at the end of it, loading the output from the example folder.
 
-   phaseone <- readRDS(paste0(system.file("extdata",package="TraRe"),
+   phaseone <- readRDS(paste0(system.file('extdata',package='TraRe'),
                               '/linker_phaseone_example.rds'))
 
    ## We are loading drivers and targets to generate lognorm_est_counts, as we need it
    ## for the phase 2.
 
-   drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),
+   drivers <- readRDS(paste0(system.file('extdata',package='TraRe'),
                                          '/tfs_linker_example.rds'))
-   targets <- readRDS(paste0(system.file("extdata",package="TraRe"),
+   targets <- readRDS(paste0(system.file('extdata',package='TraRe'),
                                          '/targets_linker_example.rds'))
 
    lognorm_est_counts <- as.matrix(rbind(drivers,targets))
@@ -55,7 +55,7 @@ two graph nodes within the same set are adjacent.
 
 
    graph <- LINKER_runPhase2(modules=modules_phaseone,Data=lognorm_est_counts,
-                             NrCores=1,mode="LM")
+                             NrCores=1,mode='LM')
 
 
 }

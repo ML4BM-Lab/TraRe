@@ -30,7 +30,7 @@ selectmethod(selection, ggoutput, pdoutput)
 \item{nassay}{if SummarizedExperiment object is passed as input to dataset, name of the assay containing
 the desired matrix. Default: 0}
 
-\item{method}{method to use in the correlation matrix generation (see stats:cor). Default: "pearson"}
+\item{method}{method to use in the correlation matrix generation (see stats:cor). Default: 'pearson'}
 
 \item{correlationth}{threshold to consider edge exists. Default: 0.6}
 
@@ -77,7 +77,7 @@ per clique.
 
    ## For this example, we will only work with the driver genes of a example dataset.
 
-   dataset <- readRDS(paste0(system.file("extdata",package="TraRe"),
+   dataset <- readRDS(paste0(system.file('extdata',package='TraRe'),
                       '/tfs_linker_example_eg.rds'))
 
    ## Lets select the generated dataset, as the rest of parameters are set by default.

@@ -63,16 +63,16 @@ plots targets according to the t-statistic from the differential expression anal
    ## We load the igraph object that we generated from the `NET_run()` example.
    ## Note: the igraph object is inside the list `NET_run()` generates.
 
-   graph <- readRDS(paste0(system.file("extdata",package="TraRe"),
+   graph <- readRDS(paste0(system.file('extdata',package='TraRe'),
                     '/graph_netrun_example.rds'))$graphs$VBSR
 
    ## We first generate the normal layout for the plot.
    ## We need the drivers and target names.
 
-   drivers <- readRDS(paste0(system.file("extdata",package="TraRe"),'/tfs_linker_example.rds'))
+   drivers <- readRDS(paste0(system.file('extdata',package='TraRe'),'/tfs_linker_example.rds'))
    drivers_n <- rownames(drivers)
 
-   targets <- readRDS(paste0(system.file("extdata",package="TraRe"),'/targets_linker_example.rds'))
+   targets <- readRDS(paste0(system.file('extdata',package='TraRe'),'/targets_linker_example.rds'))
    targets_n <- rownames(targets)
 
    ## As for this example we are working at gene level (we dont have transcripts inside genes),
@@ -88,7 +88,7 @@ plots targets according to the t-statistic from the differential expression anal
    gnames <- c(drivers_n,targets_n)
    expmat <-rbind(drivers,targets)
 
-   phenotype <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
+   phenotype <- utils::read.delim(paste0(system.file('extdata',package='TraRe'),
                                   '/phenotype_rewiring_example.txt'))
 
    expmat_R <- expmat[,phenotype$Class=='R']
@@ -99,11 +99,11 @@ plots targets according to the t-statistic from the differential expression anal
               function(x) c(stats::t.test(expmat_R[x,],expmat_NR[x,])$statistic,
               if(x\%in\%drivers_n) 1 else 0))))
 
-   colnames(varfile)<-c("t-stat","is-regulator")
+   colnames(varfile)<-c('t-stat','is-regulator')
 
    phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,varfile)
 
-   plot_igraph(graph,mytitle="Normal Layout",titlecol="black",mylayout=normal_layout)
-   plot_igraph(graph,mytitle="Phenotype Layout",titlecol="black",mylayout=phenotype_layout)
+   plot_igraph(graph,mytitle='Normal Layout',titlecol='black',mylayout=normal_layout)
+   plot_igraph(graph,mytitle='Phenotype Layout',titlecol='black',mylayout=phenotype_layout)
 
 }

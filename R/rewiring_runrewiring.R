@@ -300,15 +300,23 @@ runrewiring<- function(ObjectList){
     supermod_targs_list = NULL
 
     message('Selecting biggest supermodule.')
+
+    #maybe we can add an extra for loop here
+    #to go through all the supermodules
+    #for (cluster in clusters$clusters){}
+
+    #We can create folder for each supermodule and leave the index.html outside
+    #containing all the links and graphs to the rest of the files (txt,imgs, and .htmls)
     for (clusmod in clusters$clusters[[1]]) { #select only the first big supermodule
 
-      clusmod_vec = unlist(strsplit(clusmod, "\\."))
+      clusmod_vec <- unlist(strsplit(clusmod, "\\."))
       methods::show(clusmod_vec)
       mregs <- unique(rundata$modules[[clusmod_vec[1]]][[as.numeric(clusmod_vec[3])]]$regulators)
       mtargs <- unique(rundata$modules[[clusmod_vec[1]]][[as.numeric(clusmod_vec[3])]]$target_genes)
       supermod_regs_list <- c(supermod_regs_list, mregs)
       supermod_targs_list <- c(supermod_targs_list, mtargs)
     }
+
     reg_multiplicity <- sort(table(supermod_regs_list), decreasing = TRUE)
     targ_multiplicity <- sort(table(supermod_targs_list), decreasing = TRUE)
     multitab <- NULL
@@ -334,8 +342,8 @@ runrewiring<- function(ObjectList){
     )
     write(table2html(multitab), paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
 
-    alllabels = responder[keepsamps]
-    samps2pheno = alllabels
+    alllabels <- responder[keepsamps]
+    samps2pheno <- alllabels
     samps2pheno[which(alllabels == phenotype_class_vals_label[2])] = phenotype_class_vals[2]
     samps2pheno[which(alllabels == phenotype_class_vals_label[1])] = phenotype_class_vals[1]
 
@@ -421,7 +429,7 @@ runrewiring<- function(ObjectList){
       paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE
     )
 
-    pname = paste(sep = ".", "igraphs.refined.graphs")
+    pname <- paste(sep = ".", "igraphs.refined.graphs")
     grDevices::png(paste0(outdir, "/imgs/", pname, ".png"), 1500, 750)
     graphics::par(mfrow = c(1, 3))
 
