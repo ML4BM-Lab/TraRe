@@ -44,7 +44,8 @@ Imports:
     	dqrng,
 	parallel,
 	xlsx,
-	SummarizedExperiment
+	SummarizedExperiment,
+	BiocStyle
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -55,6 +56,5 @@ Suggests:
     knitr,
     rmarkdown,
     BiocGenerics,
-    BiocStyle,
     RUnit
 VignetteBuilder: knitr
