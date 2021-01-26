@@ -35,11 +35,11 @@
 #' @export
 
 excel_generation <- function(gpath = NULL, wpath = paste0(tempdir(), "/grnsumm.xlsx"), cliquesbool = TRUE, ...) {
-    
+
     if (is.null(gpath)) {
         stop("Path to the graph object must be specified")
     }
-    
+
     if (inherits(try(summary(gpath)$class, TRUE), "try-error")) {
         # check for url object check for weburl check if local url exists
         if (inherits(try(url(gpath), TRUE), "try-error")) {
@@ -48,94 +48,94 @@ excel_generation <- function(gpath = NULL, wpath = paste0(tempdir(), "/grnsumm.x
             }
         }
     }
-    
+
     if (!is.logical(cliquesbool)) {
         stop("non-logical variable pass to this cliquesbool argument")
     }
-    
+
     # List of nodes - XOR-------------------------------------------------------
-    
+
     # Import graph objects
     graphs <- readRDS(gpath)
     graph_R <- graphs$respond_graph
     graph_NR <- graphs$nonresp_graph
-    
+
     # Get the edges
     edges_R <- igraph::as_edgelist(graph_R)
     edges_NR <- igraph::as_edgelist(graph_NR)
-    
+
     # Get the list of nodes in both groups
-    
+
     # Join driver+target (Responder) and sorting alphabeticaly
     list_edges_NR <- sort(paste(edges_NR[, 2], edges_NR[, 1]))
     # Join driver+target (Non Responder) and sorting alphabeticaly
     list_edges_R <- sort(paste(edges_R[, 2], edges_R[, 1]))
     list_final <- union(list_edges_NR, list_edges_R)
-    
+
     # Preallocation
     L <- length(list_final)
     R <- rep(0, L)
     NR <- rep(0, L)
-    
+
     # Fill the table
     NR[list_final %in% list_edges_NR] <- 1
     R[list_final %in% list_edges_R] <- 1
-    
+
     signature <- as.integer(xor(NR, R))
-    
+
     # Create Data Frame
     excel <- data.frame(do.call(rbind, strsplit(list_final, " ")), NR, R, signature)
     names(excel) <- c("Drivers", "Targets", "NR", "R", "XOR")
-    
+
     # Summary table -----------------------------------------------------------
-    
+
     # Sum of XOR
     drivers_xor <- split(excel$XOR, excel$Drivers)
     drivers_xor_sum <- vapply(drivers_xor, sum, FUN.VALUE = c(1))
-    
+
     # Normalization
     normalized_sum <- round(drivers_xor_sum/lengths(drivers_xor))
-    
+
     if (cliquesbool) {
-        
+
         CliquesObject <- generatecliques(...)
-        
+
         # Add cliques
         Driv <- names(drivers_xor)
-        
+
         Cliques <- vector("list", length(Driv))
         names(Cliques) <- Driv
-        
+
         for (x in CliquesObject$cliques) {
             for (y in Driv[Driv %in% x]) {
-                
+
                 Cliques[[y]] <- setdiff(x, y)
-                
+
             }
         }
-        
+
         Cliques <- vapply(Cliques, function(x) paste(x, collapse = ","), FUN.VALUE = c("C"))
-        
+
         # Reorder (in normalized_sum they are in alphabetical order, in Cliques as they come out from the cliques
         # object)
         Cliques <- Cliques[order(names(Cliques))]
-        
-        
+
+
         # Create Data frame with cliques
         sumXOR <- data.frame(normalized_sum, Cliques, check.names = TRUE, check.rows = TRUE)
         colnames(sumXOR) <- c("Normalized_XOR_Sum", "Cliques")
-        
+
     } else {
-        
+
         # Create Data frame without cliques
         sumXOR <- data.frame(normalized_sum, check.names = TRUE, check.rows = TRUE)
         colnames(sumXOR) <- c("Normalized_XOR_Sum")
-        
+
     }
-    
+
     # Export to xlsx ------------------------------------------------------------
-    
+
     # Write the data
     xlsx::write.xlsx(excel, file = wpath, sheetName = "Table", col.names = TRUE, row.names = FALSE, append = FALSE)
-    xlsx::write.xlsx(sumXOR, file = wpath, sheetName = "Summary", col.names = TRUE, row.names = TRUE, append = FALSE)
+    xlsx::write.xlsx(sumXOR, file = wpath, sheetName = "Summary", col.names = TRUE, row.names = TRUE, append = TRUE)
 }

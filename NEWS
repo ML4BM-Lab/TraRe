@@ -32,4 +32,9 @@ Changes in Version 0.99.6
  + SummarizedExperiment objects are allowed to use
  + code style and structure has been improved
 
+Changes in Version 0.99.7
+ ------------------
+ + Rewiring method outputs every supermodule
+
+
 
