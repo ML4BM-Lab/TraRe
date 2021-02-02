@@ -114,7 +114,7 @@ runrewiring<- function(ObjectList){
                    length(modtargs), length(modregs), regnames,targnames, dim(modmat),
                    class_counts)
         if (orig_pval < retest_thresh | orig_pval == 1 | mymod %% 300 == 0) {
-          methods::show(paste(c("ModNum and NumGenes", mymod, length(keepfeats))))
+          #methods::show(paste(c("ModNum and NumGenes", mymod, length(keepfeats))))
           result <- rewiring_test_pair_detail(modmat, keeplabels + 1,perm = retest_perms)
           new_pval <- result$pval
           stats <- c(modmeth_i, mymod, signif(orig_pval, 3),
