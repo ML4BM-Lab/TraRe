@@ -86,10 +86,10 @@ preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_c
         warning("Data comparison mode selected, only heatmap will be generated.")
     }
 
-    # create folder name
+    # Create folder name
     foldername <- paste(name, paste(final_signif_thresh, collapse = "_"), sep = "_")
 
-    # concatenate with outdir path
+    # Concatenate with outdir path
     outdir <- paste(outdir, foldername, sep = "/")
 
     rewobjects <- list()
@@ -115,7 +115,9 @@ preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_c
 
             input_expr_mat <- as.matrix(utils::read.delim(lognorm_est_counts_p[i]))
         }
-        methods::show(paste(c("Expression Matrix Size", dim(input_expr_mat))))
+
+        ExpMatSize <- c("Expression Matrix Size: ", '(',paste(dim(input_expr_mat),collapse=','),')')
+        message(ExpMatSize)
 
         # read in gene info
         if (se) {
@@ -130,11 +132,15 @@ preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_c
         }
 
         rownames(gene_info_df) <- gene_info_df[, 1]
-        methods::show(paste(c("Gene Info Table Size", dim(gene_info_df))))
+
+        GeneInfoTableSize <- c("Gene Info Table Size: ", '(',paste(dim(gene_info_df),collapse=','),')')
+        message(GeneInfoTableSize)
 
         # find intersection of genes
         keepgenes <- intersect(rownames(input_expr_mat), rownames(gene_info_df))
-        message("NumGenes Kept ", length(keepgenes))
+
+        NumGenesKept <- c("NumGenes Kept: ", length(keepgenes))
+        message(NumGenesKept)
 
 
         norm_expr_mat_keep <- input_expr_mat[keepgenes, ]
@@ -145,7 +151,9 @@ preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_c
         # divide genes into regulators and targets
         allregs <- keepgenes[which(gene_info_df_keep[, regulator_info_col_name] == 1)]
         alltargs <- keepgenes[which(gene_info_df_keep[, regulator_info_col_name] == 0)]
-        methods::show(paste(c("NumRegs and NumTargs", length(allregs), length(alltargs))))
+
+        NumRegsTargs <- c("NumRegs and NumTargs: [", length(allregs),',',length(alltargs),']')
+        message(NumRegsTargs)
 
         # read in phenotype file
         if (se) {
@@ -158,7 +166,8 @@ preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_c
 
         }
 
-        methods::show(paste(c("Phenotype Table Size", dim(pheno_df))))
+        PhenTableSize <- c("Phenotype Table Size: ", '(',paste(dim(pheno_df),collapse=','),')')
+        message(PhenTableSize)
 
         # clean up phenotype column
         responder <- pheno_df[, phenotype_col_name]
@@ -170,11 +179,22 @@ preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_c
         # find intersection of sample ids, keepsamps
         keepsamps <- intersect(colnames(norm_expr_mat_keep), names(responder)[which(responder == 0 | responder ==
             1)])
-        methods::show(paste(c("Sample Names:", keepsamps, length(keepsamps))))
+
+        # format for the log file.
+        keepsamps_s <- split(keepsamps,cut(seq_along(keepsamps),
+                                             max(length(keepsamps)/3,2),labels=FALSE))
+
+        keepsamps_s <- paste0(vapply(keepsamps_s,FUN=paste0,
+                                     collapse='|',FUN.VALUE=''),collapse='\n')
+
+        SampleNames <- c("\nSample Names: [", keepsamps_s,
+                         ']\n\nNumber of samples: ',length(keepsamps))
+        message(SampleNames)
 
         # find intersection of expression matrix and phenotype
         norm_expr_mat_keep <- norm_expr_mat_keep[,keepsamps]
-        methods::show(paste(c("Filtered exp matrix:", dim(norm_expr_mat_keep))))
+        FiltExpMat <- c("Filtered exp matrix: ",'(',paste(dim(norm_expr_mat_keep),collapse=','),')')
+        message(FiltExpMat)
 
         # keeplabels is numeric class id, 0 or 1, in keep samps order
         keeplabels <- as.numeric(responder[keepsamps])  #used outside
@@ -188,7 +208,9 @@ preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_c
         }
 
         class_counts <- as.numeric(table(keeplabels))
-        methods::show(paste(c("Class Per Counts", class_counts)))
+
+        ClassPerCounts <- c("Class Per Counts: ", '(',paste(class_counts,collapse=','),')')
+        message(ClassPerCounts)
 
 
         rewobject$rundata <- rundata
@@ -212,6 +234,14 @@ preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_c
     rewobjects$retest_thresh <- retest_thresh
     rewobjects$retest_perms <- retest_perms
     rewobjects$NrCores <- nrcores
+
+    # Create logfile
+
+    logfile <- list(ExpMatSize,GeneInfoTableSize,NumGenesKept,NumRegsTargs,
+                    PhenTableSize,SampleNames,FiltExpMat,ClassPerCounts)
+    logfile <- vapply(logfile,FUN=paste0,collapse='',FUN.VALUE='')
+
+    rewobjects$logfile <- logfile
 
     return(rewobjects)
 

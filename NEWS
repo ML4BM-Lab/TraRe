@@ -36,5 +36,10 @@ Changes in Version 0.99.7
  ------------------
  + Rewiring method outputs every supermodule
 
+Changes in Version 0.99.8
+ ------------------
+ + Logfile added to runrewiring method.
+ + Message structure of preparerewiring method has been cleaned.
+
 
 

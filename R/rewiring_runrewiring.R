@@ -45,11 +45,20 @@ runrewiring<- function(ObjectList){
   orig_test_perms<-ObjectList$orig_test_perms
   retest_thresh<-ObjectList$retest_thresh
   retest_perms<-ObjectList$retest_perms
+  logfile <- ObjectList$logfile
 
   # set up output html page, we use the first argv.
   indexpageinfo <- create_index_page(outdir = outdir, runtag = "",
                                      codedir = codedir)
   imgdir <- paste0(indexpageinfo$htmldir, indexpageinfo$imgstr)
+
+
+  # Initialize log file
+  logfile_p <- paste0(indexpageinfo$htmldir,'logfile.txt')
+
+  write('----Prepare Rewiring summary----',logfile_p,append=TRUE)
+  write(logfile,logfile_p,append=TRUE)
+  write('----End of Prepare Rewiring summary----',logfile_p,append=TRUE)
 
   #set.seed(1)
   dqrng::dqset.seed(1)
@@ -82,13 +91,14 @@ runrewiring<- function(ObjectList){
       name2idx<-ObjectList$'datasets'[[i]]$name2idx
 
 
-      cl <- parallel::makeCluster(ObjectList$NrCores)
-      doParallel::registerDoParallel(cl)
-      `%dopar%` <- foreach::`%dopar%`
+      # This will register nr of cores/threads, keep this here
+      # so the user can decide how many cores based on
+      # their hardware.
 
-      mymod <- NULL
+      parallClass <- BiocParallel::bpparam()
+      parallClass$workers <- ObjectList$NrCores
 
-      foreach_allstats <-foreach::foreach(mymod = seq_along(rundata$modules[[modmeth]])) %dopar% {
+      GenerateStats <- function(mymod){
 
         signify <- NULL
         modregs <- unique(rundata$modules[[modmeth]][[mymod]]$regulators)
@@ -119,11 +129,11 @@ runrewiring<- function(ObjectList){
           }
 
         }
-        list(stats,signify)
+        return(list(stats,signify))
 
-
-      } # end mymod
-      parallel::stopCluster(cl)
+      }
+      foreach_allstats <-BiocParallel::bplapply(seq_along(rundata$modules[[modmeth]]),
+                                                GenerateStats, BPPARAM = parallClass)
 
       for (elements in foreach_allstats){
 
@@ -198,7 +208,11 @@ runrewiring<- function(ObjectList){
     colnames(fisher_tbl) <- fisher_cols
     fisher_tbl <- as.data.frame(fisher_tbl)
     fisher_tbl$pval <- signif(log10(as.numeric(fisher_tbl$pval)) * -1, 3)
+    #Maximum pval is 300
     fisher_tbl$pval[fisher_tbl$pval > 300] <- 300
+
+    # get the max(fisher_tbl$pval) for scaling heatmap colors
+    pval_max <- ceiling(max(fisher_tbl$pval))
 
     simmat <- matrix(-0.1, length(all_modules), length(all_modules),
                      dimnames = list(all_modules, all_modules))
@@ -226,9 +240,23 @@ runrewiring<- function(ObjectList){
       myplotname <- paste0("mod_sim.", modmeth)
       my_palette <- grDevices::colorRampPalette(c("darkgrey",
                                                   "yellow", "green"))(n = 299)
-      my_col_breaks <- c(seq(0, 4.9, length = 100), # for darkgrey
-                         seq(5, 199, length = 100), # for yellow
-                         seq(200, 300, length = 100)) # for green
+      #Generate a const to compensate pvals
+      compensate_const <- pval_max/300
+
+      #Fix a lower bound to 0.01 for darkgrey and
+      #apply compensate_const if that lower bound is not
+      #reached
+      lower_bound <- max(2,4.9*compensate_const)
+
+      #Generate new_compensate_const based on the lower_bound
+      new_compensate_const <- lower_bound/4.9
+
+      #Correct higherbound based on the new compensate const
+      higher_bound <- 199*new_compensate_const
+
+      my_col_breaks <- c(seq(0, lower_bound, length = 100), # for darkgrey
+                         seq(lower_bound+0.1, higher_bound, length = 100), # for yellow
+                         seq(higher_bound+1, 300*new_compensate_const, length = 100)) # for green
 
       grDevices::png(paste0(imgdir, myplotname, ".heatm.png"),
                      width = 8 * 300,
@@ -299,13 +327,8 @@ runrewiring<- function(ObjectList){
     supermod_regs_list <- NULL
     supermod_targs_list <- NULL
 
-    #maybe we can add an extra for loop here
-    #to go through all the supermodules
-    #for (cluster in clusters$clusters){}
 
-    #We can create folder for each supermodule and leave the index.html outside
-    #containing all the links and graphs to the rest of the files (txt,imgs, and .htmls)
-
+    #Detection of clusters (all but the last one)
     message(length(clusters$clusters)-1,' clusters detected!')
 
     #select every cluster we have found except the last one.
@@ -332,6 +355,15 @@ runrewiring<- function(ObjectList){
         ),
         paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE
       )
+
+      #Write to the logfile
+      mods <- clusters$clusters[[numclus]]
+      mods <- split(mods,cut(seq_along(mods),
+                                  max(length(mods)/5,2),labels=FALSE))
+      mods <- paste0(vapply(mods,FUN=paste0,
+                                   collapse='|',FUN.VALUE=''),collapse='\n')
+
+      write(paste0('\nSupermodule ',numclus,' : ',mods,'\n'),logfile_p,append = TRUE)
 
       for (clusmod in clusters$clusters[[numclus]]) {
 
