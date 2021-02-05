@@ -434,7 +434,10 @@ runrewiring<- function(ObjectList){
 
         #Write raw and refined r object
         # nodesumm, fulledgesumm, full_graph, respond_graph, nonresp_graph
-        if (!cut) saveRDS(rawsumm, file = paste0(outdir,'/supermodule_',numclus, "/rawsumm.rds"))
+        if (!cut) {
+          saveRDS(rawsumm, file = paste0(outdir,'/supermodule_',numclus, "/rawsumm.rds"))
+          saveRDS(rawrunmoddata, file = paste0(outdir,'/supermodule_',numclus, "/rawrunmoddata.rds"))
+        }
       }
 
       #If we have failed generating the raw full graph, we cant generate refined graphs
@@ -502,6 +505,7 @@ runrewiring<- function(ObjectList){
       #Write raw and refined r object
       # nodesumm, fulledgesumm, full_graph, respond_graph, nonresp_graph
       saveRDS(refinedsumm, file = paste0(outdir,'/supermodule_',numclus, "/refinedsumm.rds"))
+      saveRDS(refinedrunmoddata, file = paste0(outdir,'/supermodule_',numclus, "/refinedrunmoddata.rds"))
 
 
       }
