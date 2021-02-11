@@ -127,15 +127,15 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
 
     grDevices::png(paste0(imgdir, myplotname, ".png"),
         width = plotwidth, height = plotheight)
-    vioplot(x=respond_plotlist, col = "palevioletred", side = "right",
+    vioplot::vioplot(x=respond_plotlist, col = "palevioletred", side = "right",
             names = paste(sep="||", rownames(reg_info), signif(reg_info$t.pval,2)),
             plotCentre = "line", horizontal = T, cex.axis=0.8)
-    vioplot(x=nonresp_plotlist, col = "lightblue", side = "left", add = T,
+    vioplot::vioplot(x=nonresp_plotlist, col = "lightblue", side = "left", add = T,
             plotCentre = "line", horizontal = T)
     abline(v=-5:5*2, col="lightgrey")
     title(xlab = "Expression Value (CQN)", ylab = "Regulator")
     legend("topleft", fill = c("palevioletred", "lightblue"), legend = c("R", "NR"), title = "Outcome", cex=.5)
-    dev.off()
+    grDevices::dev.off()
 
     rankdf = data.frame(matrix(vector(), length(reg_vec), 0,
                       dimnames=list(sample(reg_vec), c())),
@@ -177,14 +177,14 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
       grDevices::png(paste0(imgdir, myplotname0, ".png"),
           width = plotwidth, height = plotheight)
 
-      vioplot(x=plotlist, col = "goldenrod", side = "right", main = cname,
+      vioplot::vioplot(x=plotlist, col = "goldenrod", side = "right", main = cname,
               names = paste(sep="||", names(plotlist),
                                       unlist(lapply(plotlist, length)),
                                       signif(unlist(lapply(plotlist, mean)),3)),
               plotCentre = "line", horizontal = T, cex.axis=0.6)
       abline(v=-5:5*2, col="lightgrey")
       title(xlab = "T Statistic: Higher in Responders <-> Not Signficant <-> Higher in Non-Responders", ylab = "Regulator Targets")
-      dev.off()
+      grDevices::dev.off()
 
       if(cname=="all"){
         rankdfcols = c(rankdfcols, "all.targets", "tar.diffexpr.avg", "tar.diffexpr.rank")
@@ -257,18 +257,18 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
 
       grDevices::png(paste0(imgdir, myplotname, ".png"),
           width = plotwidth, height = plotheight)
-      vioplot(x=respond_plotlist, col = "palevioletred", side = "right", main = loopmode,
+      vioplot::vioplot(x=respond_plotlist, col = "palevioletred", side = "right", main = loopmode,
               names = paste(sep="||", names(respond_plotlist),
                             unlist(lapply(respond_plotlist, length)),
                             unlist(lapply(nonresp_plotlist, length)),
                             mypvals[names(respond_plotlist)]),
               plotCentre = "line", horizontal = T, cex.axis=0.6)
-      vioplot(x=nonresp_plotlist, col = "lightblue", side = "left", add = T,
+      vioplot::vioplot(x=nonresp_plotlist, col = "lightblue", side = "left", add = T,
               plotCentre = "line", horizontal = T)
       abline(v=-5:5/5, col="lightgrey")
       title(xlab = "Pearson Correlation", ylab = "Regulator Targets")
       legend("topleft", fill = c("palevioletred", "lightblue"), legend = c("R", "NR"), title = "Outcome", cex=.5)
-      dev.off()
+      grDevices::dev.off()
 
       if(loopmode=="all"){
         rankdfcols = c(rankdfcols, "regtar.corr.tpval", "regtar.corr.rank")
@@ -312,7 +312,7 @@ bipartiteGraphsSumm <- function(cluster_num, modsumm, runmoddata, norm_expr_mat_
     # try(plot_igraph(modsumm$full_graph, paste0(dim(norm_expr_mat_keep)[2], " Samples"), "black", mylayout))
     # try(plot_igraph(modsumm$nonresp_graph, paste0(length(nonrespond_idxs), " Phenotype1"), "darkviolet", mylayout))
     # try(plot_igraph(modsumm$respond_graph, paste0(length(responder_idxs), " Phenotype2"), "darkgoldenrod", mylayout))
-    # dev.off()
+    # grDevices::dev.off()
 
     # # write plot to index page
     # write(paste0("<img src='", htmlinfo$imgstr, pname, ".png",
@@ -423,7 +423,7 @@ createLegendPlot <- function(htmlinfo){
     colramp = colorRampPalette(c("darkred","gray100","darkgreen"))(ngroups)
     image(vals, 1, as.matrix(vals,ngroups,1), col=colramp, axes=F, main="", xlab="", ylab="")
     axis(1, vals, cex.axis=2)
-    dev.off()
+    grDevices::dev.off()
 
     myplotname = paste0("expression_colorscale")
     grDevices::png(paste0(imgdir, myplotname,".png"), width=plotwidth, height=plotheight)
@@ -432,7 +432,7 @@ createLegendPlot <- function(htmlinfo){
     colramp = colorRampPalette(c("darkorange","gray100","darkblue"))(ngroups)
     image(vals, 1, as.matrix(vals,ngroups,1), col=colramp, axes=F, main="", xlab="", ylab="")
     axis(1, vals, cex.axis=2)
-    dev.off()
+    grDevices::dev.off()
 }
 
 # plot target correlation
@@ -660,7 +660,7 @@ nullDistributionOfRewiringStatistic <- function(mat, keeplabels, modmeth, mymod,
     rewiring_score = result$T_star
     hist(main = paste0("True Val = ", signif(result$T, 3)), rewiring_score)
     abline(v = result$T, col = "red")
-    dev.off()
+    grDevices::dev.off()
 
     write(
       paste0(
