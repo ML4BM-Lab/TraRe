@@ -36,7 +36,7 @@ createModuleSummary <- function(ObjectList,run_mode=2,cluster_num=1) {
 	correlationOfModuleGene(mymod, orderobj$regorder, orderobj$targetorder, orderobj$mat, orderobj$cormats, ObjectList$keeplabels, htmlinfo, ObjectList$phenotype_class_vals)
 	expressionTableOfModuleGenes(mymod, modsumm$nodesumm, htmlinfo)
 	expressionPlotsOfModuleGenes(mymod, orderobj$regorder, orderobj$targetorder, orderobj$mat, samps2pheno, ObjectList$phenotype_class_vals, htmlinfo)
-	bipartiteGraphsSumm(modsumm, runmoddata, ObjectList$datasets[[cluster_num]]$norm_expr_mat_keep, nonrespond_idxs, responder_idxs, modmeths[cluster_num], htmlinfo)
+	bipartiteGraphsSumm(cluster_num, modsumm, runmoddata, ObjectList$datasets[[cluster_num]]$norm_expr_mat_keep, nonrespond_idxs, responder_idxs, modmeths[cluster_num], htmlinfo)
 	nullDistributionOfRewiringStatistic(orderobj$mat, ObjectList$datasets[[cluster_num]]$keeplabels, modmeths[cluster_num], mymod, htmlinfo)
 	rankdf <- violinPlots(ObjectList$datasets[[cluster_num]]$norm_expr_mat_keep, ObjectList$datasets[[cluster_num]]$keepsamps, ObjectList$datasets[[cluster_num]]$keeplabels, modsumm$nodesumm, modsumm$fulledgesumm, modsumm$appendmat, htmlinfo)
 	regulatorSummaryAndRank(rankdf, htmlinfo)

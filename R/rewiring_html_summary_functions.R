@@ -287,7 +287,7 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
     return(rankdf)
 }
 
-bipartiteGraphsSumm <- function(modsumm, runmoddata, norm_expr_mat_keep, nonrespond_idxs, responder_idxs, modmeth, htmlinfo){
+bipartiteGraphsSumm <- function(cluster_num, modsumm, runmoddata, norm_expr_mat_keep, nonrespond_idxs, responder_idxs, modmeth, htmlinfo){
     modhtmlfile = paste0(htmlinfo$htmldir, htmlinfo$indexpath)
     imgdir = paste0(htmlinfo$htmldir, htmlinfo$imgstr)
 
@@ -321,7 +321,7 @@ bipartiteGraphsSumm <- function(modsumm, runmoddata, norm_expr_mat_keep, nonresp
     #       modhtmlfile, append = T)
 
     # write plot to index page
-    write(paste0("<img src='", 'supermodule_',numclus,'/imgs/', pname, ".png",
+    write(paste0("<img src='", 'supermodule_',cluster_num,'/imgs/', pname, ".png",
                    "' alt='", pname,
                    "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
             modhtmlfile,
