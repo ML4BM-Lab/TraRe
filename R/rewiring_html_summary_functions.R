@@ -287,38 +287,18 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
     return(rankdf)
 }
 
-bipartiteGraphsSumm <- function(cluster_num, modsumm, runmoddata, norm_expr_mat_keep, nonrespond_idxs, responder_idxs, modmeth, htmlinfo){
+bipartiteGraphsSumm <- function(cluster_num, modsumm, modmeth, htmlinfo){
     modhtmlfile = paste0(htmlinfo$htmldir, htmlinfo$indexpath)
     imgdir = paste0(htmlinfo$htmldir, htmlinfo$imgstr)
 
-    # write(
-    #   paste0(
-    #     "<table style='width:100%' bgcolor='gray'><tr><td><h1>",
-    #     "Modules Summary",
-    #     "</h1></td></tr></table><br>\n"
-    #   ),
-    #   modhtmlfile, append = T
-    # )
-
-    # pname = paste(sep = ".", "igraphs.refined.graphs")
-    # png(paste0(imgdir, pname, ".png"), 1500, 750)
-    # par(mfrow = c(1, 3))
-    # mylayout = return_layout_from_two(modsumm$respond_graph,
-    #                                   modsumm$nonresp_graph,
-    #                                   runmoddata$regulators,
-    #                                   runmoddata$target_genes,
-    #                                   rownames(norm_expr_mat_keep),
-    #                                   modsumm$nodesumm)
-    # try(plot_igraph(modsumm$full_graph, paste0(dim(norm_expr_mat_keep)[2], " Samples"), "black", mylayout))
-    # try(plot_igraph(modsumm$nonresp_graph, paste0(length(nonrespond_idxs), " Phenotype1"), "darkviolet", mylayout))
-    # try(plot_igraph(modsumm$respond_graph, paste0(length(responder_idxs), " Phenotype2"), "darkgoldenrod", mylayout))
-    # grDevices::dev.off()
-
-    # # write plot to index page
-    # write(paste0("<img src='", htmlinfo$imgstr, pname, ".png",
-    #              "' alt='", pname,
-    #              "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
-    #       modhtmlfile, append = T)
+    write(
+      paste0(
+        "<table style='width:100%' bgcolor='gray'><tr><td><h1>",
+        "Modules Summary",
+        "</h1></td></tr></table><br>\n"
+      ),
+      modhtmlfile, append = T
+    )
 
     # write plot to index page
     write(paste0("<img src='", 'supermodule_',cluster_num,'/imgs/', pname, ".png",
@@ -342,6 +322,62 @@ bipartiteGraphsSumm <- function(cluster_num, modsumm, runmoddata, norm_expr_mat_
                      htmlinfo = htmlinfo)
 
 }
+
+# bipartiteGraphsSumm <- function(cluster_num, modsumm, norm_expr_mat_keep, nonrespond_idxs, responder_idxs, modmeth, htmlinfo){
+#     modhtmlfile = paste0(htmlinfo$htmldir, htmlinfo$indexpath)
+#     imgdir = paste0(htmlinfo$htmldir, htmlinfo$imgstr)
+
+#     write(
+#       paste0(
+#         "<table style='width:100%' bgcolor='gray'><tr><td><h1>",
+#         "Modules Summary",
+#         "</h1></td></tr></table><br>\n"
+#       ),
+#       modhtmlfile, append = T
+#     )
+
+#     # pname = paste(sep = ".", "igraphs.refined.graphs")
+#     # png(paste0(imgdir, pname, ".png"), 1500, 750)
+#     # par(mfrow = c(1, 3))
+#     # mylayout = return_layout_from_two(modsumm$respond_graph,
+#     #                                   modsumm$nonresp_graph,
+#     #                                   modsumm$runmoddata$regulators,
+#     #                                   modsumm$runmoddata$target_genes,
+#     #                                   rownames(norm_expr_mat_keep),
+#     #                                   modsumm$nodesumm)
+#     # try(plot_igraph(modsumm$full_graph, paste0(dim(norm_expr_mat_keep)[2], " Samples"), "black", mylayout))
+#     # try(plot_igraph(modsumm$nonresp_graph, paste0(length(nonrespond_idxs), " Phenotype1"), "darkviolet", mylayout))
+#     # try(plot_igraph(modsumm$respond_graph, paste0(length(responder_idxs), " Phenotype2"), "darkgoldenrod", mylayout))
+#     # grDevices::dev.off()
+
+#     # # write plot to index page
+#     # write(paste0("<img src='", htmlinfo$imgstr, pname, ".png",
+#     #              "' alt='", pname,
+#     #              "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
+#     #       modhtmlfile, append = T)
+
+#     # write plot to index page
+#     write(paste0("<img src='", 'supermodule_',cluster_num,'/imgs/', pname, ".png",
+#                    "' alt='", pname,
+#                    "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
+#             modhtmlfile,
+#             append = TRUE)
+
+#     sortidxs <- sort(as.numeric(modsumm$nodesumm[, "t-pval"]),
+#                      decreasing = F, index.return = T)$ix
+#     write_tables_all(modsumm$nodesumm[sortidxs, ],
+#                      tabletype = paste0(modmeth, "_nodesumm"),
+#                      filestr = "data", html_idxs = 1:dim(modsumm$nodesumm)[1],
+#                      htmlinfo = htmlinfo)
+
+#     sortidxs <- sort(as.numeric(modsumm$fulledgesumm[, "all.weights"]),
+#                      decreasing = F, index.return = T)$ix
+#     write_tables_all(modsumm$fulledgesumm[sortidxs, ],
+#                      tabletype = paste0(modmeth, "_edgesumm"),
+#                      filestr = "data", html_idxs = 1:dim(modsumm$fulledgesumm)[1],
+#                      htmlinfo = htmlinfo)
+
+# }
 
 geneOrder <- function(modsumm, keepsamps, keeplabels, norm_mat_keep) {
     modregs = levels(unique(modsumm$fulledgesumm$reg))

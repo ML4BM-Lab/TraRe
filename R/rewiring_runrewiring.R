@@ -382,6 +382,7 @@ runrewiring<- function(ObjectList){
 
       message('Generating raw graph')
       rawsumm <- summarize_module(norm_expr_mat_keep, rawrunmoddata, name2idx, nonrespond_idxs, responder_idxs)
+      rawsumm$runmoddata <- rawrunmoddata
 
       rawsummary <- function(cut=FALSE){
 
@@ -436,7 +437,6 @@ runrewiring<- function(ObjectList){
         # nodesumm, fulledgesumm, full_graph, respond_graph, nonresp_graph
         if (!cut) {
           saveRDS(rawsumm, file = paste0(outdir,'/supermodule_',numclus, "/rawsumm.rds"))
-          saveRDS(rawrunmoddata, file = paste0(outdir,'/supermodule_',numclus, "/rawrunmoddata.rds"))
         }
       }
 
@@ -452,6 +452,7 @@ runrewiring<- function(ObjectList){
                                                              "0")])
       message('Generating refined graph')
       refinedsumm <- summarize_module(norm_expr_mat_keep, refinedrunmoddata, name2idx, nonrespond_idxs, responder_idxs)
+      refinedsumm$runmoddata <- refinedrunmoddata
 
       # summary of refined
       write(
@@ -502,11 +503,10 @@ runrewiring<- function(ObjectList){
                        htmlinfo = indexpageinfo,
                        extradir = paste0('supermodule_',numclus,'/'))
 
+
       #Write raw and refined r object
       # nodesumm, fulledgesumm, full_graph, respond_graph, nonresp_graph
       saveRDS(refinedsumm, file = paste0(outdir,'/supermodule_',numclus, "/refinedsumm.rds"))
-      saveRDS(refinedrunmoddata, file = paste0(outdir,'/supermodule_',numclus, "/refinedrunmoddata.rds"))
-
 
       }
   }

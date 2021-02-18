@@ -94,7 +94,7 @@ summarize_module <- function(norm_expr_mat_keep, runmoddata, name2idx, nonrespon
     nodesumm <- module_node_summary(norm_expr_mat_keep, runmoddata, name2idx, nonrespond_idxs, responder_idxs)
 
     # edge summary
-    edgesumm <- module_edge_summary(norm_expr_mat_keep, runmoddata, name2idx)
+    edgesumm <- module_edge_summary(norm_expr_mat_keep, runmoddata, name2idx, nonrespond_idxs, responder_idxs)
 
     modregs <- runmoddata$regulators
     modtargs <- runmoddata$target_genes

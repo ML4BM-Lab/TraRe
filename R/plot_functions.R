@@ -303,7 +303,7 @@ plot_correlation_row <- function(cormats = NULL,
 
     write(paste0("<tr>"),htmlfile, append=T)
     for (mattype in ls(cormats)){
-        myplotname = paste0("corr", ".mod",modnum, ".", mattype, ".", rowdesc)
+        myplotname = paste0("corr", ".mod.",modnum, ".", mattype, ".", rowdesc)
 
         titlename = mattype
         # if(mattype=="cor1"){titlename="nonrespond_only"}
