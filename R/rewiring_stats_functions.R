@@ -31,29 +31,28 @@
 #'
 #'
 rewiring_test = function(x, grp, perm = 500) {
-
+    
     p = ncol(x)
     numgrp = length(unique(grp))
-
+    
     ## keep only rows with variance within groups
     bools = rep(TRUE, p)
     for (g in unique(grp)) {
-        bools = bools & (matrixStats::colSds(x[grp==g,]) != 0)
+        bools = bools & (matrixStats::colSds(x[grp == g, ]) != 0)
     }
     if (sum(bools) < p) {
-        methods::show(paste(collapse = " ", c("...Rewiring Test - Dropping 0 Variance Genes:", paste(collapse = ",",
-            names(which(bools == FALSE))))))
+        methods::show(paste(collapse = " ", c("...Rewiring Test - Dropping 0 Variance Genes:", paste(collapse = ",", names(which(bools == FALSE))))))
         # show(c(p,sum(bools),which(bools==FALSE)))
         x = x[, bools]
         p = ncol(x)
     }
-
-
+    
+    
     ## test stat
     T = sum(apply(utils::combn(numgrp, 2), 2, function(pair) {
         as.vector((stats::cor(x[grp == pair[1], seq_len(p)]) - stats::cor(x[grp == pair[2], seq_len(p)]))^2)
     }))
-
+    
     ## p
     T_star = rep(NA, perm)
     for (j in seq_len(perm)) {
@@ -64,32 +63,32 @@ rewiring_test = function(x, grp, perm = 500) {
     }
     # show(c(T, T_star))
     return(mean(c(T, T_star) >= T, na.rm = TRUE))
-
+    
 }
 #' @export
 #' @rdname rewiring_test
 rewiring_test_pair_detail = function(x, grp, perm = 500) {
     p = ncol(x)
     numgrp = length(unique(grp))
-
+    
     ## keep only rows with variance within groups
     bools = rep(TRUE, p)
     for (g in unique(grp)) {
-        bools = bools & (matrixStats::colSds(x[grp==g,]) != 0)
+        bools = bools & (matrixStats::colSds(x[grp == g, ]) != 0)
     }
     if (sum(bools) < p) {
-        methods::show(paste(collapse = " ", c("...Detailed Rewiring Test - Dropping 0 Variance Genes:", paste(collapse = ",",
-            names(which(bools == FALSE))))))
+        methods::show(paste(collapse = " ", c("...Detailed Rewiring Test - Dropping 0 Variance Genes:", paste(collapse = ",", names(which(bools == 
+            FALSE))))))
         # show(c(p,sum(bools),which(bools==FALSE)))
         x = x[, bools]
         p = ncol(x)
     }
-
+    
     ## test stat
     T = sum(apply(utils::combn(numgrp, 2), 2, function(pair) {
         as.vector((stats::cor(x[grp == pair[1], seq_len(p)]) - stats::cor(x[grp == pair[2], seq_len(p)]))^2)
     }))
-
+    
     ## perm
     T_star = rep(NA, perm)
     for (j in seq_len(perm)) {
@@ -98,7 +97,7 @@ rewiring_test_pair_detail = function(x, grp, perm = 500) {
             as.vector((stats::cor(x[grp_perm == pair[1], ]) - stats::cor(x[grp_perm == pair[2], ]))^2)
         }))
     }
-
+    
     pval = mean(c(T, T_star) >= T, na.rm = TRUE)
     return(list(pval = pval, T_star = T_star, T = T))
 }

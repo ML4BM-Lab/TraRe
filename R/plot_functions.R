@@ -67,40 +67,37 @@
 #'
 #' @export plot_igraph
 plot_igraph <- function(mygraph = NULL, mytitle = "", titlecol = "black", mylayout = NULL) {
-
+    
     if (is.null(mygraph)) {
         stop("graph object field empty")
     }
     if (is.null(mylayout)) {
         stop("layout field empty")
     }
-
+    
     if (is.null(igraph::E(mygraph)$weight)) {
         igraph::E(mygraph)$weight <- rep(1, length(igraph::E(mygraph)))
     }
-
+    
     nodecol <- c("darkblue", "darkorange")
     framecol <- c("black", "darkorange")
     shape <- c("circle", "square")
     edge_cscale <- grDevices::colorRamp(c("darkred", "lightgrey", "darkgreen"))
-
+    
     maxw <- max(abs(igraph::E(mygraph)$weight))
     tweight = (igraph::E(mygraph)$weight + maxw)/(2 * maxw)
-    igraph::E(mygraph)$color <- apply(edge_cscale(tweight), 1, function(x) grDevices::rgb(x[1]/255, x[2]/255,
-        x[3]/255, 0.8))
-
+    igraph::E(mygraph)$color <- apply(edge_cscale(tweight), 1, function(x) grDevices::rgb(x[1]/255, x[2]/255, x[3]/255, 0.8))
+    
     degrees <- igraph::degree(mygraph, igraph::V(mygraph)$name)
     nodenames <- mylayout$genesnames[igraph::V(mygraph)$name]
     regdegrees <- degrees[nodenames]
     regdegrees[which(is.na(regdegrees))] <- ""
     finalnames <- apply(cbind(nodenames, regdegrees), 1, paste, collapse = " - ")
-
-    plot(mygraph, vertex.color = nodecol[as.numeric(igraph::V(mygraph)$type) + 1], vertex.shape = shape[as.numeric(igraph::V(mygraph)$type) +
-        1], vertex.label = finalnames, vertex.label.cex = 1.5, vertex.frame.color = framecol[as.numeric(igraph::V(mygraph)$type) +
-        1], vertex.size = as.numeric(igraph::V(mygraph)$type) * 5 + 5, layout = cbind(mylayout$genesx[igraph::V(mygraph)$name],
-        mylayout$genesy[igraph::V(mygraph)$name]))
-    graphics::title(paste0(mytitle, " ", sum(igraph::V(mygraph)$type == 1), "&", sum(igraph::V(mygraph)$type ==
-        0)), cex.main = 2, col.main = titlecol)
+    
+    plot(mygraph, vertex.color = nodecol[as.numeric(igraph::V(mygraph)$type) + 1], vertex.shape = shape[as.numeric(igraph::V(mygraph)$type) + 
+        1], vertex.label = finalnames, vertex.label.cex = 1.5, vertex.frame.color = framecol[as.numeric(igraph::V(mygraph)$type) + 1], vertex.size = as.numeric(igraph::V(mygraph)$type) * 
+        5 + 5, layout = cbind(mylayout$genesx[igraph::V(mygraph)$name], mylayout$genesy[igraph::V(mygraph)$name]))
+    graphics::title(paste0(mytitle, " ", sum(igraph::V(mygraph)$type == 1), "&", sum(igraph::V(mygraph)$type == 0)), cex.main = 2, col.main = titlecol)
     graphics::abline(h = 0, col = grDevices::rgb(0, 0, 0, alpha = 0.3))
 }
 #' @export
@@ -110,7 +107,7 @@ plot_igraph <- function(mygraph = NULL, mytitle = "", titlecol = "black", mylayo
 #' @param namehash list containing the drivers genes as names and transcripts as values.
 #' If only genes are required, leave it empty.
 return_layout <- function(regs = NULL, targets = NULL, namehash = NULL) {
-
+    
     if (is.null(regs)) {
         stop("regulators field empty")
     }
@@ -120,8 +117,8 @@ return_layout <- function(regs = NULL, targets = NULL, namehash = NULL) {
     if (is.null(namehash)) {
         namehash <- regs
     }
-
-
+    
+    
     nregs <- length(regs)
     myratio <- length(targets)/nregs
     genesx <- c(seq_len(nregs) * myratio - myratio/2, seq_along(targets))
@@ -141,7 +138,7 @@ return_layout <- function(regs = NULL, targets = NULL, namehash = NULL) {
 #' t-statistic from the differential expression analysis of the desired phenotype column and
 #' a boolean variable for regulator (1) - no regulator (0) column.
 return_layout_phenotype <- function(regs = NULL, targets = NULL, varfile = NULL, namehash = NULL) {
-
+    
     if (is.null(regs)) {
         stop("regulators field empty")
     }
@@ -154,7 +151,7 @@ return_layout_phenotype <- function(regs = NULL, targets = NULL, varfile = NULL,
     if (is.null(namehash)) {
         namehash <- regs
     }
-
+    
     # check varfile structure
     if (is.null(rownames(varfile))) {
         stop("genes names must be specified at varfile as rownames")
@@ -168,45 +165,44 @@ return_layout_phenotype <- function(regs = NULL, targets = NULL, varfile = NULL,
     if (!("t-stat" %in% colnames(varfile))) {
         stop("varfile must contain the column t-stat")
     }
-
-
+    
+    
     vals <- as.numeric(varfile[, "t-stat"])
     genesnames <- rownames(varfile)[order(vals)]
     names(genesnames) <- genesnames
-
+    
     genesx <- seq_along(vals)
     names(genesx) <- genesnames
-
+    
     orderedregs <- names(genesx)[which(varfile[names(genesx), "is-regulator"] == 1)]
     absval <- max(abs(vals))
     genesy <- signif(vals[order(vals)]/absval, 3)
     names(genesy) <- genesnames
     genesy[orderedregs] <- genesy[orderedregs] + rep(c(2, -2), length(regs))[seq_along(regs)]
-
+    
     # my part
     nregs <- length(regs)
     myratio <- length(targets)/nregs
     genesx[orderedregs] <- seq_len(nregs) * myratio - myratio/2
-
+    
     genesnames[targets] <- ""
     if (length(names(namehash)) == 0) {
         names(namehash) <- namehash
     }
     genesnames[regs] <- namehash[regs]
-
+    
     return(list(genesx = genesx, genesy = genesy, genesnames = genesnames))
-
+    
 }
 #' @export
 #' @rdname plot_igraph
 #' @param graph igraph object
 #' @param edgelist list containing the edges of the igraph object.
 orderGraphWeights <- function(graph, edgelist) {
-
-    weights = igraph::get.data.frame(igraph::graph.adjacency(as.matrix(igraph::get.adjacency(graph, attr = "weight",
-        type = "upper")), weighted = TRUE))
+    
+    weights = igraph::get.data.frame(igraph::graph.adjacency(as.matrix(igraph::get.adjacency(graph, attr = "weight", type = "upper")), weighted = TRUE))
     rownames(weights) <- apply(weights[, seq_len(2)], 1, paste, collapse = "||")
     commonedges <- intersect(edgelist, rownames(weights))
     return(list(commonedges = commonedges, weights = weights[commonedges, "weight"]))
-
+    
 }

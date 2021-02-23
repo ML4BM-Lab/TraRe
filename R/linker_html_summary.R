@@ -78,21 +78,20 @@ create_html_summary <- function(rfiles, tagstr, mapfile, outdir = paste0(tempdir
     
     ################ create overall summary for html index page #################
     indexpath <- paste(sep = ".", "index", runinfo$tagstr, "html")
-    htmlinfo <- linker_create_index_page(outdir = runinfo$outdir, runtag = runinfo$tagstr, indexpath = indexpath, 
-        codedir = paste0(system.file("extdata", package = "TraRe"), "/RewiringReport/"))
+    htmlinfo <- linker_create_index_page(outdir = runinfo$outdir, runtag = runinfo$tagstr, indexpath = indexpath, codedir = paste0(system.file("extdata", 
+        package = "TraRe"), "/RewiringReport/"))
     
     # write gene info stats
-    write(paste0("<br>", length(all_tar_genes), " target isoforms covering ", length(unique(all_tar_genes)), 
-        " genes.<br>"), file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
-    write(paste0(length(all_reg_genes), " regulator isoforms covering ", length(unique(all_reg_genes)), " genes.<br><br>"), 
-        file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
+    write(paste0("<br>", length(all_tar_genes), " target isoforms covering ", length(unique(all_tar_genes)), " genes.<br>"), file = paste0(htmlinfo$htmldir, 
+        htmlinfo$indexpath), append = TRUE)
+    write(paste0(length(all_reg_genes), " regulator isoforms covering ", length(unique(all_reg_genes)), " genes.<br><br>"), file = paste0(htmlinfo$htmldir, 
+        htmlinfo$indexpath), append = TRUE)
     
     ################# load information on chip evidence, if exists ###############
     weighted_chip_evidence <- NULL
     if (file.exists(runinfo$evidfile)) {
         message("Loading chip evidence table: ", runinfo$evidfile, "...")
-        weighted_chip_evidence <- as.matrix(utils::read.table(runinfo$evidfile, header = TRUE, row.names = 1, 
-            sep = "\t", quote = ""))
+        weighted_chip_evidence <- as.matrix(utils::read.table(runinfo$evidfile, header = TRUE, row.names = 1, sep = "\t", quote = ""))
         message("chip evidence regulators: ")
         showfirstlast(rownames(weighted_chip_evidence))
         message("chip evidence regulators: ")
@@ -100,17 +99,15 @@ create_html_summary <- function(rfiles, tagstr, mapfile, outdir = paste0(tempdir
         binary_chip_evidence <- weighted_chip_evidence
         binary_chip_evidence[binary_chip_evidence > 1] <- 1
         binary_chip_summary <- table(as.numeric(binary_chip_evidence))
-        methods::show(signif(binary_chip_summary/(dim(weighted_chip_evidence)[1] * dim(weighted_chip_evidence)[2]) * 
-            100, 3))
+        methods::show(signif(binary_chip_summary/(dim(weighted_chip_evidence)[1] * dim(weighted_chip_evidence)[2]) * 100, 3))
         
         nonzeroregs <- sum(rowSums(binary_chip_evidence) >= 0)
         nonzerotargs <- sum(colSums(binary_chip_evidence) != dim(binary_chip_evidence)[1] * -1)
         
-        write(paste0(nonzeroregs, " regulators and ", nonzerotargs, " targets with possible chip evidence."), 
-            file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
-        write(paste0(binary_chip_summary["1"], " (", signif(binary_chip_summary["1"]/(nonzeroregs * nonzerotargs) * 
-            100, 3), "%) of ", nonzeroregs, "*", nonzerotargs, " possible chip edges have at least one peak.<br>"), 
-            file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
+        write(paste0(nonzeroregs, " regulators and ", nonzerotargs, " targets with possible chip evidence."), file = paste0(htmlinfo$htmldir, 
+            htmlinfo$indexpath), append = TRUE)
+        write(paste0(binary_chip_summary["1"], " (", signif(binary_chip_summary["1"]/(nonzeroregs * nonzerotargs) * 100, 3), "%) of ", nonzeroregs, 
+            "*", nonzerotargs, " possible chip edges have at least one peak.<br>"), file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
         bin_summ <- cumSumTable(cbind(as.numeric(binary_chip_evidence), 1 - as.numeric(binary_chip_evidence)))
         myrnames <- c("Peaks", "noPeak", "NA")
         bin_summ <- cbind(myrnames, bin_summ)
@@ -164,8 +161,7 @@ create_html_summary <- function(rfiles, tagstr, mapfile, outdir = paste0(tempdir
                 allsummaries <- rbind(allsummaries, labeled_table)
                 resultspath <- paste0(htmlinfo$txtstr, runinfo$tagstr, ".all_summaries.txt")
                 message("Writing table: ", resultspath)
-                utils::write.table(allsummaries, paste0(htmlinfo$htmldir, resultspath), sep = "\t", row.names = FALSE, 
-                  col.names = TRUE, quote = FALSE)
+                utils::write.table(allsummaries, paste0(htmlinfo$htmldir, resultspath), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
             }  # end graphmeth
         }  # end modmeth
     }  # end rfile
