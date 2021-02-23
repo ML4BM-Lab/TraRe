@@ -38,12 +38,9 @@ Imports:
     	gplots,
     	gtools,
     	pvclust,
-    	doParallel,
     	R.utils,
     	dqrng,
-	parallel,
 	SummarizedExperiment,
-	BiocStyle,
 	BiocParallel,
 	matrixStats
 License: MIT + file LICENSE
