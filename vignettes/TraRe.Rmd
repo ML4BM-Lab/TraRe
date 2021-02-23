@@ -163,7 +163,7 @@ geneinfo <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
 # We have to make sure geneinfo and lognorm
 # have same rows (same genes).
 
-geneinfo <- geneinfo[rownames(lognorm_est_counts),,drop=F]
+geneinfo <- geneinfo[rownames(lognorm_est_counts),,drop=FALSE]
 
 # Now we can generate the SE object.
 SeObject <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = lognorm_est_counts),
