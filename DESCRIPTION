@@ -44,8 +44,7 @@ Imports:
     	dqrng,
 	parallel,
 	xlsx,
-	SummarizedExperiment,
-	vioplot
+	SummarizedExperiment
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
