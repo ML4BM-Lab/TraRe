@@ -44,6 +44,7 @@ Changes in Version 0.99.8
 Changes in Version 0.99.9
  ------------------
  + xlsx files changed to html, library removed
+ + More evaluated chunks in the vignettes
  + generate_cliques structure has changed, new plot function.
 
 
