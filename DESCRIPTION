@@ -1,6 +1,6 @@
 Package: TraRe
 Title: Transcriptional Rewiring 
-Version: 0.99.9
+Version: 0.99.10
 URL: https://github.com/ubioinformat/TraRe/tree/master
 Authors@R: 
     c(person(given = "Jesus",
