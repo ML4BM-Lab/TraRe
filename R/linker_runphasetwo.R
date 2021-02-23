@@ -52,9 +52,10 @@ LINKER_runPhase2 <- function(modules, Data, NrCores, mode = "VBSR", alpha = 1 - 
     bp_g <- list()
     i <- 1
 
-    # this will register nr of cores/threads, keep this
-    # here so the user can decide how many cores based on
-    # their hardware.
+    #this will register nr of cores/threads, keep this
+    #here so the user can decide how many cores based on
+    #their hardware.
+
     parallClass <- BiocParallel::bpparam()
     parallClass$workers <- NrCores
 
@@ -89,18 +90,21 @@ LINKER_runPhase2 <- function(modules, Data, NrCores, mode = "VBSR", alpha = 1 - 
                     betas <- res$beta
                     betas[res$pval > 0.05/(length(regulators) * length(targetgenes))] <- 0
                     driverMat[idx_gene, ] <- betas
+
                 } else if (mode == "LASSOmin") {
                     fit <- glmnet::cv.glmnet(t(X), y, alpha = alpha)
 
                     b_o <- stats::coef(fit, s = fit$lambda.min)
                     b_opt <- c(b_o[2:length(b_o)])  # removing the intercept.
                     driverMat[idx_gene, ] <- b_opt
+
                 } else if (mode == "LASSO1se") {
                     fit <- glmnet::cv.glmnet(t(X), y, alpha = alpha)
 
                     b_o <- stats::coef(fit, s = fit$lambda.1se)
                     b_opt <- c(b_o[2:length(b_o)])  # removing the intercept.
                     driverMat[idx_gene, ] <- b_opt
+
                 } else if (mode == "LM") {
                     for (idx_regs in seq_along(regulators)) {
                         x <- t(X)[, idx_regs]
@@ -125,9 +129,11 @@ LINKER_runPhase2 <- function(modules, Data, NrCores, mode = "VBSR", alpha = 1 - 
             if (length(regulated_genes) < 2) {
                 driverMat <- driverMat[regulated_genes, ]
                 driverMat <- driverMat[regulatory_genes]
+
             } else if (length(regulatory_genes) < 2) {
                 driverMat <- driverMat[, regulatory_genes]
                 driverMat <- driverMat[regulated_genes]
+
             } else {
                 driverMat <- driverMat[, regulatory_genes]
                 driverMat <- driverMat[regulated_genes, ]
@@ -135,11 +141,11 @@ LINKER_runPhase2 <- function(modules, Data, NrCores, mode = "VBSR", alpha = 1 - 
 
         }
 
-        return(igraph::graph_from_incidence_matrix(driverMat))
+        igraph::graph_from_incidence_matrix(driverMat)
 
     }
-    bp_g <- BiocParallel::bplapply(seq_along(modules),runPhase2Bettas,BPPARAM = parallClass)
 
+    bp_g <- BiocParallel::bplapply(seq_along(modules),runPhase2Bettas,BPPARAM = parallClass)
 
     return(bp_g)
 }

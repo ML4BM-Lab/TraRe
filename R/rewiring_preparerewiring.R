@@ -222,6 +222,8 @@ preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_c
         rewobject$responder <- responder
         rewobject$gene_info_df_keep <- gene_info_df_keep
         rewobject$name2idx <- name2idx
+        rewobject$allregs <- allregs
+        rewobject$alltargs <- alltargs
 
         rewobjects$datasets[[i]] <- rewobject
     }

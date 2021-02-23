@@ -37,7 +37,6 @@ runrewiring<- function(ObjectList){
   codedir <- paste0(system.file("extdata",package="TraRe"),"/RewiringReport/")
 
   #initialize common parameters
-
   regulator_info_col_name<-ObjectList$regulator_info_col_name
   phenotype_class_vals<-ObjectList$phenotype_class_vals
   phenotype_class_vals_label<-ObjectList$phenotype_class_vals_label
@@ -56,101 +55,118 @@ runrewiring<- function(ObjectList){
   # Initialize log file
   logfile_p <- paste0(indexpageinfo$htmldir,'logfile.txt')
 
-  write('----Prepare Rewiring summary----',logfile_p,append=TRUE)
+  write('----Prepare Rewiring summary----',logfile_p)
   write(logfile,logfile_p,append=TRUE)
   write('----End of Prepare Rewiring summary----',logfile_p,append=TRUE)
 
   #set.seed(1)
   dqrng::dqset.seed(1)
-  module_membership_list <- hash::hash()
 
   #we create rundata and combine the modules of both parsers.
+  #Lets generate the dupla (dataset's method - dataset's number)
 
-  for (modmeth in names(ObjectList$'datasets'[[1]]$rundata$modules)) { #VBSR
-    message("ModuleMethod ", modmeth)
+  duplas <- unlist(lapply(seq_along(ObjectList$datasets),
+                          function(i) paste(names(ObjectList$datasets[[i]]$rundata$modules),i)))
+
+  #Initialize c_allstats and statsnames variables
+
+  c_allstats <- c() #This is for the combined heatmap
+  c_module_membership_list <- c() #This is for the combined heatmap
+
+  statsnames <- c("module-method", "module-index", "orig-pval",
+                  "revised-pvalue", "num-targets", "num-regulators",
+                  "regulator-names","target-names", "num-samples", "num-genes",
+                  "num-class1", "num-class2")
+
+  for (dupla in duplas) {
+
+    #Initialize rewired module's hash table
+    module_membership_list <- hash::hash()
+
+    #Initialize allstats array
     allstats <- NULL
-    statsnames <- c("module-method", "module-index", "orig-pval",
-                    "revised-pvalue", "num-targets", "num-regulators",
-                    "regulator-names","target-names", "num-samples", "num-genes",
-                    "num-class1", "num-class2")
 
-    for (i in seq_along(ObjectList$'datasets')){
+    #For instance: 'VBSR X' to 'VBSR' and 'X'
+    modmeth_i <- unlist(strsplit(dupla,' '))
+
+    modmeth <- modmeth_i[1]
+    i <- as.numeric(modmeth_i[2])
+
+    #Output to the user which dupla we are working with
+    message(modmeth,' ',i)
+
+    rundata <- ObjectList$'datasets'[[i]]$rundata
+    norm_expr_mat_keep <- ObjectList$'datasets'[[i]]$norm_expr_mat_keep
+    keepsamps <- ObjectList$'datasets'[[i]]$keepsamps
+    keeplabels <- ObjectList$'datasets'[[i]]$keeplabels
+    class_counts <- ObjectList$'datasets'[[i]]$class_counts
+    final_signif_thresh <- ObjectList$'datasets'[[i]]$final_signif_thresh
+    responder <- ObjectList$'datasets'[[i]]$responder
+    gene_info_df_keep <- ObjectList$'datasets'[[i]]$gene_info_df_keep
+    name2idx <- ObjectList$'datasets'[[i]]$name2idx
+    allregs <- ObjectList$'datasets'[[i]]$allregs
+    alltargs <- ObjectList$'datasets'[[i]]$alltargs
 
 
-      modmeth_i<-paste(modmeth,i)
-      message('VBSR: ',i)
+    # This will register nr of cores/threads, keep this here
+    # so the user can decide how many cores based on
+    # their hardware.
 
-      rundata<-ObjectList$'datasets'[[i]]$rundata
-      norm_expr_mat_keep<-ObjectList$'datasets'[[i]]$norm_expr_mat_keep
-      keepsamps<-ObjectList$'datasets'[[i]]$keepsamps
-      keeplabels<-ObjectList$'datasets'[[i]]$keeplabels
-      class_counts<-ObjectList$'datasets'[[i]]$class_counts
-      final_signif_thresh<-ObjectList$'datasets'[[i]]$final_signif_thresh
-      responder<-ObjectList$'datasets'[[i]]$responder
-      gene_info_df_keep<-ObjectList$'datasets'[[i]]$gene_info_df_keep
-      name2idx<-ObjectList$'datasets'[[i]]$name2idx
+    parallClass <- BiocParallel::bpparam()
+    parallClass$workers <- ObjectList$NrCores
 
+    GenerateStats <- function(mymod){
 
-      # This will register nr of cores/threads, keep this here
-      # so the user can decide how many cores based on
-      # their hardware.
+      signify <- NULL
+      modregs <- unique(rundata$modules[[modmeth]][[mymod]]$regulators)
+      modtargs <- unique(rundata$modules[[modmeth]][[mymod]]$target_genes)
+      regnames <- paste(collapse = ", ", modregs)
+      targnames <- paste(collapse = ", ", modtargs)
+      keepfeats <- unique(c(modregs, modtargs))
+      modmat <- t(norm_expr_mat_keep[keepfeats, keepsamps])
+      modmeth_i_c <- paste(modmeth_i,collapse=' ')
 
-      parallClass <- BiocParallel::bpparam()
-      parallClass$workers <- ObjectList$NrCores
+      orig_pval <- rewiring_test(modmat, keeplabels + 1, perm = orig_test_perms)
+      new_pval <- orig_pval
+      stats <- c(modmeth_i_c, mymod, signif(orig_pval, 3), signif(new_pval, 3),
+                 length(modtargs), length(modregs), regnames,targnames, dim(modmat),
+                 class_counts)
+      if (orig_pval < retest_thresh | orig_pval == 1 | mymod %% 300 == 0) {
+        #methods::show(paste(c("ModNum and NumGenes", mymod, length(keepfeats))))
+        result <- rewiring_test_pair_detail(modmat, keeplabels + 1,perm = retest_perms)
+        new_pval <- result$pval
+        stats <- c(modmeth_i_c, mymod, signif(orig_pval, 3),
+                   signif(new_pval, 3), length(modtargs),
+                   length(modregs), regnames,targnames, dim(modmat), class_counts)
 
-      GenerateStats <- function(mymod){
-
-        signify <- NULL
-        modregs <- unique(rundata$modules[[modmeth]][[mymod]]$regulators)
-        modtargs <- unique(rundata$modules[[modmeth]][[mymod]]$target_genes)
-        regnames <- paste(collapse = ", ", modregs)
-        targnames <- paste(collapse = ", ", modtargs)
-        keepfeats <- unique(c(modregs, modtargs))
-        modmat <- t(norm_expr_mat_keep[keepfeats, keepsamps])
-
-        orig_pval <- rewiring_test(modmat, keeplabels + 1, perm = orig_test_perms)
-        new_pval <- orig_pval
-        stats <- c(modmeth_i, mymod, signif(orig_pval, 3), signif(new_pval, 3),
-                   length(modtargs), length(modregs), regnames,targnames, dim(modmat),
-                   class_counts)
-        if (orig_pval < retest_thresh | orig_pval == 1 | mymod %% 300 == 0) {
-          #methods::show(paste(c("ModNum and NumGenes", mymod, length(keepfeats))))
-          result <- rewiring_test_pair_detail(modmat, keeplabels + 1,perm = retest_perms)
-          new_pval <- result$pval
-          stats <- c(modmeth_i, mymod, signif(orig_pval, 3),
-                     signif(new_pval, 3), length(modtargs),
-                     length(modregs), regnames,targnames, dim(modmat), class_counts)
-
-          if (new_pval <= final_signif_thresh | new_pval == 1) {
-            # save as list
-            modname <- paste0(modmeth,'.',i, ".mod.", mymod)
-            #module_membership_list[[modname]] <- keepfeats
-            signify <- list(modname,keepfeats)
-          }
-
+        if (new_pval <= final_signif_thresh | new_pval == 1) {
+          # save as list
+          modname <- paste0(modmeth,'.',i, ".mod.", mymod)
+          #module_membership_list[[modname]] <- keepfeats
+          signify <- list(modname,keepfeats)
         }
-        return(list(stats,signify))
 
       }
-      foreach_allstats <-BiocParallel::bplapply(seq_along(rundata$modules[[modmeth]]),
-                                                GenerateStats, BPPARAM = parallClass)
+      return(list(stats,signify))
 
-      for (elements in foreach_allstats){
+    }
+    foreach_allstats <-BiocParallel::bplapply(seq_along(rundata$modules[[modmeth]]),
+                                              GenerateStats, BPPARAM = parallClass)
 
-        #now we recover first allstats matrix
-        foreach_stats <- elements[[1]]
-        allstats<-rbind(allstats,foreach_stats)
+    for (elements in foreach_allstats){
 
-        #and then update the module_membership dictionary
-        hashtable <- elements[[2]]
+      #now we recover first allstats matrix
+      foreach_stats <- elements[[1]]
+      allstats<-rbind(allstats,foreach_stats)
 
-        if (!is.null(hashtable)){
+      #and then update the module_membership dictionary
+      hashtable <- elements[[2]]
 
-          module_membership_list[[hashtable[[1]]]] <- hashtable[[2]]
+      if (!is.null(hashtable)){
 
-        }
+        module_membership_list[[hashtable[[1]]]] <- hashtable[[2]]
+
       }
-
     }
 
     # generate txt file with pvals
@@ -159,169 +175,208 @@ runrewiring<- function(ObjectList){
     allstats[, "orig-pval"] <- signif(as.numeric(allstats[, "orig-pval"]), 3)
     allstats[, "revised-pvalue"] <- signif(as.numeric(allstats[, "revised-pvalue"]), 3)
 
-    # calculate overlap between signif mod sets
-    fisher_tbl <- NULL
-    fisher_cols <- c("user_gene_set", "property_gene_set", "universe_count",
-                     "user_count", "property_count", "overlap_count", "pval")
+    message('Generating Heatmap')
 
-    universe_size <- length(rownames(ObjectList$'datasets'[[1]]$norm_expr_mat_keep))
+    #Generate heatmap
+    gen_heatmap <- function(ObjectList,module_membership_list,allstats,cmp=FALSE,modmeth_i=''){
 
-    all_modules <- names(module_membership_list)
+      # calculate overlap between signif mod sets
+      fisher_tbl <- NULL
+      fisher_cols <- c("user_gene_set", "property_gene_set", "universe_count",
+                       "user_count", "property_count", "overlap_count", "pval")
 
-    methods::show(paste(c("Significant Modules: ", all_modules)))
-    if (!length(all_modules)) return(message('No significant modules found.'))
+      if (cmp){
+        #If compare mode enable, select the max of dataset's genes
+        #as universe_size
+        universe_size <- max(vapply(ObjectList$datasets,
+                                function(x) nrow(x$norm_expr_mat_keep),
+                                FUN.VALUE=1))
+      }else{
+        universe_size <- nrow(ObjectList$'datasets'[[i]]$norm_expr_mat_keep)
+      }
 
-    #save significant modules as .txt
-    utils::write.table(all_modules,file=paste(outdir,
-                                              'sigmodules.txt',sep="/"),quote=FALSE,sep="\n",row.names = FALSE,col.names = FALSE)
+      all_modules <- names(module_membership_list)
 
-    module_pairs <- gtools::combinations(length(all_modules), 2, all_modules,
-                                         repeats = TRUE)
+      methods::show(paste(c("Significant Modules: ", all_modules)))
+      if (!length(all_modules)) return(message('No significant modules found.'))
 
-    #fisher test (hipergeometric distribution)
+      #save significant modules as .txt
+      sigmodules_p <- paste0('txts/sigmodules_',modmeth_i,'.txt')
+      utils::write.table(all_modules,file=paste(outdir,sigmodules_p,sep="/"),
+                         quote=FALSE,sep="\n",row.names = FALSE,col.names = FALSE)
 
-    pvals <- NULL
-    for (pair_idx in seq_len(nrow(module_pairs))) {
+      module_pairs <- gtools::combinations(length(all_modules), 2, all_modules,
+                                           repeats = TRUE)
 
-      mod1genes <- module_membership_list[[module_pairs[pair_idx, ][1]]]
-      mod2genes <- module_membership_list[[module_pairs[pair_idx, ][2]]]
-      stats <- c(module_pairs[pair_idx, ][1], module_pairs[pair_idx, ][2],
-                 universe_size, length(mod1genes), length(mod2genes),
-                 length(intersect(mod1genes, mod2genes)))
-      #show(stats)
+      #fisher test (hipergeometric distribution)
 
-      #building contigency table.
-      contig_tbl <- as.table(matrix(c(length(intersect(mod1genes, mod2genes)),
-                                      length(setdiff(mod1genes, mod2genes)),
-                                      length(setdiff(mod2genes, mod1genes)),
-                                      universe_size - length(mod2genes) -
-                                        length(mod1genes) +
-                                        length(intersect(mod1genes, mod2genes))),
-                                    ncol = 2, byrow = TRUE))
-      #show(contig_tbl)
-      res <- stats::fisher.test(contig_tbl, alternative = "g")
-      fisher_tbl <- rbind(fisher_tbl, c(stats, res$p.value))
-      pvals <- c(pvals, res$p.value)
+      pvals <- NULL
+      for (pair_idx in seq_len(nrow(module_pairs))) {
+
+        mod1genes <- module_membership_list[[module_pairs[pair_idx, ][1]]]
+        mod2genes <- module_membership_list[[module_pairs[pair_idx, ][2]]]
+        stats <- c(module_pairs[pair_idx, ][1], module_pairs[pair_idx, ][2],
+                   universe_size, length(mod1genes), length(mod2genes),
+                   length(intersect(mod1genes, mod2genes)))
+        #show(stats)
+
+        #building contigency table.
+        contig_tbl <- as.table(matrix(c(length(intersect(mod1genes, mod2genes)),
+                                        length(setdiff(mod1genes, mod2genes)),
+                                        length(setdiff(mod2genes, mod1genes)),
+                                        universe_size - length(mod2genes) -
+                                          length(mod1genes) +
+                                          length(intersect(mod1genes, mod2genes))),
+                                      ncol = 2, byrow = TRUE))
+        #show(contig_tbl)
+        res <- stats::fisher.test(contig_tbl, alternative = "g")
+        fisher_tbl <- rbind(fisher_tbl, c(stats, res$p.value))
+        pvals <- c(pvals, res$p.value)
+
+      }
+
+      # generate txt file with pvals
+      colnames(fisher_tbl) <- fisher_cols
+      fisher_tbl <- as.data.frame(fisher_tbl)
+      fisher_tbl$pval <- signif(log10(as.numeric(fisher_tbl$pval)) * -1, 3)
+      #Maximum pval is 300
+      fisher_tbl$pval[fisher_tbl$pval > 300] <- 300
+
+      #Bonferroni correction (to implement)
+
+      # get the max(fisher_tbl$pval) for scaling heatmap colors
+      pval_max <- ceiling(max(fisher_tbl$pval))
+
+      simmat <- matrix(-0.1, length(all_modules), length(all_modules),
+                       dimnames = list(all_modules, all_modules))
+      simmat[cbind(fisher_tbl$user_gene_set, fisher_tbl$property_gene_set)] <- fisher_tbl$pval
+      simmat[cbind(fisher_tbl$property_gene_set, fisher_tbl$user_gene_set)] <- fisher_tbl$pval
+
+      rownames(simmat) <- gsub(paste0("mod."), "", rownames(simmat))
+      colnames(simmat) <- gsub(paste0("mod."), "", colnames(simmat))
+
+      print(simmat)
+
+      pvc_result <- pvclust::pvclust(simmat, method.dist = "cor", method.hclust = "average",
+                                     nboot = 1000)
+
+      clusters <- pvclust::pvpick(pvc_result)
+      myplotname <- paste0("mod_sim.", modmeth,'.',i)
+      grDevices::png(paste0(imgdir, myplotname, ".dendro.png"),
+                     width = 8 * 300,
+                     height = 4 * 300,
+                     res = 300, pointsize = 8)
+      plot(pvc_result, hang = -1, cex = 1)
+      pvclust::pvrect(pvc_result, alpha = 0.9)
+      grDevices::dev.off()
+
+      # create heatmap plot
+      if (length(all_modules) > 1) {
+        myplotname <- paste0("mod_sim.", modmeth,'.',i)
+
+        #Generate the color palette
+        my_palette <- grDevices::colorRampPalette(c("darkgrey",
+                                                    "yellow", "green"))(n = 299)
+
+        #Generate a const to compensate pvals
+        compensate_const <- pval_max/300
+
+        #Fix a lower bound to 0.01 for darkgrey and
+        #apply compensate_const if that lower bound is not
+        #reached
+        lower_bound <- max(2,4.9*compensate_const)
+
+        #Generate new_compensate_const based on the lower_bound
+        new_compensate_const <- lower_bound/4.9
+
+        #Correct higherbound based on the new compensate const
+        higher_bound <- 199*new_compensate_const
+
+        my_col_breaks <- c(seq(0, lower_bound, length = 100), # for darkgrey
+                           seq(lower_bound+0.1, higher_bound, length = 100), # for yellow
+                           seq(higher_bound+1, 300*new_compensate_const, length = 100)) # for green
+
+        grDevices::png(paste0(imgdir, myplotname, ".heatm.png"),
+                       width = 8 * 300,
+                       height = 8 * 300,
+                       res = 300, pointsize = 8)
+        row_order <- labels(stats::as.dendrogram(pvc_result$hclust))
+        #show(row_order)
+        heatm <- simmat[row_order, row_order]
+        gplots::heatmap.2(heatm,
+                          Rowv = FALSE,
+                          Colv = FALSE,
+                          scale = "none",
+                          col = my_palette,
+                          breaks = my_col_breaks,
+                          dendrogram = "none",
+                          cellnote = round(heatm, 0),
+                          trace = "none",
+                          density.info = "none",
+                          notecol = "black",
+                          margins = c(8, 8),
+                          cexRow = 1.5,
+                          cexCol = 1.5,
+                          lmat = rbind(c(4, 4), c(2, 1), c(0, 3)),
+                          lwid = c(1, 4),
+                          lhei = c(1, 8, .1)
+        )
+        grDevices::dev.off()
+        # write plot to index page
+        write(paste0("<img src='", indexpageinfo$imgstr, myplotname, ".dendro.png",
+                     "' alt='", myplotname,
+                     "' height='", 300, "' width='", 600, "'> &emsp; <br>\n"),
+              paste0(indexpageinfo$htmldir, indexpageinfo$indexpath),
+              append = TRUE)
+        write(paste0("<img src='", indexpageinfo$imgstr, myplotname, ".heatm.png",
+                     "' alt='", myplotname,
+                     "' height='", 600, "' width='", 600, "'> &emsp; <br>\n"),
+              paste0(indexpageinfo$htmldir, indexpageinfo$indexpath),
+              append = TRUE)
+
+      }else warning('Unique module found, heatmap can not be generated')
+      # end module simularity if
+
+      # write all stats table
+      sortidxs <- sort(as.numeric(allstats[, "revised-pvalue"]),
+                       decreasing = FALSE, index.return = TRUE)$ix
+      write_tables_all(allstats[sortidxs, ],
+                       tabletype = paste0(modmeth_i, "_mod_rewiring_scores"),
+                       filestr = "data", html_idxs = seq_len(nrow(allstats)),
+                       htmlinfo = indexpageinfo)
+
+      # write module similarity table
+      sortidxs <- sort(as.numeric(fisher_tbl[, "pval"]),
+                       decreasing = FALSE, index.return = TRUE)$ix
+      write_tables_all(fisher_tbl[sortidxs, ],
+                       tabletype = paste0(modmeth_i, "_sigmod_overlap"),
+                       filestr = "data", html_idxs = seq_len(nrow(fisher_tbl)),
+                       htmlinfo = indexpageinfo)
+
+      return(clusters)
+
     }
 
-    # generate txt file with pvals
-    colnames(fisher_tbl) <- fisher_cols
-    fisher_tbl <- as.data.frame(fisher_tbl)
-    fisher_tbl$pval <- signif(log10(as.numeric(fisher_tbl$pval)) * -1, 3)
-    #Maximum pval is 300
-    fisher_tbl$pval[fisher_tbl$pval > 300] <- 300
-
-    # get the max(fisher_tbl$pval) for scaling heatmap colors
-    pval_max <- ceiling(max(fisher_tbl$pval))
-
-    simmat <- matrix(-0.1, length(all_modules), length(all_modules),
-                     dimnames = list(all_modules, all_modules))
-    simmat[cbind(fisher_tbl$user_gene_set, fisher_tbl$property_gene_set)] <- fisher_tbl$pval
-    simmat[cbind(fisher_tbl$property_gene_set, fisher_tbl$user_gene_set)] <- fisher_tbl$pval
-
-    rownames(simmat) <- gsub(paste0("mod."), "", rownames(simmat))
-    colnames(simmat) <- gsub(paste0("mod."), "", colnames(simmat))
-
-    pvc_result <- pvclust::pvclust(simmat, method.dist = "cor", method.hclust = "average",
-                                   nboot = 1000)
-
-    clusters <- pvclust::pvpick(pvc_result)
-    myplotname <- paste0("mod_sim.", modmeth)
-    grDevices::png(paste0(imgdir, myplotname, ".dendro.png"),
-                   width = 8 * 300,
-                   height = 4 * 300,
-                   res = 300, pointsize = 8)
-    plot(pvc_result, hang = -1, cex = 1)
-    pvclust::pvrect(pvc_result, alpha = 0.9)
-    grDevices::dev.off()
-
-    # create heatmap plot
-    if (length(all_modules) > 1) {
-      myplotname <- paste0("mod_sim.", modmeth)
-      my_palette <- grDevices::colorRampPalette(c("darkgrey",
-                                                  "yellow", "green"))(n = 299)
-      #Generate a const to compensate pvals
-      compensate_const <- pval_max/300
-
-      #Fix a lower bound to 0.01 for darkgrey and
-      #apply compensate_const if that lower bound is not
-      #reached
-      lower_bound <- max(2,4.9*compensate_const)
-
-      #Generate new_compensate_const based on the lower_bound
-      new_compensate_const <- lower_bound/4.9
-
-      #Correct higherbound based on the new compensate const
-      higher_bound <- 199*new_compensate_const
-
-      my_col_breaks <- c(seq(0, lower_bound, length = 100), # for darkgrey
-                         seq(lower_bound+0.1, higher_bound, length = 100), # for yellow
-                         seq(higher_bound+1, 300*new_compensate_const, length = 100)) # for green
-
-      grDevices::png(paste0(imgdir, myplotname, ".heatm.png"),
-                     width = 8 * 300,
-                     height = 8 * 300,
-                     res = 300, pointsize = 8)
-      row_order <- labels(stats::as.dendrogram(pvc_result$hclust))
-      #show(row_order)
-      heatm <- simmat[row_order, row_order]
-      gplots::heatmap.2(heatm,
-                        Rowv = FALSE,
-                        Colv = FALSE,
-                        scale = "none",
-                        col = my_palette,
-                        breaks = my_col_breaks,
-                        dendrogram = "none",
-                        cellnote = round(heatm, 0),
-                        trace = "none",
-                        density.info = "none",
-                        notecol = "black",
-                        margins = c(8, 8),
-                        cexRow = 1.5,
-                        cexCol = 1.5,
-                        lmat = rbind(c(4, 4), c(2, 1), c(0, 3)),
-                        lwid = c(1, 4),
-                        lhei = c(1, 8, .1)
-      )
-      grDevices::dev.off()
-      # write plot to index page
-      write(paste0("<img src='", indexpageinfo$imgstr, myplotname, ".dendro.png",
-                   "' alt='", myplotname,
-                   "' height='", 300, "' width='", 600, "'> &emsp; <br>\n"),
-            paste0(indexpageinfo$htmldir, indexpageinfo$indexpath),
-            append = TRUE)
-      write(paste0("<img src='", indexpageinfo$imgstr, myplotname, ".heatm.png",
-                   "' alt='", myplotname,
-                   "' height='", 600, "' width='", 600, "'> &emsp; <br>\n"),
-            paste0(indexpageinfo$htmldir, indexpageinfo$indexpath),
-            append = TRUE)
-
-    }else warning('Unique module found, heatmap can not be generated')
-    # end module simularity if
-
-    # write all stats table
-    sortidxs <- sort(as.numeric(allstats[, "revised-pvalue"]),
-                     decreasing = FALSE, index.return = TRUE)$ix
-    write_tables_all(allstats[sortidxs, ],
-                     tabletype = paste0(modmeth, "_mod_rewiring_scores"),
-                     filestr = "data", html_idxs = seq_len(nrow(allstats)),
-                     htmlinfo = indexpageinfo)
-
-    # write module similarity table
-    sortidxs <- sort(as.numeric(fisher_tbl[, "pval"]),
-                     decreasing = FALSE, index.return = TRUE)$ix
-    write_tables_all(fisher_tbl[sortidxs, ],
-                     tabletype = paste0(modmeth, "_sigmod_overlap"),
-                     filestr = "data", html_idxs = seq_len(nrow(fisher_tbl)),
-                     htmlinfo = indexpageinfo)
+    clusters <- gen_heatmap(ObjectList,module_membership_list,
+                allstats,modmeth_i = paste(modmeth,i,sep='_'))
 
     #Check if more than one dataset is being analyzed,
     #in which case only heatmap is available, so program
     #finish here.
 
     if (length(ObjectList$'datasets')>1){
-      return(1)
-    }
+
+      #concatenate allstats and module_membership_list
+      #to generate the combinated heatmap
+      c_allstats <- c(c_allstats,allstats)
+      c_module_membership_list <- c(c_module_membership_list,
+                                    module_membership_list)
+
+      #Generate the combined heatmap
+      gen_heatmap(ObjectList,c_module_membership_list,
+                  c_allstats,TRUE,'combined')
+
+    }else{
 
     # Create multiplicity table
     supermod_regs_list <- NULL
@@ -337,24 +392,29 @@ runrewiring<- function(ObjectList){
 
       message('Cluster number: ',numclus)
 
+      #Name the folder of supermodule numclus within method modmeth
+      foldername_p <- paste0('supermodule_',numclus,'_',modmeth,i)
+
       #Create dir for cluster numclus
-      dir.create(paste0(outdir,'/supermodule_',numclus))
+      dir.create(paste0(outdir,'/',foldername_p))
 
       #Create txts folder in numclus's folder
-      dir.create(paste0(outdir,'/supermodule_',numclus,'/txts'))
+      dir.create(paste0(outdir,'/',foldername_p,'/txts'))
       #Create imgs folder in numclus's folder
-      dir.create(paste0(outdir,'/supermodule_',numclus,'/imgs'))
+      dir.create(paste0(outdir,'/',foldername_p,'/imgs'))
+      #Create html folder in numclu's folder
+      dir.create(paste0(outdir,'/',foldername_p,'/htmls'))
 
       # Supermodule number tittle
-      write(
-        paste0(
-          "<br><table style='width:100%' bgcolor='gray'><tr>",
-          "<td style='text-align: center; vertical-align: middle;'><h1>",
-          "Supermodule ",numclus,
-          "</h1></td></tr></table><br>\n"
-        ),
-        paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE
-      )
+      # write(
+      #   paste0(
+      #     "<br><table style='width:100%' bgcolor='gray'><tr>",
+      #     "<td style='text-align: center; vertical-align: middle;'><h1>",
+      #     "Supermodule ",numclus,
+      #     "</h1></td></tr></table><br>\n"
+      #   ),
+      #   paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE
+      # )
 
       #Write to the logfile
       mods <- clusters$clusters[[numclus]]
@@ -363,7 +423,8 @@ runrewiring<- function(ObjectList){
       mods <- paste0(vapply(mods,FUN=paste0,
                                    collapse='|',FUN.VALUE=''),collapse='\n')
 
-      write(paste0('\nSupermodule ',numclus,' : ',mods,'\n'),logfile_p,append = TRUE)
+      #Add to logfile
+      write(paste0('\nSupermodule ',numclus,', mode ',modmeth,' ',i, ' : ',mods,'\n'),logfile_p,append = TRUE)
 
       for (clusmod in clusters$clusters[[numclus]]) {
 
@@ -397,10 +458,13 @@ runrewiring<- function(ObjectList){
           "Multiplicity Table",
           "</h1></td></tr></table><br>\n"
         ),
-        paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE
+        paste0(indexpageinfo$htmldir,foldername_p,'/' ,indexpageinfo$indexpath),
+        append = TRUE
       )
       # write multitab table to index.html
-      write(table2html(multitab), paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
+      write(table2html(multitab), paste0(indexpageinfo$htmldir,'/',
+                                         foldername_p,'/',indexpageinfo$indexpath),
+            append = TRUE)
 
       alllabels <- responder[keepsamps]
       samps2pheno <- alllabels
@@ -426,11 +490,11 @@ runrewiring<- function(ObjectList){
               "Raw Modules Summary",
               "</h1></td></tr></table><br>\n"
             ),
-            paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE
+            paste0(indexpageinfo$htmldir, foldername_p, '/' , indexpageinfo$indexpath), append = TRUE
           )
 
           pname <- paste(sep = ".", "igraphs.raw.full_graph")
-          grDevices::png(paste0(outdir, '/supermodule_',numclus,'/imgs/', pname, ".png"), 1500, 750)
+          grDevices::png(paste0(outdir, '/',foldername_p,'/imgs/', pname, ".png"), 1500, 750)
           mylayout <- return_layout_phenotype(rawrunmoddata$regulators,
                                               rawrunmoddata$target_genes,
                                               rawsumm$nodesumm,
@@ -440,10 +504,10 @@ runrewiring<- function(ObjectList){
           grDevices::dev.off()
 
           # write plot to index page
-          write(paste0("<img src='", 'supermodule_',numclus,'/imgs/', pname, ".png",
+          write(paste0("<img src='", 'imgs/', pname, ".png",
                        "' alt='", pname,
                        "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
-                paste0(indexpageinfo$htmldir, indexpageinfo$indexpath),
+                paste0(indexpageinfo$htmldir, foldername_p, '/' , indexpageinfo$indexpath),
                 append = TRUE)
         }
 
@@ -454,7 +518,8 @@ runrewiring<- function(ObjectList){
                          tabletype = paste0(modmeth, "_raw_nodesumm"),
                          filestr = "data", html_idxs = seq_len(nrow(rawsumm$nodesumm)),
                          htmlinfo = indexpageinfo,
-                         extradir = paste0('supermodule_',numclus,'/'))
+                         extradir = paste0(foldername_p,'/'),
+                         glossarypath = '../glossary.html')
 
         sortidxs <- sort(as.numeric(rawsumm$fulledgesumm[, "all.weights"]),
                          decreasing = FALSE, index.return = TRUE)$ix
@@ -462,11 +527,12 @@ runrewiring<- function(ObjectList){
                          tabletype = paste0(modmeth, "_raw_edgesumm"),
                          filestr = "data", html_idxs = seq_len(nrow(rawsumm$fulledgesumm)),
                          htmlinfo = indexpageinfo,
-                         extradir = paste0('supermodule_',numclus,'/'))
+                         extradir = paste0(foldername_p,'/'),
+                         glossarypath = '../glossary.html')
 
         #Write raw and refined r object
         # nodesumm, fulledgesumm, full_graph, respond_graph, nonresp_graph
-        if (!cut) saveRDS(rawsumm, file = paste0(outdir,'/supermodule_',numclus, "/rawsumm.rds"))
+        if (!cut) saveRDS(rawsumm, file = paste0(outdir, '/',foldername_p, "/rawsumm.rds"))
       }
 
       #If we have failed generating the raw full graph, we cant generate refined graphs
@@ -489,11 +555,11 @@ runrewiring<- function(ObjectList){
           "Refined Modules Summary",
           "</h1></td></tr></table><br>\n"
         ),
-        paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE
+        paste0(indexpageinfo$htmldir, foldername_p, '/', indexpageinfo$indexpath), append = TRUE
       )
 
       pname <- paste(sep = ".", "igraphs.refined.graphs")
-      grDevices::png(paste0(outdir, '/supermodule_',numclus,'/imgs/', pname, ".png"), 1500, 750)
+      grDevices::png(paste0(outdir, '/',foldername_p,'/imgs/', pname, ".png"), 1500, 750)
       graphics::par(mfrow = c(1, 3))
 
       mylayout <- return_layout_phenotype(refinedrunmoddata$regulators,
@@ -508,10 +574,10 @@ runrewiring<- function(ObjectList){
       grDevices::dev.off()
 
       # write plot to index page
-      write(paste0("<img src='", 'supermodule_',numclus,'/imgs/', pname, ".png",
+      write(paste0("<img src='", 'imgs/', pname, ".png",
                    "' alt='", pname,
                    "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
-            paste0(indexpageinfo$htmldir, indexpageinfo$indexpath),
+            paste0(indexpageinfo$htmldir, foldername_p, '/' ,indexpageinfo$indexpath),
             append = TRUE)
 
       # Write tables for refinedsumm
@@ -521,7 +587,7 @@ runrewiring<- function(ObjectList){
                        tabletype = paste0(modmeth, "_refined_nodesumm"),
                        filestr = "data", html_idxs = seq_len(nrow(refinedsumm$nodesumm)),
                        htmlinfo = indexpageinfo,
-                       extradir = paste0('supermodule_',numclus,'/'))
+                       extradir = paste0(foldername_p,'/'))
 
       sortidxs <- sort(as.numeric(refinedsumm$fulledgesumm[, "all.weights"]),
                        decreasing = FALSE, index.return = TRUE)$ix
@@ -529,13 +595,20 @@ runrewiring<- function(ObjectList){
                        tabletype = paste0(modmeth, "_refined_edgesumm"),
                        filestr = "data", html_idxs = seq_len(nrow(refinedsumm$fulledgesumm)),
                        htmlinfo = indexpageinfo,
-                       extradir = paste0('supermodule_',numclus,'/'))
+                       extradir = paste0(foldername_p,'/'))
 
       #Write raw and refined r object
       # nodesumm, fulledgesumm, full_graph, respond_graph, nonresp_graph
-      saveRDS(refinedsumm, file = paste0(outdir,'/supermodule_',numclus, "/refinedsumm.rds"))
+      saveRDS(refinedsumm, file = paste0(outdir,'/',foldername_p, "/refinedsumm.rds"))
+
+      #Generate the htmls for every supermodule from the refinedsumm.rds
+      html_from_graph(gpath = paste0(outdir,'/',foldername_p, "/refinedsumm.rds"),
+                       wpath = paste0(outdir,'/',foldername_p),
+                       user_mode = FALSE,
+                       dataset = norm_expr_mat_keep[allregs,])
 
 
-      }
+    }
+   }
   }
 }

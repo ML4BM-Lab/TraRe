@@ -1,6 +1,6 @@
-#' Excel generation
+#' Html generation
 #'
-#' From input Gene Regulatory Network, an excel is generated containing a table with
+#' From input Gene Regulatory Network, an html is generated containing a table with
 #' driver to target phenotype dependent relationships. Brief summary containing
 #' drivers normalized xor sum, which is the ratio between drivers-targets connections
 #' present only in one of both phenotypes over all possible connections, and cliques, which are driver genes
@@ -9,11 +9,12 @@
 #'
 #'
 #' @param gpath path to the graph object ('refinedsumm.rds'). (RDS format)
-#' @param wpath writing path, where the excel file will be saved. (Default: temp directory)
+#' @param wpath writing path, where the html and txts file will be saved. (Default: temp directory)
+#' @param user_mode boolean indicating if this function is called from user or internaly. (Default: TRUE)
 #' @param cliquesbool indicating if cliques method should be added to the summary table. (Default: TRUE)
 #' @param ... every argument you should pass to generatecliques() in case cliquesbool is TRUE.
 #'
-#' @return Excel containing the mentioned parameters.
+#' @return Html and txts containing the mentioned files.
 #'
 #' @examples
 #'
@@ -22,19 +23,20 @@
 #' ## of this package.
 #'
 #' gpath <- paste0(system.file('extdata',package='TraRe'),'/refinedsumm.rds')
-#' wpath <- paste0(system.file('extdata',package='TraRe'),'/grnsumm.xlsx')
+#' wpath <- paste0(system.file('extdata',package='TraRe'))
 #'
 #' ## We are going to use the drivers dataset from the external data folder as well.
 #' ## For more information about generatecliques() please check the help page of it.
 #'
 #' dataset<-readRDS(paste0(system.file('extdata',package='TraRe')
 #'                  ,'/tfs_linker_example_eg.rds'))
-#' excel_generation(gpath=gpath,wpath=wpath,dataset=dataset)
+#' html_from_graph(gpath=gpath,wpath=wpath,dataset=dataset)
 #'
 #'
 #' @export
 
-excel_generation <- function(gpath = NULL, wpath = paste0(tempdir(), "/grnsumm.xlsx"), cliquesbool = TRUE, ...) {
+html_from_graph <- function(gpath = NULL, wpath = paste0(tempdir()),
+                             user_mode = TRUE, cliquesbool = TRUE, ...) {
 
     if (is.null(gpath)) {
         stop("Path to the graph object must be specified")
@@ -42,6 +44,7 @@ excel_generation <- function(gpath = NULL, wpath = paste0(tempdir(), "/grnsumm.x
 
     if (inherits(try(summary(gpath)$class, TRUE), "try-error")) {
         # check for url object check for weburl check if local url exists
+
         if (inherits(try(url(gpath), TRUE), "try-error")) {
             if (!file.exists(gpath)) {
                 stop("graph object in the specified folder must exist")
@@ -84,13 +87,13 @@ excel_generation <- function(gpath = NULL, wpath = paste0(tempdir(), "/grnsumm.x
     signature <- as.integer(xor(NR, R))
 
     # Create Data Frame
-    excel <- data.frame(do.call(rbind, strsplit(list_final, " ")), NR, R, signature)
-    names(excel) <- c("Drivers", "Targets", "NR", "R", "XOR")
+    df <- data.frame(do.call(rbind, strsplit(list_final, " ")), NR, R, signature)
+    names(df) <- c("Drivers", "Targets", "NR", "R", "XOR")
 
     # Summary table -----------------------------------------------------------
 
     # Sum of XOR
-    drivers_xor <- split(excel$XOR, excel$Drivers)
+    drivers_xor <- split(df$XOR, df$Drivers)
     drivers_xor_sum <- vapply(drivers_xor, sum, FUN.VALUE = c(1))
 
     # Normalization
@@ -123,19 +126,90 @@ excel_generation <- function(gpath = NULL, wpath = paste0(tempdir(), "/grnsumm.x
 
         # Create Data frame with cliques
         sumXOR <- data.frame(normalized_sum, Cliques, check.names = TRUE, check.rows = TRUE)
-        colnames(sumXOR) <- c("Normalized_XOR_Sum", "Cliques")
+        colnames(sumXOR) <- c("Normalized XOR Sum", "Cliques")
 
     } else {
 
         # Create Data frame without cliques
         sumXOR <- data.frame(normalized_sum, check.names = TRUE, check.rows = TRUE)
-        colnames(sumXOR) <- c("Normalized_XOR_Sum")
+        colnames(sumXOR) <- c("Normalized XOR Sum")
 
     }
 
-    # Export to xlsx ------------------------------------------------------------
+    ## Export to txt and  html
 
-    # Write the data
-    xlsx::write.xlsx(excel, file = wpath, sheetName = "Table", col.names = TRUE, row.names = FALSE, append = FALSE)
-    xlsx::write.xlsx(sumXOR, file = wpath, sheetName = "Summary", col.names = TRUE, row.names = TRUE, append = TRUE)
+    #check if this function is called from runrewiring or from user
+
+    if (!user_mode){
+        txts_path <- paste0(wpath,'/txts')
+        htmls_path <- paste0(wpath,'/htmls')
+    }else{
+        #Create directory
+        dir.create(wpath)
+        #Assign paths
+        txts_path <- wpath
+        htmls_path <- wpath
+    }
+
+    ##Save as .txt
+
+    #Df
+    download_df <- paste0(txts_path,'/refined_supermodule_edges.txt')
+    utils::write.table(df,file = download_df, sep='\t',quote=F)
+
+    #SumXOR
+    download_sumXOR <- paste0(txts_path,'/refined_supermodule_summary.txt')
+    utils::write.table(sumXOR,file = download_sumXOR, sep='\t',quote = F)
+
+    #Generate path
+    path_html <- paste0(htmls_path,'/refined_edges_table.html')
+
+    #Generate html from df and sumXOR
+    df_to_html(df,sumXOR,
+                  path_html = path_html,
+                  download_df = download_df,
+                  download_sumXOR = download_sumXOR)
+
+}
+
+
+#Helper function
+
+df_to_html <- function(df,sumXOR,
+                          path_html = 'C:/Users/Jesus/Desktop/refined.html',
+                          download_df = '',
+                          download_sumXOR = ''){
+
+
+    #Define containers
+    write(paste0("<style>\n.floatLeft { width: 25%; float: left; margin-left: 200px;}",
+                 "\n.floatRight { width: 25%; float: right; margin-right: 250px;}",
+                 "\n.container { overflow: hidden; }\n</style>"),file = path_html)
+
+
+    #First the df file
+    write(paste0("<table border = 1 width = '100%'><tr bgcolor = ", "'#AAAAAA'><th><a href = '",
+                 download_df, "' target=", "'_blank'>Download Rewiring Edges</a></th><th><a href = '",
+                 download_sumXOR, "' target='_blank'>Download Summary</a></th></tr></table><br><br>"),
+
+          file = path_html, append= TRUE)
+
+    write(paste0("<div class='container'>\n",
+                 "<div class='floatLeft'>\n",
+                 "<table border = 1>"), file=path_html,append=TRUE)
+
+    htmlstr <- table2html_from_graph(df)
+
+    write(htmlstr, file = path_html, append= TRUE)
+    write('</div>', file=path_html, append= TRUE)
+
+    #Now the summary
+    write(paste0("<div class='floatRight'>\n",
+                 "<table border = 1>"), file=path_html,append=TRUE)
+
+    htmlstr <- table2html_from_graph(sumXOR,FALSE)
+
+    write(htmlstr, file = path_html, append = TRUE)
+    write('</div>', file=path_html, append= TRUE)
+
 }

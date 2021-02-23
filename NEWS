@@ -41,5 +41,10 @@ Changes in Version 0.99.8
  + Logfile added to runrewiring method.
  + Message structure of preparerewiring method has been cleaned.
 
+Changes in Version 0.99.9
+ ------------------
+ + xlsx files changed to html, library removed
+ + generate_cliques structure has changed, new plot function.
+
 
 

@@ -133,6 +133,7 @@ NET_compute_graph_all_LASSO1se <- function(lognorm_est_counts, regulator_filtere
     # This will register nr of cores/threads, keep this here so the
     # user can decide how many cores based on
     # their hardware.
+
     parallClass <- BiocParallel::bpparam()
     parallClass$workers <- NrCores
 
@@ -145,7 +146,7 @@ NET_compute_graph_all_LASSO1se <- function(lognorm_est_counts, regulator_filtere
         b_o <- stats::coef(fit, s = fit$lambda.1se)
         b_opt <- c(b_o[2:length(b_o)])  # removing the intercept.
 
-        return(b_opt)
+        b_opt
 
     }
     driverMat <- BiocParallel::bplapply(target_filtered_idx, Lasso1se,
@@ -191,7 +192,7 @@ NET_compute_graph_all_LASSOmin <- function(lognorm_est_counts, regulator_filtere
         b_o <- stats::coef(fit, s = fit$lambda.min)
         b_opt <- c(b_o[2:length(b_o)])  # removing the intercept.
 
-        return(b_opt)
+        b_opt
 
     }
     driverMat <- BiocParallel::bplapply(target_filtered_idx, Lassomin,
@@ -215,7 +216,8 @@ NET_compute_graph_all_LASSOmin <- function(lognorm_est_counts, regulator_filtere
 }
 #' @export
 #' @rdname NET_run
-NET_compute_graph_all_LM <- function(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx, NrCores = 1) {
+NET_compute_graph_all_LM <- function(lognorm_est_counts, regulator_filtered_idx,
+                                     target_filtered_idx, NrCores = 1) {
     GEA_per_regulator <- list()
     i <- 1
 
@@ -231,20 +233,22 @@ NET_compute_graph_all_LM <- function(lognorm_est_counts, regulator_filtered_idx,
     parallClass <- BiocParallel::bpparam()
     parallClass$workers <- NrCores
 
-    LM <- function(idx, lognorm_est_counts){
+    LM <- function(idx, lognorm_est_counts, Pthre){
 
         y <- lognorm_est_counts[idx, ]
         driverVec <- numeric(length = ncol(X))
+
         for (i in seq_len(ncol(X))) {
             x <- X[, i]
             fit <- stats::lm(y ~ x)
             s <- summary(fit)
             driverVec[i] <- (s$coefficients[2, "Pr(>|t|)"] < Pthre)
         }
-        return(driverVec)
+        driverVec
     }
     driverMat <- BiocParallel::bplapply(target_filtered_idx, LM,
-                                        lognorm_est_counts, BPPARAM = parallClass)
+                                        lognorm_est_counts, Pthre,
+                                        BPPARAM = parallClass)
 
     #Transform list of bettas into matrix, as .combine=rbind in foreach
     driverMat <- do.call(rbind,driverMat)
@@ -253,7 +257,7 @@ NET_compute_graph_all_LM <- function(lognorm_est_counts, regulator_filtered_idx,
     regulators <- rownames(lognorm_est_counts)[regulator_filtered_idx]
 
     rownames(driverMat) <- target_genes
-    colnames(driverMat) <- regulatory_genes
+    colnames(driverMat) <- regulators
 
     regulated_genes <- which(rowSums(abs(driverMat)) != 0)
     regulatory_genes <- which(colSums(abs(driverMat)) != 0)
@@ -276,34 +280,40 @@ NET_compute_graph_all_VBSR <- function(lognorm_est_counts, regulator_filtered_id
     # This will register nr of cores/threads, keep this here
     # so the user can decide how many cores based on
     # their hardware.
-    parallClass <- BiocParallel::bpparam()
-    parallClass$workers <- NrCores
 
-    # compute the VBSR
-    VBSR <- function(idx,lognorm_est_counts){
+     parallClass <- BiocParallel::bpparam()
+     parallClass$workers <- NrCores
 
-        y <- lognorm_est_counts[idx, , drop = FALSE]
-        if (nrow(y)) {
-            y <- t(y)
-        }
-        if (length(unique(y)) == 1) {
-            return(rep(0, length(regulator_filtered_idx)))
-        } else {
-            res <- try(vbsr::vbsr(y, t(X), n_orderings = 15, family = "normal"))
-            if (inherits(res, "try-error")) {
-                return(rep(0, length(regulator_filtered_idx)))
-            } else {
-                betas <- res$beta
-                betas[res$pval > 0.05/(length(target_filtered_idx) * length(regulator_filtered_idx))] <- 0
+     # compute the VBSR
+     VBSR <- function(idx,lognorm_est_counts,X,regulator_filtered_idx,target_filtered_idx){
 
-                return(betas)
-            }
-        }
+         y <- lognorm_est_counts[idx, , drop = FALSE]
+         if (nrow(y)) {
+             y <- t(y)
+         }
+         if (length(unique(y)) == 1) {
+             rep(0, length(regulator_filtered_idx))
 
-    }
+         } else {
+             res <- try(vbsr::vbsr(y, t(X), n_orderings = 15, family = "normal"),
+                        silent = TRUE)
+
+             if (inherits(res, "try-error")) {
+                 rep(0, length(regulator_filtered_idx))
+
+             } else {
+                 betas <- res$beta
+                 betas[res$pval > 0.05/(length(target_filtered_idx) * length(regulator_filtered_idx))] <- 0
+                 betas
+             }
+         }
+     }
 
     driverMat <- BiocParallel::bplapply(target_filtered_idx, VBSR,
-                                        lognorm_est_counts, BPPARAM = parallClass)
+                                         lognorm_est_counts, X,
+                                         regulator_filtered_idx,
+                                         target_filtered_idx,
+                                         BPPARAM = parallClass)
 
     #Transform list of bettas into matrix, as .combine=rbind in foreach
     driverMat <- do.call(rbind,driverMat)

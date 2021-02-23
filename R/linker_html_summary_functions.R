@@ -17,7 +17,7 @@ linker_summarize_rungraphs <- function(rungraphs = NULL, iso_table = NULL, weigh
     # edgesinfo <<- edgesinfo
 
     # write edge results summary
-    write_tables_all(edgesinfo, tabletype = "edges", html_cols = c("edgekey", "weight", "reg-origid", "target-origid",
+    linker_write_tables_all(edgesinfo, tabletype = "edges", html_cols = c("edgekey", "weight", "reg-origid", "target-origid",
         "reg-geneid", "target-geneid", "chip-evidence", "num-chip-peaks"), html_idxs = seq_len(min(1000, dim(edgesinfo)[1])),
         filestr = graphstr, htmlinfo = htmlinfo)
 
@@ -78,7 +78,7 @@ linker_create_index_page <- function(outdir = "./", runtag = "run", codedir = ".
     abspath <- paste0(htmldir, indexpath)
 
     write(paste0("<br>"), file = abspath)
-    write_html_table_page(glossary, paste0(htmldir, glossarypath), glossarypath)
+    linker_write_html_table_page(glossary, paste0(htmldir, glossarypath), glossarypath)
 
     return(list(htmldir = htmldir, indexpath = indexpath, imgstr = imgstr, txtstr = txtstr, glossarypath = glossarypath,
         abspath = abspath))
@@ -107,7 +107,7 @@ genetable_summary <- function(filter, filterNeigh, tabletype, nboots = 10, minsu
     colnames(genetable) <- c("gid", "nEdges", "nNeigh", "nMax-Conf-Neigh", "topNeigh", "suppTable")
     sortval <- (as.numeric(genetable[, "nMax-Conf-Neigh"]) * 1e+09 + as.numeric(genetable[, "nEdges"]))
     sortidxs <- sort(sortval, decreasing = TRUE, index.return = TRUE)$ix[seq_len(min(1000, length(sortval)))]
-    write_tables_all(genetable, tabletype = tabletype, html_idxs = sortidxs, filestr = graphstr, htmlinfo = htmlinfo)
+    linker_write_tables_all(genetable, tabletype = tabletype, html_idxs = sortidxs, filestr = graphstr, htmlinfo = htmlinfo)
     return(genetable)
 }
 
@@ -150,6 +150,32 @@ edgeinfo_from_graphs <- function(rungraphs, iso_table, weighted_chip_evidence) {
         "chip-evidence", "num-chip-peaks", "sort-val")
 
     return(edgesinfo[sort(as.numeric(edgesinfo[, "sort-val"]), decreasing = TRUE, index.return = TRUE)$ix, ])
+}
+
+linker_write_html_table_page <- function(resultstable, htmlpagefile, resultsrelpath,
+                                  indexpath = "index.html", glossarypath = "glossary.html", htmlinfo) {
+
+    write(paste0("<table border = 1 width = '100%'><tr bgcolor = ", "'#AAAAAA'><th><a href = '", indexpath,
+                 "' target='_blank'>", "Index</a></th><th><a href = '", glossarypath, "' target=", "'_blank'>Glossary</a></th><th><a href = '",
+                 resultsrelpath, "' target='_blank'>Download</a></th></tr></table><br><br>"), file = htmlpagefile)
+    htmlstr <- table2html(resultstable)
+    write(htmlstr, file = htmlpagefile, append = TRUE)
+
+}
+
+linker_write_tables_all <- function(mytab, tabletype = "table", html_idxs = seq_len(dim(mytab)[1]), html_cols = colnames(mytab),
+                                    filestr = "data", htmlinfo = list(htmldir = "html/", indexpath = "index.html", txtstr = "txts/")) {
+    htmlpath <- paste0(filestr, "_", tabletype, ".html")
+    resultspath <- paste0(htmlinfo$txtstr, filestr, "_", tabletype, ".txt")
+    message("Writing table: ", resultspath)
+    utils::write.table(mytab, paste0(htmlinfo$htmldir, resultspath), sep = "\t", row.names = F, col.names = T,
+                       quote = F)
+    write(paste0("<a href = \"", htmlpath, "\" target=\"_blank\">", tabletype, "</a><br>"),
+          file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = T)
+
+    linker_write_html_table_page(resultstable = mytab[html_idxs, html_cols],
+                                 htmlpagefile = paste0(htmlinfo$htmldir,
+                                 htmlpath), resultsrelpath = resultspath, indexpath = htmlinfo$indexpath)
 }
 
 # Helpers -----------------------------------------------------------------

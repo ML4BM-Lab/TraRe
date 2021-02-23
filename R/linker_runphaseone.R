@@ -93,9 +93,11 @@ LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_
         train_samples <- sample(seq_len(sample_size), train_size, replace = FALSE)
         validation_samples <- setdiff(seq_len(sample_size), train_samples)
 
+        #Scale by driver genes
         Regulator_data_train <- t(scale(t(lognorm_est_counts[regulator_filtered_idx, train_samples])))
         Regulator_data_validation <- t(scale(t(lognorm_est_counts[regulator_filtered_idx, validation_samples])))
 
+        #Scale by samples within targets
         MA_matrix_Var_train <- t(scale(t(lognorm_est_counts[target_filtered_idx, train_samples])))
         MA_matrix_Var_validation <- t(scale(t(lognorm_est_counts[target_filtered_idx, validation_samples])))
 
@@ -264,6 +266,7 @@ LINKER_ReassignGenesToClusters <- function(Data, RegulatorData, Beta, Clusters, 
 
     #Transform list of bettas into matrix, as .combine=c in foreach
     nc <- do.call(c,nc)
+
 
     # Remove cluster with too few genes. Avoids singularities. Could be solved imposing priors. future work
     for (i in unique(nc)) {
