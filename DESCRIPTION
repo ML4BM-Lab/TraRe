@@ -24,7 +24,7 @@ Description: TraRe (Transcriptional Rewiring) is an R package which contains the
              recovering via cliques methodology. For each tool, an html report can be generated containing useful information about
              the generated GRN and statistical data about the performed tests. These tools have been developed considering sequenced data (RNA-Seq).
 Depends:
-	R (>= 4.0)
+	R (>= 4.1)
 Imports: 
 	hash,
 	ggplot2,
