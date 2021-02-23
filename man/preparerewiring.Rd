@@ -26,9 +26,9 @@ preparerewiring(
 }
 \arguments{
 \item{name}{Desired name of the folder which is generated. The chosen
-threshold will be \code{paste()} to the name folder.}
+threshold will be \code{paste()} to the folder's name.}
 
-\item{linker_output_p}{Output file from linker function path.}
+\item{linker_output_p}{Output file from linker function path. RDS format is required.}
 
 \item{lognorm_est_counts_p}{Lognorm counts of the gene expression matrix path.}
 

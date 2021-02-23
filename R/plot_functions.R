@@ -86,21 +86,18 @@ plot_igraph <- function(mygraph = NULL, mytitle = "", titlecol = "black", mylayo
     
     maxw <- max(abs(igraph::E(mygraph)$weight))
     tweight = (igraph::E(mygraph)$weight + maxw)/(2 * maxw)
-    igraph::E(mygraph)$color <- apply(edge_cscale(tweight), 1, function(x) grDevices::rgb(x[1]/255, x[2]/255, 
-        x[3]/255, 0.8))
+    igraph::E(mygraph)$color <- apply(edge_cscale(tweight), 1, function(x) grDevices::rgb(x[1]/255, x[2]/255, x[3]/255, 0.8))
     
-    degrees = igraph::degree(mygraph, igraph::V(mygraph)$name)
-    nodenames = mylayout$genesnames[igraph::V(mygraph)$name]
-    regdegrees = degrees[nodenames]
-    regdegrees[which(is.na(regdegrees))] = ""
-    finalnames = apply(cbind(nodenames, regdegrees), 1, paste, collapse = " - ")
+    degrees <- igraph::degree(mygraph, igraph::V(mygraph)$name)
+    nodenames <- mylayout$genesnames[igraph::V(mygraph)$name]
+    regdegrees <- degrees[nodenames]
+    regdegrees[which(is.na(regdegrees))] <- ""
+    finalnames <- apply(cbind(nodenames, regdegrees), 1, paste, collapse = " - ")
     
     plot(mygraph, vertex.color = nodecol[as.numeric(igraph::V(mygraph)$type) + 1], vertex.shape = shape[as.numeric(igraph::V(mygraph)$type) + 
-        1], vertex.label = finalnames, vertex.label.cex = 1.5, vertex.frame.color = framecol[as.numeric(igraph::V(mygraph)$type) + 
-        1], vertex.size = as.numeric(igraph::V(mygraph)$type) * 5 + 5, layout = cbind(mylayout$genesx[igraph::V(mygraph)$name], 
-        mylayout$genesy[igraph::V(mygraph)$name]))
-    graphics::title(paste0(mytitle, " ", sum(igraph::V(mygraph)$type == 1), "&", sum(igraph::V(mygraph)$type == 
-        0)), cex.main = 2, col.main = titlecol)
+        1], vertex.label = finalnames, vertex.label.cex = 1.5, vertex.frame.color = framecol[as.numeric(igraph::V(mygraph)$type) + 1], vertex.size = as.numeric(igraph::V(mygraph)$type) * 
+        5 + 5, layout = cbind(mylayout$genesx[igraph::V(mygraph)$name], mylayout$genesy[igraph::V(mygraph)$name]))
+    graphics::title(paste0(mytitle, " ", sum(igraph::V(mygraph)$type == 1), "&", sum(igraph::V(mygraph)$type == 0)), cex.main = 2, col.main = titlecol)
     graphics::abline(h = 0, col = grDevices::rgb(0, 0, 0, alpha = 0.3))
 }
 #' @export
@@ -203,8 +200,7 @@ return_layout_phenotype <- function(regs = NULL, targets = NULL, varfile = NULL,
 #' @param edgelist list containing the edges of the igraph object.
 orderGraphWeights <- function(graph, edgelist) {
     
-    weights = igraph::get.data.frame(igraph::graph.adjacency(as.matrix(igraph::get.adjacency(graph, attr = "weight", 
-        type = "upper")), weighted = TRUE))
+    weights = igraph::get.data.frame(igraph::graph.adjacency(as.matrix(igraph::get.adjacency(graph, attr = "weight", type = "upper")), weighted = TRUE))
     rownames(weights) <- apply(weights[, seq_len(2)], 1, paste, collapse = "||")
     commonedges <- intersect(edgelist, rownames(weights))
     return(list(commonedges = commonedges, weights = weights[commonedges, "weight"]))

@@ -33,6 +33,28 @@
 #'
 #' @noRd
 
+
+table2html_from_graph <- function(resultstable, numvar = TRUE) {
+    
+    if (numvar) {
+        numvar <- "idx"
+    } else {
+        numvar <- "Drivers"
+    }
+    
+    colheader <- paste(collapse = "</th><th>", c(numvar, colnames(resultstable)))
+    theader <- paste0("<thead>\n<tr bgcolor='#AAAAAA';><th>", colheader, "</th></tr>\n</thead>\n<tbody>\n")
+    
+    numtable <- cbind(rownames(resultstable), resultstable)
+    rowinnerstrs <- apply(numtable, 1, paste, collapse = "</td><td>")
+    rowstrs <- paste0("<tr><td>", rowinnerstrs, "</td></tr>")
+    rows_str <- paste(collapse = "\n", rowstrs)
+    
+    return(paste0(collapse = "\n", theader, rows_str, "\n</tbody></table><br>"))
+    
+    
+}
+
 table2html <- function(resultstable) {
     
     colheader <- paste(collapse = "</th><th>", c("idx", colnames(resultstable)))
@@ -49,38 +71,52 @@ table2html <- function(resultstable) {
 }
 
 
-write_html_table_page <- function(resultstable, htmlpagefile, resultsrelpath, indexpath = "index.html", glossarypath = "glossary.html") {
+write_html_table_page <- function(resultstable, htmlpagefile, resultsrelpath, indexpath = "index.html", glossarypath = "glossary.html", htmlinfo) {
     
-    write(paste0("<table border = 1 width = '100%'><tr bgcolor = ", "'#AAAAAA'><th><a href = '", indexpath, 
-        "' target='_blank'>", "Index</a></th><th><a href = '", glossarypath, "' target=", "'_blank'>Glossary</a></th><th><a href = '", 
-        resultsrelpath, "' target='_blank'>Download</a></th></tr></table><br><br>"), file = htmlpagefile)
-    htmlstr = table2html(resultstable)
+    write(paste0("<table border = 1 width = '100%'><tr bgcolor = ", "'#AAAAAA'><th><a href = '", "../", indexpath, "' target='_blank'>", "Index</a></th><th><a href = '", 
+        htmlinfo$htmldir, glossarypath, "' target=", "'_blank'>Glossary</a></th><th><a href = '", "../", resultsrelpath, "' target='_blank'>Download</a></th></tr></table><br><br>"), 
+        file = htmlpagefile)
+    htmlstr <- table2html(resultstable)
     write(htmlstr, file = htmlpagefile, append = TRUE)
+    
 }
 
 
-write_tables_all <- function(mytab, tabletype = "table", html_idxs = seq_len(nrow(mytab)), html_cols = colnames(mytab), 
-    filestr = "data", htmlinfo = list(htmldir = "html/", indexpath = "index.html", txtstr = "txts/")) {
-    htmlpath = paste0(filestr, "_", tabletype, ".html")
-    resultspath = paste0(htmlinfo$txtstr, filestr, "_", tabletype, ".txt")
-    message("Writing table: ", resultspath)
-    utils::write.table(mytab, paste0(htmlinfo$htmldir, resultspath), sep = "\t", row.names = FALSE, col.names = TRUE, 
-        quote = FALSE)
-    write(paste0("<a href = \"", htmlpath, "\" target=\"_blank\">", tabletype, "</a><br>"), file = paste0(htmlinfo$htmldir, 
-        htmlinfo$indexpath), append = TRUE)
-    write_html_table_page(resultstable = mytab[html_idxs, html_cols], htmlpagefile = paste0(htmlinfo$htmldir, 
-        htmlpath), resultsrelpath = resultspath, indexpath = htmlinfo$indexpath)
+write_tables_all <- function(mytab, tabletype = "table", html_idxs = seq_len(nrow(mytab)), html_cols = colnames(mytab), filestr = "data", htmlinfo = list(htmldir = "htmls/", 
+    indexpath = "index.html", txtstr = "txts/"), extradir = "", glossarypath = "glossary.txt") {
+    
+    
+    htmlpath <- paste0("htmls/", filestr, "_", tabletype, ".html")
+    resultspath <- paste0(htmlinfo$txtstr, filestr, "_", tabletype, ".txt")
+    message("Writing table: ", extradir, resultspath)
+    # Write the table as .txt
+    utils::write.table(mytab, paste0(htmlinfo$htmldir, extradir, resultspath), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+    
+    # Write hyperlink in index file
+    write(paste0("<a href = \"", htmlpath, "\" target=\"_blank\">", tabletype, "</a><br>"), file = paste0(htmlinfo$htmldir, extradir, htmlinfo$indexpath), 
+        append = TRUE)
+    
+    # Write the table in .html format
+    write_html_table_page(resultstable = mytab[html_idxs, html_cols], htmlpagefile = paste0(htmlinfo$htmldir, extradir, htmlpath), resultsrelpath = resultspath, 
+        indexpath = htmlinfo$indexpath, glossarypath = glossarypath, htmlinfo = htmlinfo)
 }
 
-create_index_page <- function(outdir = "./", runtag = "run", codedir = "code/", indexpath = "index.html", glossarypath = "glossary.html", 
-    imgstr = "imgs/", txtstr = "txts/") {
+create_index_page <- function(outdir = "./", runtag = "run", codedir = "code/", indexpath = "index.html", glossarypath = "glossary.html", imgstr = "imgs/", 
+    txtstr = "txts/", htmlstr = "htmls/") {
     
     htmldir <- paste0(outdir, runtag, "/")
     dir.create(file.path(htmldir))
     
     file.copy(from = paste0(codedir, "sorttable.js"), to = htmldir)
+    
+    # Create folder imgs
     dir.create(file.path(paste0(htmldir, imgstr)))
+    
+    # Create folder txts
     dir.create(file.path(paste0(htmldir, txtstr)))
+    
+    # Create folder htmls
+    dir.create(file.path(paste0(htmldir, htmlstr)))
     
     glossary <- as.matrix(utils::read.table(paste0(codedir, "glossary.txt"), header = TRUE, sep = "\t", quote = ""))
     file.copy(from = paste0(codedir, "glossary.txt"), to = htmldir)
@@ -88,6 +124,5 @@ create_index_page <- function(outdir = "./", runtag = "run", codedir = "code/", 
     
     write(paste0("<br>"), file = abspath)
     
-    return(list(htmldir = htmldir, indexpath = indexpath, imgstr = imgstr, txtstr = txtstr, glossarypath = glossarypath, 
-        abspath = abspath))
+    return(list(htmldir = htmldir, indexpath = indexpath, imgstr = imgstr, txtstr = txtstr, glossarypath = glossarypath, abspath = abspath))
 }

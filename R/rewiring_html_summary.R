@@ -36,14 +36,12 @@ module_node_summary <- function(norm_mat_keep, runmoddata, name2idx, nonrespond_
     for (gene in genenames) {
         tres = stats::t.test(allmat0[gene, ], allmat1[gene, ])
         wres = stats::wilcox.test(allmat0[gene, ], allmat1[gene, ])
-        myrow = c(signif(tres$p.value, 3), signif(tres$statistic, 3), signif(wres$p.value, 3), signif(wres$statistic, 
-            3))
+        myrow = c(signif(tres$p.value, 3), signif(tres$statistic, 3), signif(wres$p.value, 3), signif(wres$statistic, 3))
         test_vals = rbind(test_vals, myrow)
     }
-    nodesumm = cbind(genenames, isreg, signif(avgAll, 3), signif(avg0, 3), signif(avg1, 3), signif(avgdiff, 
-        3), test_vals, repAll, rep0, rep1)
-    colnames(nodesumm) = c("gene-name", "is-regulator", "avg-all", "avg-nonresp", "avg-respond", "avg-diff", 
-        "t-pval", "t-stat", "wilcox-pval", "wilcox-stat", "num-repeats-all", "num-repeats-nonresp", "num-repeats-respond")
+    nodesumm = cbind(genenames, isreg, signif(avgAll, 3), signif(avg0, 3), signif(avg1, 3), signif(avgdiff, 3), test_vals, repAll, rep0, rep1)
+    colnames(nodesumm) = c("gene-name", "is-regulator", "avg-all", "avg-nonresp", "avg-respond", "avg-diff", "t-pval", "t-stat", "wilcox-pval", 
+        "wilcox-stat", "num-repeats-all", "num-repeats-nonresp", "num-repeats-respond")
     rownames(nodesumm) = genenames
     return(nodesumm)
 }
@@ -72,15 +70,14 @@ module_edge_summary <- function(norm_mat_keep, runmoddata, name2idx, nonrespond_
             spcorall = stats::cor.test(regmat[myreg, ], tarmat[mytar, ], method = "spearman")
             spcor0 = stats::cor.test(regmat0[myreg, ], tarmat0[mytar, ], method = "spearman")
             spcor1 = stats::cor.test(regmat1[myreg, ], tarmat1[mytar, ], method = "spearman")
-            myrow = c(paste0(mytar, "||", myreg), myreg, mytar, pcorall$estimate, pcorall$p.value, pcor0$estimate, 
-                pcor0$p.value, pcor1$estimate, pcor1$p.value, spcorall$estimate, spcorall$p.value, spcor0$estimate, 
-                spcor0$p.value, spcor1$estimate, spcor1$p.value)
+            myrow = c(paste0(mytar, "||", myreg), myreg, mytar, pcorall$estimate, pcorall$p.value, pcor0$estimate, pcor0$p.value, pcor1$estimate, 
+                pcor1$p.value, spcorall$estimate, spcorall$p.value, spcor0$estimate, spcor0$p.value, spcor1$estimate, spcor1$p.value)
             edgesumm = rbind(edgesumm, myrow)
         }
     }
-    colnames(edgesumm) = c("key", "reg", "target", "all-pearson", "all-pearson-pvalue", "nonresp-pearson", "nonresp-pearson-pvalue", 
-        "respond-pearson", "respond-pearson-pvalue", "all-spearman", "all-spearman-pvalue", "nonresp-spearman", 
-        "nonresp-spearman-pvalue", "respond-spearman", "respond-spearman-pvalue")
+    colnames(edgesumm) = c("key", "reg", "target", "all-pearson", "all-pearson-pvalue", "nonresp-pearson", "nonresp-pearson-pvalue", "respond-pearson", 
+        "respond-pearson-pvalue", "all-spearman", "all-spearman-pvalue", "nonresp-spearman", "nonresp-spearman-pvalue", "respond-spearman", 
+        "respond-spearman-pvalue")
     rownames(edgesumm) = edgesumm[, "key"]
     return(edgesumm)
 }
@@ -91,23 +88,22 @@ summarize_module <- function(norm_expr_mat_keep, runmoddata, name2idx, nonrespon
     summarized_list <- NULL
     
     # node summary
-    nodesumm = module_node_summary(norm_expr_mat_keep, runmoddata, name2idx, nonrespond_idxs, responder_idxs)
+    nodesumm <- module_node_summary(norm_expr_mat_keep, runmoddata, name2idx, nonrespond_idxs, responder_idxs)
     
     # edge summary
-    edgesumm = module_edge_summary(norm_expr_mat_keep, runmoddata, name2idx)
+    edgesumm <- module_edge_summary(norm_expr_mat_keep, runmoddata, name2idx)
     
-    modregs = runmoddata$regulators
-    modtargs = runmoddata$target_genes
+    modregs <- runmoddata$regulators
+    modtargs <- runmoddata$target_genes
     
-    regidxs = name2idx[modregs]
+    regidxs <- name2idx[modregs]
     targetidxs = name2idx[modtargs]
     
     
     # get chip evidence and support data
-    appendmat = matrix(0, dim(edgesumm)[1], 6)
-    rownames(appendmat) = rownames(edgesumm)
-    colnames(appendmat) = c("support", "chip-evidence", "num-chip-peaks", "all-weights", "nonresp-weights", 
-        "respond-weights")
+    appendmat <- matrix(0, dim(edgesumm)[1], 6)
+    rownames(appendmat) <- rownames(edgesumm)
+    colnames(appendmat) <- c("support", "chip-evidence", "num-chip-peaks", "all-weights", "nonresp-weights", "respond-weights")
     
     # compute graphs and extract VBSR edge weights
     
@@ -167,6 +163,6 @@ summarize_module <- function(norm_expr_mat_keep, runmoddata, name2idx, nonrespon
     fulledgesumm = utils::type.convert(as.data.frame(cbind(edgesumm, appendmat), stringsAsFactors = FALSE))
     colnames(fulledgesumm) = make.names(colnames(fulledgesumm))
     
-    return(list(nodesumm = nodesumm, fulledgesumm = fulledgesumm, full_graph = full_graph, respond_graph = respond_graph, 
-        nonresp_graph = nonresp_graph, cut = cut))
+    return(list(nodesumm = nodesumm, fulledgesumm = fulledgesumm, full_graph = full_graph, respond_graph = respond_graph, nonresp_graph = nonresp_graph, 
+        cut = cut))
 }

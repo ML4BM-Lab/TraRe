@@ -1,6 +1,6 @@
 Package: TraRe
 Title: Transcriptional Rewiring 
-Version: 0.99.6
+Version: 0.99.9
 URL: https://github.com/ubioinformat/TraRe/tree/master
 Authors@R: 
     c(person(given = "Jesus",
@@ -24,7 +24,7 @@ Description: TraRe (Transcriptional Rewiring) is an R package which contains the
              recovering via cliques methodology. For each tool, an html report can be generated containing useful information about
              the generated GRN and statistical data about the performed tests. These tools have been developed considering sequenced data (RNA-Seq).
 Depends:
-	R (>= 4.1)
+	R (>= 4.0)
 Imports: 
 	hash,
 	ggplot2,
@@ -32,7 +32,6 @@ Imports:
 	methods,
 	igraph,
 	utils,
-    	foreach,
     	glmnet,
     	vbsr,
     	grDevices,
@@ -43,8 +42,10 @@ Imports:
     	R.utils,
     	dqrng,
 	parallel,
-	xlsx,
-	SummarizedExperiment
+	SummarizedExperiment,
+	BiocStyle,
+	BiocParallel,
+	matrixStats
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -55,6 +56,5 @@ Suggests:
     knitr,
     rmarkdown,
     BiocGenerics,
-    BiocStyle,
     RUnit
 VignetteBuilder: knitr
