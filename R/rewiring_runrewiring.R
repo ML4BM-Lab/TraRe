@@ -47,7 +47,7 @@ runrewiring<- function(ObjectList){
   retest_perms<-ObjectList$retest_perms
 
   # set up output html page, we use the first argv.
-  dir.create(paste0(ObjectList$outdir))
+  dir.create(ObjectList$outdir)
   indexpageinfo <- create_index_page(outdir = outdir, runtag = "",
                                      codedir = codedir)
   imgdir <- paste0(indexpageinfo$htmldir, indexpageinfo$imgstr)

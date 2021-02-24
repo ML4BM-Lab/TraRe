@@ -16,9 +16,10 @@ createModuleSummary <- function(ObjectList, modmeth="VBSR", numclus=1, supertype
 	}
 
 	# set up output html page
+	dir.create(paste0(ObjectList$outdir,"/rewiring_module_summary"))
 	codedir <- paste0(system.file("extdata",package="TraRe"),"/RewiringReport/")
-	dir.create(file.path(paste0(ObjectList$outdir,"/module_summ.",modmeth,".",numclus,".",supertype,"/")), showWarnings = FALSE)
-	htmlinfo <- create_index_page(outdir = paste0(ObjectList$outdir,"/module_summ.",modmeth,".",numclus,".",supertype), runtag = "", codedir = codedir)
+	dir.create(file.path(paste0(ObjectList$outdir,"/rewiring_module_summary/module_summ.",modmeth,".",numclus,".",supertype,"/")), showWarnings = FALSE)
+	htmlinfo <- create_index_page(outdir = paste0(ObjectList$outdir,"/rewiring_module_summary/module_summ.",modmeth,".",numclus,".",supertype), runtag = "", codedir = codedir)
 
 	orderobj <- geneOrder(modsumm, ObjectList$datasets[[1]]$keepsamps, ObjectList$datasets[[1]]$keeplabels, ObjectList$datasets[[1]]$norm_expr_mat_keep)
 	createLegendPlot(htmlinfo)
