@@ -28,7 +28,7 @@ createModuleSummary <- function(ObjectList, modmeth="VBSR", numclus=1, supertype
 	correlationOfModuleGene(supertype, orderobj$regorder, orderobj$targetorder, orderobj$mat, orderobj$cormats, ObjectList$keeplabels, htmlinfo, ObjectList$phenotype_class_vals)
 	expressionTableOfModuleGenes(supertype, modsumm$nodesumm, htmlinfo)
 	expressionPlotsOfModuleGenes(supertype, orderobj$regorder, orderobj$targetorder, orderobj$mat, samps2pheno, ObjectList$phenotype_class_vals, htmlinfo)
-	bipartiteGraphsSumm(numclus, modsumm, modmeth, htmlinfo,ObjectList$outdir)
+	bipartiteGraphsSumm(numclus, modsumm, modmeth, htmlinfo)
 	nullDistributionOfRewiringStatistic(orderobj$mat, ObjectList$datasets[[1]]$keeplabels, modmeth, supertype, htmlinfo)
 	rankdf <- violinPlots(ObjectList$datasets[[1]]$norm_expr_mat_keep, ObjectList$datasets[[1]]$keepsamps, ObjectList$datasets[[1]]$keeplabels, modsumm$nodesumm, modsumm$fulledgesumm, modsumm$appendmat, htmlinfo)
 	regulatorSummaryAndRank(rankdf, htmlinfo)
