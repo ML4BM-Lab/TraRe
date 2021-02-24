@@ -287,7 +287,7 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
     return(rankdf)
 }
 
-bipartiteGraphsSumm <- function(cluster_num, modsumm, modmeth, htmlinfo, outdir){
+bipartiteGraphsSumm <- function(cluster_num, modsumm, modmeth, htmlinfo){
     modhtmlfile = paste0(htmlinfo$htmldir, htmlinfo$indexpath)
     imgdir = paste0(htmlinfo$htmldir, htmlinfo$imgstr)
 
@@ -300,8 +300,9 @@ bipartiteGraphsSumm <- function(cluster_num, modsumm, modmeth, htmlinfo, outdir)
       modhtmlfile, append = T
     )
 
+    pname <- paste(sep = ".", "igraphs.refined.graphs")
     # write plot to index page
-    write(paste0("<img src='", outdir,'/supermodule_',cluster_num,'/imgs/',pname, ".png",
+    write(paste0("<img src='",'../supermodule_',cluster_num,'/imgs/',pname, ".png",
                    "' alt='", pname,
                    "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
             modhtmlfile,

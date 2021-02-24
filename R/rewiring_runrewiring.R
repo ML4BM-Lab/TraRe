@@ -41,12 +41,13 @@ runrewiring<- function(ObjectList){
   regulator_info_col_name<-ObjectList$regulator_info_col_name
   phenotype_class_vals<-ObjectList$phenotype_class_vals
   phenotype_class_vals_label<-ObjectList$phenotype_class_vals_label
-  outdir<-ObjectList$outdir
+  outdir <- paste0(ObjectList$outdir,"/supermod_rewiring")
   orig_test_perms<-ObjectList$orig_test_perms
   retest_thresh<-ObjectList$retest_thresh
   retest_perms<-ObjectList$retest_perms
 
   # set up output html page, we use the first argv.
+  dir.create(paste0(ObjectList$outdir))
   indexpageinfo <- create_index_page(outdir = outdir, runtag = "",
                                      codedir = codedir)
   imgdir <- paste0(indexpageinfo$htmldir, indexpageinfo$imgstr)
@@ -315,12 +316,12 @@ runrewiring<- function(ObjectList){
       message('Cluster number: ',numclus)
 
       #Create dir for cluster numclus
-      dir.create(paste0(outdir,'/supermodule_',numclus))
+      dir.create(paste0(outdir,"/supermod.",modmeth,".",numclus))
 
       #Create txts folder in numclus's folder
-      dir.create(paste0(outdir,'/supermodule_',numclus,'/txts'))
+      dir.create(paste0(outdir,"/supermod.",modmeth,".",numclus,'/txts'))
       #Create imgs folder in numclus's folder
-      dir.create(paste0(outdir,'/supermodule_',numclus,'/imgs'))
+      dir.create(paste0(outdir,"/supermod.",modmeth,".",numclus,'/imgs'))
 
       # Supermodule number tittle
       write(
@@ -382,7 +383,6 @@ runrewiring<- function(ObjectList){
 
       message('Generating raw graph')
       rawsumm <- summarize_module(norm_expr_mat_keep, rawrunmoddata, name2idx, nonrespond_idxs, responder_idxs)
-      rawsumm$runmoddata <- rawrunmoddata
 
       rawsummary <- function(cut=FALSE){
 
@@ -399,7 +399,7 @@ runrewiring<- function(ObjectList){
           )
 
           pname <- paste(sep = ".", "igraphs.raw.full_graph")
-          grDevices::png(paste0(outdir, '/supermodule_',numclus,'/imgs/', pname, ".png"), 1500, 750)
+          grDevices::png(paste0(outdir, '/supermod.',modmeth,'.',numclus,'/imgs/', pname, ".png"), 1500, 750)
           mylayout <- return_layout_phenotype(rawrunmoddata$regulators,
                                               rawrunmoddata$target_genes,
                                               rawsumm$nodesumm,
@@ -409,7 +409,7 @@ runrewiring<- function(ObjectList){
           grDevices::dev.off()
 
           # write plot to index page
-          write(paste0("<img src='", 'supermodule_',numclus,'/imgs/', pname, ".png",
+          write(paste0("<img src='", 'supermod.',modmeth,'.',numclus,'/imgs/', pname, ".png",
                        "' alt='", pname,
                        "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
                 paste0(indexpageinfo$htmldir, indexpageinfo$indexpath),
@@ -423,7 +423,7 @@ runrewiring<- function(ObjectList){
                          tabletype = paste0(modmeth, "_raw_nodesumm"),
                          filestr = "data", html_idxs = seq_len(nrow(rawsumm$nodesumm)),
                          htmlinfo = indexpageinfo,
-                         extradir = paste0('supermodule_',numclus,'/'))
+                         extradir = paste0('supermod.',modmeth,'.',numclus,'/'))
 
         sortidxs <- sort(as.numeric(rawsumm$fulledgesumm[, "all.weights"]),
                          decreasing = FALSE, index.return = TRUE)$ix
@@ -431,12 +431,12 @@ runrewiring<- function(ObjectList){
                          tabletype = paste0(modmeth, "_raw_edgesumm"),
                          filestr = "data", html_idxs = seq_len(nrow(rawsumm$fulledgesumm)),
                          htmlinfo = indexpageinfo,
-                         extradir = paste0('supermodule_',numclus,'/'))
+                         extradir = paste0('supermod.',modmeth,'.',numclus,'/'))
 
         #Write raw and refined r object
         # nodesumm, fulledgesumm, full_graph, respond_graph, nonresp_graph
         if (!cut) {
-          saveRDS(rawsumm, file = paste0(outdir,'/supermodule_',numclus, "/rawsumm.rds"))
+          saveRDS(rawsumm, file = paste0(outdir,'/supermod.',modmeth,'.',numclus, "/rawsumm.rds"))
         }
       }
 
@@ -452,7 +452,6 @@ runrewiring<- function(ObjectList){
                                                              "0")])
       message('Generating refined graph')
       refinedsumm <- summarize_module(norm_expr_mat_keep, refinedrunmoddata, name2idx, nonrespond_idxs, responder_idxs)
-      refinedsumm$runmoddata <- refinedrunmoddata
 
       # summary of refined
       write(
@@ -465,7 +464,7 @@ runrewiring<- function(ObjectList){
       )
 
       pname <- paste(sep = ".", "igraphs.refined.graphs")
-      grDevices::png(paste0(outdir, '/supermodule_',numclus,'/imgs/', pname, ".png"), 1500, 750)
+      grDevices::png(paste0(outdir, '/supermod.',modmeth,'.',numclus,'/imgs/', pname, ".png"), 1500, 750)
       graphics::par(mfrow = c(1, 3))
 
       mylayout <- return_layout_phenotype(refinedrunmoddata$regulators,
@@ -480,7 +479,7 @@ runrewiring<- function(ObjectList){
       grDevices::dev.off()
 
       # write plot to index page
-      write(paste0("<img src='", 'supermodule_',numclus,'/imgs/', pname, ".png",
+      write(paste0("<img src='", 'supermod.',modmeth,'.',numclus,'/imgs/', pname, ".png",
                    "' alt='", pname,
                    "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
             paste0(indexpageinfo$htmldir, indexpageinfo$indexpath),
@@ -493,7 +492,7 @@ runrewiring<- function(ObjectList){
                        tabletype = paste0(modmeth, "_refined_nodesumm"),
                        filestr = "data", html_idxs = seq_len(nrow(refinedsumm$nodesumm)),
                        htmlinfo = indexpageinfo,
-                       extradir = paste0('supermodule_',numclus,'/'))
+                       extradir = paste0('supermod.',modmeth,'.',numclus,'/'))
 
       sortidxs <- sort(as.numeric(refinedsumm$fulledgesumm[, "all.weights"]),
                        decreasing = FALSE, index.return = TRUE)$ix
@@ -501,12 +500,12 @@ runrewiring<- function(ObjectList){
                        tabletype = paste0(modmeth, "_refined_edgesumm"),
                        filestr = "data", html_idxs = seq_len(nrow(refinedsumm$fulledgesumm)),
                        htmlinfo = indexpageinfo,
-                       extradir = paste0('supermodule_',numclus,'/'))
+                       extradir = paste0('supermod.',modmeth,'.',numclus,'/'))
 
 
       #Write raw and refined r object
       # nodesumm, fulledgesumm, full_graph, respond_graph, nonresp_graph
-      saveRDS(refinedsumm, file = paste0(outdir,'/supermodule_',numclus, "/refinedsumm.rds"))
+      saveRDS(refinedsumm, file = paste0(outdir,'/supermod.',modmeth,'.',numclus, "/refinedsumm.rds"))
 
       }
   }

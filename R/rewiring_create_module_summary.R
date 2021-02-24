@@ -1,4 +1,4 @@
-createModuleSummary <- function(ObjectList,modmeth="VBSR", numclus=1, supertype="refined") {
+createModuleSummary <- function(ObjectList, modmeth="VBSR", numclus=1, supertype="refined") {
 	alllabels = ObjectList$datasets[[1]]$responder[ObjectList$datasets[[1]]$keepsamps]
 	samps2pheno = alllabels
 	samps2pheno[which(alllabels == ObjectList$phenotype_class_vals_label[2])] = ObjectList$phenotype_class_vals[2]
@@ -7,7 +7,8 @@ createModuleSummary <- function(ObjectList,modmeth="VBSR", numclus=1, supertype=
 	nonrespond_idxs = names(samps2pheno)[which(samps2pheno == ObjectList$phenotype_class_vals[1])]
 	responder_idxs = names(samps2pheno)[which(samps2pheno == ObjectList$phenotype_class_vals[2])]
 
-	modsumm_name = paste0(ObjectList$outdir,"/supermodule_",numclus,"/",supertype,"summ.rds")
+	# include modmeth
+	modsumm_name = paste0(ObjectList$outdir,"/supermod_rewiring/supermod.",modmeth,".",numclus,"/",supertype,"summ.rds")
 	if (file.exists(modsumm_name)){
 		modsumm <- readRDS(modsumm_name)
 	} else {
