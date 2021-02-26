@@ -212,31 +212,6 @@ orderGraphWeights <- function(graph, edgelist) {
 }
 
 
-### takes in two graphs returns possible graph layout
-return_layout_from_two <- function(graph1, graph2, regs, targets, namehash, nodesumm){
-  vals = as.numeric(nodesumm[,"t-stat"])
-  genesnames = rownames(nodesumm)[order(vals)]
-  names(genesnames) = genesnames
-
-  genesx = 1:length(vals)
-  names(genesx) = genesnames
-
-  orderedregs = names(genesx)[which(nodesumm[names(genesx),"is-regulator"]==1)]
-  absval = max(abs(vals))
-  genesy = signif(vals[order(vals)]/absval,3)
-  names(genesy) = genesnames
-  genesy[orderedregs] = genesy[orderedregs] + rep(c(2,-2),length(regs))[1:length(regs)]
-
-  genesnames[targets] = ""
-  if (length(names(namehash)) == 0){
-    names(namehash) = namehash
-  }
-  genesnames[regs] = namehash[regs]
-
-  return(list(genesx=genesx, genesy=genesy, genesnames=genesnames))
-}
-
-
 heatmapplot <- function(heatm, plotname="", myzlim=c(min(heatm), max(heatm)),
                         cvec=c("red", "white", "blue"), showRows=T){
   colramp = colorRampPalette(cvec)(21)
