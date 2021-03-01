@@ -32,17 +32,17 @@ Imports:
 	methods,
 	igraph,
 	utils,
-    	glmnet,
-    	vbsr,
-    	grDevices,
-    	gplots,
-    	gtools,
-    	pvclust,
-    	R.utils,
-    	dqrng,
+  glmnet,
+  vbsr,
+  grDevices,
+  gplots,
+  gtools,
+  pvclust,
+  R.utils,
+  dqrng,
 	SummarizedExperiment,
-	BiocParallel,
-	matrixStats
+  matrixstats,
+  vioplot
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

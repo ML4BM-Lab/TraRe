@@ -206,3 +206,202 @@ orderGraphWeights <- function(graph, edgelist) {
     return(list(commonedges = commonedges, weights = weights[commonedges, "weight"]))
     
 }
+
+
+heatmapplot <- function(heatm, plotname="", myzlim=c(min(heatm), max(heatm)),
+                        cvec=c("red", "white", "blue"), showRows=T){
+  colramp = colorRampPalette(cvec)(21)
+  heatm[heatm<myzlim[1]] = myzlim[1]
+  heatm[heatm>myzlim[2]] = myzlim[2]
+  image(1:dim(heatm)[2], 1:dim(heatm)[1], t(heatm), col=colramp, zlim=myzlim, axes=F, xlab="", ylab="")
+  #title(main=paste(collapse="|",c(plotname,signif(myzlim,3))))
+  title(main=plotname)
+  if(showRows){
+    if(dim(heatm)[1]>10){
+        idxs = which(1:dim(heatm)[1]%%round(dim(heatm)[1]/10,0)==0)
+        axis(2, at=idxs, labels=rownames(heatm)[idxs], las=2, cex.axis=.8, tick=F, col.axis="black")
+    } else {
+        axis(2, at=1:dim(heatm)[1], labels=rownames(heatm), las=2, cex.axis=.8, tick=F, col.axis="black")
+    }
+  }
+}
+
+
+plot_expression_row <- function(mymat = NULL,
+                                rowdesc = "Regulators",
+                                plotheight = 200,
+                                myshowrows = TRUE,
+                                samps2pheno = NULL,
+                                phenostrs = c("nonrespond", "responder"),
+                                htmlfile = "./",
+                                imgdir = "imgs/",
+                                modnum = 1,
+                                plotwidth = 800,
+                                mycvec = c("darkorange","gray100","darkblue"),
+                                plotzlim = c(-10,10)
+                                ){
+    write(paste0("<tr>"),htmlfile, append=T)
+    for(respstr in phenostrs){
+        myplotname = paste0("expr", ".mod",modnum, ".", respstr, ".", rowdesc)
+        titlename = paste0(respstr, ".", rowdesc)
+        png(paste0(imgdir, myplotname,".png"), width=plotwidth, height=plotheight)
+        heatmapplot(mymat[, names(which(samps2pheno==respstr)), drop=F],
+                    plotname=titlename, myzlim=plotzlim, cvec=mycvec,
+                    showRows=myshowrows)
+        dev.off()
+        write(paste0("<td> <img src='", "imgs/", myplotname, ".png", "' alt='",
+                     myplotname, "' height='", plotheight, "' width='", plotwidth,
+                     "'> </td>\n"), htmlfile, append=T)
+    }
+    write(paste0("</tr>\n"),htmlfile, append=T)
+}
+
+
+plot_correlation_row <- function(cormats = NULL,
+                                rowdesc = "regulators",
+                                xnames = NULL,
+                                ynames = NULL,
+                                plotheight = 200,
+                                myshowrows = TRUE,
+                                htmlfile = "./",
+                                imgdir = "imgs/",
+                                modnum = 1,
+                                plotwidth = 200,
+                                mycvec = c("darkred","gray100","darkgreen"),
+                                plotzlim = c(-1,1),
+                                plottitle = NULL
+                                ){
+
+    write(paste0("<tr>"),htmlfile, append=T)
+    for (mattype in ls(cormats)){
+        myplotname = paste0("corr", ".mod.",modnum, ".", mattype, ".", rowdesc)
+
+        titlename = mattype
+        # if(mattype=="cor1"){titlename="nonrespond_only"}
+        # if(mattype=="cor2"){titlename="responder_only"}
+        if(mattype=="cor1"){titlename=plottitle[1]}
+        if(mattype=="cor2"){titlename=plottitle[2]}
+        if(mattype=="corall"){titlename="all"}
+        if(mattype=="cordiff"){titlename="corr_difference"}
+        titlename = paste0(titlename, ".", rowdesc)
+
+        #show(myplotname)
+        png(paste0(imgdir, myplotname,".png"), width=plotwidth, height=plotheight)
+        heatmapplot(cormats[[mattype]][xnames,ynames,drop=F], plotname=titlename,
+                    myzlim=plotzlim, cvec=mycvec, showRows=myshowrows)
+        dev.off()
+        write(paste0("<td> <img src='", "imgs/", myplotname, ".png", "' alt='",
+                 myplotname, "' height='", plotheight, "' width='", plotwidth,
+                 "'> </td>\n"), htmlfile, append=T)
+    }
+}
+
+### plot a pair of genes
+plot_gene_pair_scatter <- function(pname, myx, myy, xgenename, ygenename,
+                                   mylabels, alltext=NULL, plotdir = ""){
+  library(scales)
+  mymax <- max(abs(c(myx, myy)))
+  if(is.null(mylabels)){
+      mylabels = rep(2,length(myx))
+  }
+  corall <- cor.test(myx, myy)
+  png(paste0(plotdir,pname,".png"), 500, 500)
+  plot(x = myx,
+       y = myy,
+       main = paste(sep = " ", xgenename, ygenename),
+       xlab = xgenename,
+       ylab = ygenename,
+       xlim = c(mymax * -1, mymax),
+       ylim = c(mymax * -1, mymax),
+       type = "p",
+       pch = 16,
+       cex = 1.5,
+       col = alpha(mylabels, .5)
+  )
+  abline(0,1, col="black")
+  abline(.25,1, col="gray80")
+  abline(.5,1, col="gray60")
+  abline(.75,1, col="gray40")
+  abline(-.25,1, col="gray80")
+  abline(-.5,1, col="gray60")
+  abline(-.75,1, col="gray40")
+
+  abline(h = 0)
+  abline(v = 0)
+  if(!is.null(alltext)){
+      laball <- paste0(alltext, "\n", round(corall$estimate, 3), " (",
+                      signif(corall$p.value, 3), ")")
+      text(-1 * mymax, 0, labels = laball, col = 1, adj = c(0, 0))
+  }
+  dev.off()
+}
+
+# plot a pair of genes
+plot_gene_pair_scatter_by_class <- function(plotdir, pname, myx, myy, xgenename, ygenename, mylabels, lab1text, lab2text, alltext){
+  library(scales)
+  mymax=max(abs(c(myx,myy)))
+  mycols = c("darkviolet", "darkgoldenrod")
+
+  corall = cor.test(myx,myy)
+  cor1 = cor.test(myx[which(mylabels==1)],myy[which(mylabels==1)])
+  cor2 = cor.test(myx[which(mylabels==2)],myy[which(mylabels==2)])
+
+  treg = t.test(myx[which(mylabels==1)], myx[which(mylabels==2)])
+  ttar = t.test(myy[which(mylabels==1)], myy[which(mylabels==2)])
+
+  reglineall=lm(myy~myx)
+  regline1=lm(myy[which(mylabels==1)]~myx[which(mylabels==1)])
+  regline2=lm(myy[which(mylabels==2)]~myx[which(mylabels==2)])
+
+  png(paste0(plotdir,pname,".png"), 400, 400)
+  plot(x=myx,
+       y=myy,
+       main=paste(sep=" ", xgenename, "and", ygenename),
+       xlab = paste(sep=" ", "Regulator:", xgenename),
+       ylab = paste(sep=" ", "Target:", ygenename),
+       xlim=c(mymax*-1,mymax),
+       ylim=c(mymax*-1,mymax),
+       type="p",
+       pch=16,
+       cex=1.5,
+       col = alpha(mycols[mylabels], .5)
+  )
+  abline(h=0, col=rgb(0,0,0,.9))
+  abline(v=0, col=rgb(0,0,0,.9))
+
+  abline(h = ttar$estimate[1], lty=3, col=rgb(col2rgb(mycols[1])[1]/255,col2rgb(mycols[1])[2]/255,col2rgb(mycols[1])[3]/255,.6))
+  abline(h = ttar$estimate[2], lty=3, col=rgb(col2rgb(mycols[2])[1]/255,col2rgb(mycols[2])[2]/255,col2rgb(mycols[2])[3]/255,.6))
+  points(x = mymax, y= ttar$estimate[1], pch="+", lty=3, col=rgb(col2rgb(mycols[1])[1]/255,col2rgb(mycols[1])[2]/255,col2rgb(mycols[1])[3]/255,.6))
+  points(x = mymax, y= ttar$estimate[2], pch="+", lty=3, col=rgb(col2rgb(mycols[2])[1]/255,col2rgb(mycols[2])[2]/255,col2rgb(mycols[2])[3]/255,.6))
+
+  abline(v = treg$estimate[1], lty=3, col=rgb(col2rgb(mycols[1])[1]/255,col2rgb(mycols[1])[2]/255,col2rgb(mycols[1])[3]/255,.6))
+  abline(v = treg$estimate[2], lty=3, col=rgb(col2rgb(mycols[2])[1]/255,col2rgb(mycols[2])[2]/255,col2rgb(mycols[2])[3]/255,.6))
+  points(y = -1*mymax, x= treg$estimate[1], pch="+", lty=3, col=rgb(col2rgb(mycols[1])[1]/255,col2rgb(mycols[1])[2]/255,col2rgb(mycols[1])[3]/255,.6))
+  points(y = -1*mymax, x= treg$estimate[2], pch="+", lty=3, col=rgb(col2rgb(mycols[2])[1]/255,col2rgb(mycols[2])[2]/255,col2rgb(mycols[2])[3]/255,.6))
+
+  abline(reglineall, lty=5, col=rgb(0,0,0,.6))
+  abline(regline1, lty=5, lwd=3, col=rgb(col2rgb(mycols[1])[1]/255,col2rgb(mycols[1])[2]/255,col2rgb(mycols[1])[3]/255,.6))
+  abline(regline2, lty=5, lwd=3, col=rgb(col2rgb(mycols[2])[1]/255,col2rgb(mycols[2])[2]/255,col2rgb(mycols[2])[3]/255,.6))
+
+  lab1=paste(sep="", lab1text, "\n", round(cor1$estimate, 3), " (", signif(cor1$p.value,2), ")")
+  lab2=paste(sep="", lab2text, "\n", round(cor2$estimate, 3), " (", signif(cor2$p.value,2), ")")
+  laball=paste(sep="", alltext, "\n", round(corall$estimate, 3), " (", signif(corall$p.value,2), ")")
+  labtde=paste(sep="", ygenename, "\n", "DE (", signif(ttar$p.value,2), ")")
+  labrde=paste(sep="", xgenename, "\n", "DE (", signif(treg$p.value,2), ")")
+  text(-1*mymax, mymax, cex=.9, labels=lab1, col=mycols[1], adj=c(0,1))
+  text(-1*mymax, -1*mymax, cex=.9, labels=lab2, col=mycols[2], adj=c(0,0))
+  text(-1*mymax, 0, cex=.9, labels=laball, col=1, adj=c(0,0))
+  text(mymax, mymax, cex=.9, labels=labtde, col=1, adj=c(1,1))
+  text(mymax, -1*mymax, cex=.9, labels=labrde, col=1, adj=c(1,0))
+
+  dev.off()
+
+  return(list(ttar0 = signif(as.numeric(ttar$estimate[1]),3),
+              ttar1 = signif(as.numeric(ttar$estimate[2]),3),
+              ttarp = signif(as.numeric(ttar$p.value),2),
+              treg0 = signif(as.numeric(treg$estimate[1]),3),
+              treg1 = signif(as.numeric(treg$estimate[2]),3),
+              tregp = signif(as.numeric(treg$p.value),2)))
+}
+
+

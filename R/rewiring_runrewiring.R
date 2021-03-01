@@ -40,13 +40,14 @@ runrewiring <- function(ObjectList) {
     regulator_info_col_name <- ObjectList$regulator_info_col_name
     phenotype_class_vals <- ObjectList$phenotype_class_vals
     phenotype_class_vals_label <- ObjectList$phenotype_class_vals_label
-    outdir <- ObjectList$outdir
+    outdir <- paste0(ObjectList$outdir,"/supermod_rewiring")
     orig_test_perms <- ObjectList$orig_test_perms
     retest_thresh <- ObjectList$retest_thresh
     retest_perms <- ObjectList$retest_perms
     logfile <- ObjectList$logfile
 
     # set up output html page, we use the first argv.
+    dir.create(ObjectList$outdir)
     indexpageinfo <- create_index_page(outdir = outdir, runtag = "", codedir = codedir)
     imgdir <- paste0(indexpageinfo$htmldir, indexpageinfo$imgstr)
 
@@ -296,7 +297,6 @@ runrewiring <- function(ObjectList) {
                 htmlinfo = indexpageinfo)
 
             return(clusters)
-
         }
 
         clusters <- gen_heatmap(ObjectList, module_membership_list, allstats, modmeth_i = paste(modmeth, i, sep = "_"))
