@@ -26,12 +26,12 @@ Description: TraRe (Transcriptional Rewiring) is an R package which contains the
 Depends:
 	R (>= 4.0)
 Imports: 
-	hash,
-	ggplot2,
-	stats,
-	methods,
-	igraph,
-	utils,
+  hash,
+  ggplot2,
+  stats,
+  methods,
+  igraph,
+  utils,
   glmnet,
   vbsr,
   grDevices,
@@ -40,7 +40,7 @@ Imports:
   pvclust,
   R.utils,
   dqrng,
-	SummarizedExperiment,
+  SummarizedExperiment,
   matrixstats,
   vioplot
 License: MIT + file LICENSE
