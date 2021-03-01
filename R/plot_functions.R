@@ -67,35 +67,35 @@
 #'
 #' @export plot_igraph
 plot_igraph <- function(mygraph = NULL, mytitle = "", titlecol = "black", mylayout = NULL) {
-    
+
     if (is.null(mygraph)) {
         stop("graph object field empty")
     }
     if (is.null(mylayout)) {
         stop("layout field empty")
     }
-    
+
     if (is.null(igraph::E(mygraph)$weight)) {
         igraph::E(mygraph)$weight <- rep(1, length(igraph::E(mygraph)))
     }
-    
+
     nodecol <- c("darkblue", "darkorange")
     framecol <- c("black", "darkorange")
     shape <- c("circle", "square")
     edge_cscale <- grDevices::colorRamp(c("darkred", "lightgrey", "darkgreen"))
-    
+
     maxw <- max(abs(igraph::E(mygraph)$weight))
     tweight = (igraph::E(mygraph)$weight + maxw)/(2 * maxw)
     igraph::E(mygraph)$color <- apply(edge_cscale(tweight), 1, function(x) grDevices::rgb(x[1]/255, x[2]/255, x[3]/255, 0.8))
-    
+
     degrees <- igraph::degree(mygraph, igraph::V(mygraph)$name)
     nodenames <- mylayout$genesnames[igraph::V(mygraph)$name]
     regdegrees <- degrees[nodenames]
     regdegrees[which(is.na(regdegrees))] <- ""
     finalnames <- apply(cbind(nodenames, regdegrees), 1, paste, collapse = " - ")
-    
-    plot(mygraph, vertex.color = nodecol[as.numeric(igraph::V(mygraph)$type) + 1], vertex.shape = shape[as.numeric(igraph::V(mygraph)$type) + 
-        1], vertex.label = finalnames, vertex.label.cex = 1.5, vertex.frame.color = framecol[as.numeric(igraph::V(mygraph)$type) + 1], vertex.size = as.numeric(igraph::V(mygraph)$type) * 
+
+    plot(mygraph, vertex.color = nodecol[as.numeric(igraph::V(mygraph)$type) + 1], vertex.shape = shape[as.numeric(igraph::V(mygraph)$type) +
+        1], vertex.label = finalnames, vertex.label.cex = 1.5, vertex.frame.color = framecol[as.numeric(igraph::V(mygraph)$type) + 1], vertex.size = as.numeric(igraph::V(mygraph)$type) *
         5 + 5, layout = cbind(mylayout$genesx[igraph::V(mygraph)$name], mylayout$genesy[igraph::V(mygraph)$name]))
     graphics::title(paste0(mytitle, " ", sum(igraph::V(mygraph)$type == 1), "&", sum(igraph::V(mygraph)$type == 0)), cex.main = 2, col.main = titlecol)
     graphics::abline(h = 0, col = grDevices::rgb(0, 0, 0, alpha = 0.3))
@@ -107,7 +107,7 @@ plot_igraph <- function(mygraph = NULL, mytitle = "", titlecol = "black", mylayo
 #' @param namehash list containing the drivers genes as names and transcripts as values.
 #' If only genes are required, leave it empty.
 return_layout <- function(regs = NULL, targets = NULL, namehash = NULL) {
-    
+
     if (is.null(regs)) {
         stop("regulators field empty")
     }
@@ -117,8 +117,8 @@ return_layout <- function(regs = NULL, targets = NULL, namehash = NULL) {
     if (is.null(namehash)) {
         namehash <- regs
     }
-    
-    
+
+
     nregs <- length(regs)
     myratio <- length(targets)/nregs
     genesx <- c(seq_len(nregs) * myratio - myratio/2, seq_along(targets))
@@ -138,7 +138,7 @@ return_layout <- function(regs = NULL, targets = NULL, namehash = NULL) {
 #' t-statistic from the differential expression analysis of the desired phenotype column and
 #' a boolean variable for regulator (1) - no regulator (0) column.
 return_layout_phenotype <- function(regs = NULL, targets = NULL, varfile = NULL, namehash = NULL) {
-    
+
     if (is.null(regs)) {
         stop("regulators field empty")
     }
@@ -151,7 +151,7 @@ return_layout_phenotype <- function(regs = NULL, targets = NULL, varfile = NULL,
     if (is.null(namehash)) {
         namehash <- regs
     }
-    
+
     # check varfile structure
     if (is.null(rownames(varfile))) {
         stop("genes names must be specified at varfile as rownames")
@@ -165,63 +165,63 @@ return_layout_phenotype <- function(regs = NULL, targets = NULL, varfile = NULL,
     if (!("t-stat" %in% colnames(varfile))) {
         stop("varfile must contain the column t-stat")
     }
-    
-    
+
+
     vals <- as.numeric(varfile[, "t-stat"])
     genesnames <- rownames(varfile)[order(vals)]
     names(genesnames) <- genesnames
-    
+
     genesx <- seq_along(vals)
     names(genesx) <- genesnames
-    
+
     orderedregs <- names(genesx)[which(varfile[names(genesx), "is-regulator"] == 1)]
     absval <- max(abs(vals))
     genesy <- signif(vals[order(vals)]/absval, 3)
     names(genesy) <- genesnames
     genesy[orderedregs] <- genesy[orderedregs] + rep(c(2, -2), length(regs))[seq_along(regs)]
-    
+
     # my part
     nregs <- length(regs)
     myratio <- length(targets)/nregs
     genesx[orderedregs] <- seq_len(nregs) * myratio - myratio/2
-    
+
     genesnames[targets] <- ""
     if (length(names(namehash)) == 0) {
         names(namehash) <- namehash
     }
     genesnames[regs] <- namehash[regs]
-    
+
     return(list(genesx = genesx, genesy = genesy, genesnames = genesnames))
-    
+
 }
 #' @export
 #' @rdname plot_igraph
 #' @param graph igraph object
 #' @param edgelist list containing the edges of the igraph object.
 orderGraphWeights <- function(graph, edgelist) {
-    
+
     weights = igraph::get.data.frame(igraph::graph.adjacency(as.matrix(igraph::get.adjacency(graph, attr = "weight", type = "upper")), weighted = TRUE))
     rownames(weights) <- apply(weights[, seq_len(2)], 1, paste, collapse = "||")
     commonedges <- intersect(edgelist, rownames(weights))
     return(list(commonedges = commonedges, weights = weights[commonedges, "weight"]))
-    
+
 }
 
 
 heatmapplot <- function(heatm, plotname="", myzlim=c(min(heatm), max(heatm)),
                         cvec=c("red", "white", "blue"), showRows=T){
-  colramp = colorRampPalette(cvec)(21)
+  colramp = grDevices::colorRampPalette(cvec)(21)
   heatm[heatm<myzlim[1]] = myzlim[1]
   heatm[heatm>myzlim[2]] = myzlim[2]
-  image(1:dim(heatm)[2], 1:dim(heatm)[1], t(heatm), col=colramp, zlim=myzlim, axes=F, xlab="", ylab="")
-  #title(main=paste(collapse="|",c(plotname,signif(myzlim,3))))
-  title(main=plotname)
+  graphics::image(seq(ncol(heatm)), seq(ncol(heatm)), t(heatm), col=colramp, zlim=myzlim, axes=F, xlab="", ylab="")
+
+  graphics::title(main=plotname)
   if(showRows){
-    if(dim(heatm)[1]>10){
+    if(ncol(heatm)>10){
         idxs = which(1:dim(heatm)[1]%%round(dim(heatm)[1]/10,0)==0)
-        axis(2, at=idxs, labels=rownames(heatm)[idxs], las=2, cex.axis=.8, tick=F, col.axis="black")
+        graphics::axis(2, at=idxs, labels=rownames(heatm)[idxs], las=2, cex.axis=.8, tick=F, col.axis="black")
     } else {
-        axis(2, at=1:dim(heatm)[1], labels=rownames(heatm), las=2, cex.axis=.8, tick=F, col.axis="black")
+        graphics::axis(2, at=1:dim(heatm)[1], labels=rownames(heatm), las=2, cex.axis=.8, tick=F, col.axis="black")
     }
   }
 }
@@ -244,11 +244,11 @@ plot_expression_row <- function(mymat = NULL,
     for(respstr in phenostrs){
         myplotname = paste0("expr", ".mod",modnum, ".", respstr, ".", rowdesc)
         titlename = paste0(respstr, ".", rowdesc)
-        png(paste0(imgdir, myplotname,".png"), width=plotwidth, height=plotheight)
+        grDevices::png(paste0(imgdir, myplotname,".png"), width=plotwidth, height=plotheight)
         heatmapplot(mymat[, names(which(samps2pheno==respstr)), drop=F],
                     plotname=titlename, myzlim=plotzlim, cvec=mycvec,
                     showRows=myshowrows)
-        dev.off()
+        grDevices::dev.off()
         write(paste0("<td> <img src='", "imgs/", myplotname, ".png", "' alt='",
                      myplotname, "' height='", plotheight, "' width='", plotwidth,
                      "'> </td>\n"), htmlfile, append=T)
@@ -286,10 +286,10 @@ plot_correlation_row <- function(cormats = NULL,
         titlename = paste0(titlename, ".", rowdesc)
 
         #show(myplotname)
-        png(paste0(imgdir, myplotname,".png"), width=plotwidth, height=plotheight)
+        grDevices::png(paste0(imgdir, myplotname,".png"), width=plotwidth, height=plotheight)
         heatmapplot(cormats[[mattype]][xnames,ynames,drop=F], plotname=titlename,
                     myzlim=plotzlim, cvec=mycvec, showRows=myshowrows)
-        dev.off()
+        grDevices::dev.off()
         write(paste0("<td> <img src='", "imgs/", myplotname, ".png", "' alt='",
                  myplotname, "' height='", plotheight, "' width='", plotwidth,
                  "'> </td>\n"), htmlfile, append=T)
@@ -299,13 +299,14 @@ plot_correlation_row <- function(cormats = NULL,
 ### plot a pair of genes
 plot_gene_pair_scatter <- function(pname, myx, myy, xgenename, ygenename,
                                    mylabels, alltext=NULL, plotdir = ""){
-  library(scales)
   mymax <- max(abs(c(myx, myy)))
   if(is.null(mylabels)){
       mylabels = rep(2,length(myx))
   }
-  corall <- cor.test(myx, myy)
-  png(paste0(plotdir,pname,".png"), 500, 500)
+  corall <- stats::cor.test(myx, myy)
+
+  grDevices::png(paste0(plotdir,pname,".png"), 500, 500)
+
   plot(x = myx,
        y = myy,
        main = paste(sep = " ", xgenename, ygenename),
@@ -316,44 +317,46 @@ plot_gene_pair_scatter <- function(pname, myx, myy, xgenename, ygenename,
        type = "p",
        pch = 16,
        cex = 1.5,
-       col = alpha(mylabels, .5)
+       col = scales::alpha(mylabels, .5)
   )
-  abline(0,1, col="black")
-  abline(.25,1, col="gray80")
-  abline(.5,1, col="gray60")
-  abline(.75,1, col="gray40")
-  abline(-.25,1, col="gray80")
-  abline(-.5,1, col="gray60")
-  abline(-.75,1, col="gray40")
+  graphics::abline(0,1, col="black")
+  graphics::abline(.25,1, col="gray80")
+  graphics::abline(.5,1, col="gray60")
+  graphics::abline(.75,1, col="gray40")
+  graphics::abline(-.25,1, col="gray80")
+  graphics::abline(-.5,1, col="gray60")
+  graphics::abline(-.75,1, col="gray40")
 
-  abline(h = 0)
-  abline(v = 0)
+  graphics::abline(h = 0)
+  graphics::abline(v = 0)
+
   if(!is.null(alltext)){
       laball <- paste0(alltext, "\n", round(corall$estimate, 3), " (",
                       signif(corall$p.value, 3), ")")
-      text(-1 * mymax, 0, labels = laball, col = 1, adj = c(0, 0))
+      graphics::text(-1 * mymax, 0, labels = laball, col = 1, adj = c(0, 0))
   }
-  dev.off()
+
+  grDevices::dev.off()
 }
 
 # plot a pair of genes
 plot_gene_pair_scatter_by_class <- function(plotdir, pname, myx, myy, xgenename, ygenename, mylabels, lab1text, lab2text, alltext){
-  library(scales)
+
   mymax=max(abs(c(myx,myy)))
   mycols = c("darkviolet", "darkgoldenrod")
 
-  corall = cor.test(myx,myy)
-  cor1 = cor.test(myx[which(mylabels==1)],myy[which(mylabels==1)])
-  cor2 = cor.test(myx[which(mylabels==2)],myy[which(mylabels==2)])
+  corall = stats::cor.test(myx,myy)
+  cor1 = stats::cor.test(myx[which(mylabels==1)],myy[which(mylabels==1)])
+  cor2 = stats::cor.test(myx[which(mylabels==2)],myy[which(mylabels==2)])
 
-  treg = t.test(myx[which(mylabels==1)], myx[which(mylabels==2)])
-  ttar = t.test(myy[which(mylabels==1)], myy[which(mylabels==2)])
+  treg = stats::t.test(myx[which(mylabels==1)], myx[which(mylabels==2)])
+  ttar = stats::t.test(myy[which(mylabels==1)], myy[which(mylabels==2)])
 
-  reglineall=lm(myy~myx)
-  regline1=lm(myy[which(mylabels==1)]~myx[which(mylabels==1)])
-  regline2=lm(myy[which(mylabels==2)]~myx[which(mylabels==2)])
+  reglineall=stats::lm(myy~myx)
+  regline1=stats::lm(myy[which(mylabels==1)]~myx[which(mylabels==1)])
+  regline2=stats::lm(myy[which(mylabels==2)]~myx[which(mylabels==2)])
 
-  png(paste0(plotdir,pname,".png"), 400, 400)
+  grDevices::png(paste0(plotdir,pname,".png"), 400, 400)
   plot(x=myx,
        y=myy,
        main=paste(sep=" ", xgenename, "and", ygenename),
@@ -364,37 +367,37 @@ plot_gene_pair_scatter_by_class <- function(plotdir, pname, myx, myy, xgenename,
        type="p",
        pch=16,
        cex=1.5,
-       col = alpha(mycols[mylabels], .5)
+       col = scales::alpha(mycols[mylabels], .5)
   )
-  abline(h=0, col=rgb(0,0,0,.9))
-  abline(v=0, col=rgb(0,0,0,.9))
+  graphics::abline(h=0, col=grDevices::rgb(0,0,0,.9))
+  graphics::abline(v=0, col=grDevices::rgb(0,0,0,.9))
 
-  abline(h = ttar$estimate[1], lty=3, col=rgb(col2rgb(mycols[1])[1]/255,col2rgb(mycols[1])[2]/255,col2rgb(mycols[1])[3]/255,.6))
-  abline(h = ttar$estimate[2], lty=3, col=rgb(col2rgb(mycols[2])[1]/255,col2rgb(mycols[2])[2]/255,col2rgb(mycols[2])[3]/255,.6))
-  points(x = mymax, y= ttar$estimate[1], pch="+", lty=3, col=rgb(col2rgb(mycols[1])[1]/255,col2rgb(mycols[1])[2]/255,col2rgb(mycols[1])[3]/255,.6))
-  points(x = mymax, y= ttar$estimate[2], pch="+", lty=3, col=rgb(col2rgb(mycols[2])[1]/255,col2rgb(mycols[2])[2]/255,col2rgb(mycols[2])[3]/255,.6))
+  graphics::abline(h = ttar$estimate[1], lty=3, col=grDevices::rgb(grDevices::col2rgb(mycols[1])[1]/255,grDevices::col2rgb(mycols[1])[2]/255,grDevices::col2rgb(mycols[1])[3]/255,.6))
+  graphics::abline(h = ttar$estimate[2], lty=3, col=grDevices::rgb(grDevices::col2rgb(mycols[2])[1]/255,grDevices::col2rgb(mycols[2])[2]/255,grDevices::col2rgb(mycols[2])[3]/255,.6))
+  graphics::points(x = mymax, y= ttar$estimate[1], pch="+", lty=3, col=grDevices::rgb(grDevices::col2rgb(mycols[1])[1]/255,grDevices::col2rgb(mycols[1])[2]/255,grDevices::col2rgb(mycols[1])[3]/255,.6))
+  graphics::points(x = mymax, y= ttar$estimate[2], pch="+", lty=3, col=grDevices::rgb(grDevices::col2rgb(mycols[2])[1]/255,grDevices::col2rgb(mycols[2])[2]/255,grDevices::col2rgb(mycols[2])[3]/255,.6))
 
-  abline(v = treg$estimate[1], lty=3, col=rgb(col2rgb(mycols[1])[1]/255,col2rgb(mycols[1])[2]/255,col2rgb(mycols[1])[3]/255,.6))
-  abline(v = treg$estimate[2], lty=3, col=rgb(col2rgb(mycols[2])[1]/255,col2rgb(mycols[2])[2]/255,col2rgb(mycols[2])[3]/255,.6))
-  points(y = -1*mymax, x= treg$estimate[1], pch="+", lty=3, col=rgb(col2rgb(mycols[1])[1]/255,col2rgb(mycols[1])[2]/255,col2rgb(mycols[1])[3]/255,.6))
-  points(y = -1*mymax, x= treg$estimate[2], pch="+", lty=3, col=rgb(col2rgb(mycols[2])[1]/255,col2rgb(mycols[2])[2]/255,col2rgb(mycols[2])[3]/255,.6))
+  graphics::abline(v = treg$estimate[1], lty=3, col=grDevices::rgb(grDevices::col2rgb(mycols[1])[1]/255,grDevices::col2rgb(mycols[1])[2]/255,grDevices::col2rgb(mycols[1])[3]/255,.6))
+  graphics::abline(v = treg$estimate[2], lty=3, col=grDevices::rgb(grDevices::col2rgb(mycols[2])[1]/255,grDevices::col2rgb(mycols[2])[2]/255,grDevices::col2rgb(mycols[2])[3]/255,.6))
+  graphics::points(y = -1*mymax, x= treg$estimate[1], pch="+", lty=3, col=grDevices::rgb(grDevices::col2rgb(mycols[1])[1]/255,grDevices::col2rgb(mycols[1])[2]/255,grDevices::col2rgb(mycols[1])[3]/255,.6))
+  graphics::points(y = -1*mymax, x= treg$estimate[2], pch="+", lty=3, col=grDevices::rgb(grDevices::col2rgb(mycols[2])[1]/255,grDevices::col2rgb(mycols[2])[2]/255,grDevices::col2rgb(mycols[2])[3]/255,.6))
 
-  abline(reglineall, lty=5, col=rgb(0,0,0,.6))
-  abline(regline1, lty=5, lwd=3, col=rgb(col2rgb(mycols[1])[1]/255,col2rgb(mycols[1])[2]/255,col2rgb(mycols[1])[3]/255,.6))
-  abline(regline2, lty=5, lwd=3, col=rgb(col2rgb(mycols[2])[1]/255,col2rgb(mycols[2])[2]/255,col2rgb(mycols[2])[3]/255,.6))
+  graphics::abline(reglineall, lty=5, col=grDevices::rgb(0,0,0,.6))
+  graphics::abline(regline1, lty=5, lwd=3, col=grDevices::rgb(grDevices::col2rgb(mycols[1])[1]/255,grDevices::col2rgb(mycols[1])[2]/255,grDevices::col2rgb(mycols[1])[3]/255,.6))
+  graphics::abline(regline2, lty=5, lwd=3, col=grDevices::rgb(grDevices::col2rgb(mycols[2])[1]/255,grDevices::col2rgb(mycols[2])[2]/255,grDevices::col2rgb(mycols[2])[3]/255,.6))
 
   lab1=paste(sep="", lab1text, "\n", round(cor1$estimate, 3), " (", signif(cor1$p.value,2), ")")
   lab2=paste(sep="", lab2text, "\n", round(cor2$estimate, 3), " (", signif(cor2$p.value,2), ")")
   laball=paste(sep="", alltext, "\n", round(corall$estimate, 3), " (", signif(corall$p.value,2), ")")
   labtde=paste(sep="", ygenename, "\n", "DE (", signif(ttar$p.value,2), ")")
   labrde=paste(sep="", xgenename, "\n", "DE (", signif(treg$p.value,2), ")")
-  text(-1*mymax, mymax, cex=.9, labels=lab1, col=mycols[1], adj=c(0,1))
-  text(-1*mymax, -1*mymax, cex=.9, labels=lab2, col=mycols[2], adj=c(0,0))
-  text(-1*mymax, 0, cex=.9, labels=laball, col=1, adj=c(0,0))
-  text(mymax, mymax, cex=.9, labels=labtde, col=1, adj=c(1,1))
-  text(mymax, -1*mymax, cex=.9, labels=labrde, col=1, adj=c(1,0))
+  graphics::text(-1*mymax, mymax, cex=.9, labels=lab1, col=mycols[1], adj=c(0,1))
+  graphics::text(-1*mymax, -1*mymax, cex=.9, labels=lab2, col=mycols[2], adj=c(0,0))
+  graphics::text(-1*mymax, 0, cex=.9, labels=laball, col=1, adj=c(0,0))
+  graphics::text(mymax, mymax, cex=.9, labels=labtde, col=1, adj=c(1,1))
+  graphics::text(mymax, -1*mymax, cex=.9, labels=labrde, col=1, adj=c(1,0))
 
-  dev.off()
+  grDevices::dev.off()
 
   return(list(ttar0 = signif(as.numeric(ttar$estimate[1]),3),
               ttar1 = signif(as.numeric(ttar$estimate[2]),3),

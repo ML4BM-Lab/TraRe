@@ -335,10 +335,6 @@ runrewiring <- function(ObjectList) {
             # Create html folder in numclu's folder
             dir.create(paste0(outdir, "/", foldername_p, "/htmls"))
 
-            # Supermodule number tittle write( paste0( '<br><table style='width:100%' bgcolor='gray'><tr>', '<td style='text-align: center;
-            # vertical-align: middle;'><h1>', 'Supermodule ',numclus, '</h1></td></tr></table><br>\n' ), paste0(indexpageinfo$htmldir,
-            # indexpageinfo$indexpath), append = TRUE )
-
             # Write to the logfile
             mods <- clusters$clusters[[numclus]]
             mods <- split(mods, cut(seq_along(mods), max(length(mods)/5, 2), labels = FALSE))
@@ -487,8 +483,9 @@ runrewiring <- function(ObjectList) {
 
     if (length(duplas)>1){
 
-    # Generate the combined heatmap
-    gen_heatmap(ObjectList, c_module_membership_list, c_allstats, TRUE, "combined")
+        message('Generaint joint heatmap')
 
+        # Generate the combined heatmap
+        gen_heatmap(ObjectList, c_module_membership_list, c_allstats, TRUE, "combined")
     }
 }

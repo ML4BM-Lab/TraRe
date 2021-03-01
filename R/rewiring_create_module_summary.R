@@ -1,4 +1,5 @@
 createModuleSummary <- function(ObjectList, modmeth="VBSR", numclus=1, supertype="refined") {
+
 	alllabels = ObjectList$datasets[[1]]$responder[ObjectList$datasets[[1]]$keepsamps]
 	samps2pheno = alllabels
 	samps2pheno[which(alllabels == ObjectList$phenotype_class_vals_label[2])] = ObjectList$phenotype_class_vals[2]
