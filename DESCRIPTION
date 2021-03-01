@@ -41,7 +41,7 @@ Imports:
   R.utils,
   dqrng,
   SummarizedExperiment,
-  matrixstats,
+  matrixStats,
   vioplot
 License: MIT + file LICENSE
 Encoding: UTF-8
