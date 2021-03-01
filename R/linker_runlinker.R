@@ -119,7 +119,8 @@ LINKER_run <- function(lognorm_est_counts, target_filtered_idx, regulator_filter
     
     res <- lapply(seq_along(link_mode), function(x) {
         LINKER_runPhase1(lognorm_est_counts = lognorm_est_counts, target_filtered_idx = target_filtered_idx, regulator_filtered_idx = regulator_filtered_idx, 
-            NrModules = NrModules, NrCores = NrCores, mode = link_mode[x], used_method = module_rep, corrClustNrIter = corrClustNrIter, Nr_bootstraps = Nr_bootstraps)
+            NrModules = NrModules, NrCores = NrCores, mode = link_mode[x], used_method = module_rep, corrClustNrIter = corrClustNrIter, 
+            Nr_bootstraps = Nr_bootstraps)
     })
     
     names(res) <- link_mode

@@ -51,9 +51,10 @@
 #'
 #'
 #' @export
-preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_counts_p = NULL, SEObject_p = NULL, gene_info_p = NULL, phenotype_p = NULL, 
-    nassays = 1, final_signif_thresh = 0.001, regulator_info_col_name = "regulator", phenotype_col_name = "Class", phenotype_class_vals_string = "NR,R", 
-    phenotype_class_vals_string_label = "0,1", orig_test_perms = 100, retest_thresh = 0.08, retest_perms = 1000, outdir = tempdir(), nrcores = 3) {
+preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_counts_p = NULL, SEObject_p = NULL, gene_info_p = NULL, 
+    phenotype_p = NULL, nassays = 1, final_signif_thresh = 0.001, regulator_info_col_name = "regulator", phenotype_col_name = "Class", 
+    phenotype_class_vals_string = "NR,R", phenotype_class_vals_string_label = "0,1", orig_test_perms = 100, retest_thresh = 0.08, retest_perms = 1000, 
+    outdir = tempdir(), nrcores = 3) {
     
     # checks
     

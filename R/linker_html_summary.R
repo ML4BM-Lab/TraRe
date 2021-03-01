@@ -106,8 +106,9 @@ create_html_summary <- function(rfiles, tagstr, mapfile, outdir = paste0(tempdir
         
         write(paste0(nonzeroregs, " regulators and ", nonzerotargs, " targets with possible chip evidence."), file = paste0(htmlinfo$htmldir, 
             htmlinfo$indexpath), append = TRUE)
-        write(paste0(binary_chip_summary["1"], " (", signif(binary_chip_summary["1"]/(nonzeroregs * nonzerotargs) * 100, 3), "%) of ", nonzeroregs, 
-            "*", nonzerotargs, " possible chip edges have at least one peak.<br>"), file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
+        write(paste0(binary_chip_summary["1"], " (", signif(binary_chip_summary["1"]/(nonzeroregs * nonzerotargs) * 100, 3), "%) of ", 
+            nonzeroregs, "*", nonzerotargs, " possible chip edges have at least one peak.<br>"), file = paste0(htmlinfo$htmldir, htmlinfo$indexpath), 
+            append = TRUE)
         bin_summ <- cumSumTable(cbind(as.numeric(binary_chip_evidence), 1 - as.numeric(binary_chip_evidence)))
         myrnames <- c("Peaks", "noPeak", "NA")
         bin_summ <- cbind(myrnames, bin_summ)
@@ -161,7 +162,8 @@ create_html_summary <- function(rfiles, tagstr, mapfile, outdir = paste0(tempdir
                 allsummaries <- rbind(allsummaries, labeled_table)
                 resultspath <- paste0(htmlinfo$txtstr, runinfo$tagstr, ".all_summaries.txt")
                 message("Writing table: ", resultspath)
-                utils::write.table(allsummaries, paste0(htmlinfo$htmldir, resultspath), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+                utils::write.table(allsummaries, paste0(htmlinfo$htmldir, resultspath), sep = "\t", row.names = FALSE, col.names = TRUE, 
+                  quote = FALSE)
             }  # end graphmeth
         }  # end modmeth
     }  # end rfile

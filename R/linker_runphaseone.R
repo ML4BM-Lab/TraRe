@@ -59,8 +59,9 @@
 #'
 #' @export LINKER_runPhase1
 
-LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, nassay = 1, regulator = "regulator", NrModules, 
-    Lambda = 1e-04, alpha = 1 - 1e-06, pmax = 10, mode = "VBSR", used_method = "MEAN", NrCores = 1, corrClustNrIter = 100, Nr_bootstraps = 1) {
+LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, nassay = 1, regulator = "regulator", 
+    NrModules, Lambda = 1e-04, alpha = 1 - 1e-06, pmax = 10, mode = "VBSR", used_method = "MEAN", NrCores = 1, corrClustNrIter = 100, 
+    Nr_bootstraps = 1) {
     
     # Check for SummarizedExperiment Object
     
@@ -100,8 +101,8 @@ LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_
         MA_matrix_Var_train <- t(scale(t(lognorm_est_counts[target_filtered_idx, train_samples])))
         MA_matrix_Var_validation <- t(scale(t(lognorm_est_counts[target_filtered_idx, validation_samples])))
         
-        LINKERinit <- LINKER_init(MA_matrix_Var = MA_matrix_Var_train, RegulatorData = Regulator_data_train, NrModules = NrModules, NrCores = NrCores, 
-            corrClustNrIter = corrClustNrIter, Parameters = Parameters)
+        LINKERinit <- LINKER_init(MA_matrix_Var = MA_matrix_Var_train, RegulatorData = Regulator_data_train, NrModules = NrModules, 
+            NrCores = NrCores, corrClustNrIter = corrClustNrIter, Parameters = Parameters)
         
         tmp <- LINKER_corrClust(LINKERinit)
         bootstrap_results[[boost_idx]] <- tmp
@@ -397,9 +398,10 @@ LINKER_extract_modules <- function(results) {
             
             
             
-            modules[[enriched_idx]] <- list(target_genes = Module_target_genes_full_name, regulators = Modules_regulators_full_name, regulatory_program = boot_results$RegulatoryPrograms[Module_number, 
-                ], training_stats = boot_results$trainingStats[Module_number, ], test_stats = results$bootstrapTestStats[[idx_bootstrap]][Module_number], 
-                assigned_genes = which(boot_results$ModuleMembership[, ] == Module_number), bootstrap_idx = idx_bootstrap)
+            modules[[enriched_idx]] <- list(target_genes = Module_target_genes_full_name, regulators = Modules_regulators_full_name, 
+                regulatory_program = boot_results$RegulatoryPrograms[Module_number, ], training_stats = boot_results$trainingStats[Module_number, 
+                  ], test_stats = results$bootstrapTestStats[[idx_bootstrap]][Module_number], assigned_genes = which(boot_results$ModuleMembership[, 
+                  ] == Module_number), bootstrap_idx = idx_bootstrap)
             enriched_idx <- enriched_idx + 1
         }
     }
@@ -485,8 +487,8 @@ LINKER_EvaluateTestSet <- function(LINKERresults, MA_Data_TestSet, RegulatorData
             
         }
     }
-    dimnames(stats) <- list(rownames(stats, do.NULL = FALSE, prefix = "Module_"), c("nrReg", "nrGen", "MeanInModuleCorr", "Rsquare", "RsquareAdjusted", 
-        "homogeneity", "condition"))
+    dimnames(stats) <- list(rownames(stats, do.NULL = FALSE, prefix = "Module_"), c("nrReg", "nrGen", "MeanInModuleCorr", "Rsquare", 
+        "RsquareAdjusted", "homogeneity", "condition"))
     
     return(stats)
 }
@@ -607,7 +609,8 @@ LINKER_LearnRegulatoryPrograms <- function(Data, Clusters, RegulatorData, Lambda
     }
     
     # Initialize
-    BetaY_all <- BiocParallel::bplapply(seq_len(NrClusters), CalcBettas, Data, Clusters, RegulatorData, Lambda, alpha, mode, used_method, BPPARAM = parallClass)
+    BetaY_all <- BiocParallel::bplapply(seq_len(NrClusters), CalcBettas, Data, Clusters, RegulatorData, Lambda, alpha, mode, used_method, 
+        BPPARAM = parallClass)
     
     # Transform list of bettas into matrix, as .combine=cbind in foreach
     BetaY_all <- do.call(cbind, BetaY_all)
