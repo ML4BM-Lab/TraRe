@@ -235,7 +235,6 @@ runrewiring <- function(ObjectList) {
             rownames(simmat) <- gsub(paste0("mod."), "", rownames(simmat))
             colnames(simmat) <- gsub(paste0("mod."), "", colnames(simmat))
 
-            print(simmat)
 
             pvc_result <- pvclust::pvclust(simmat, method.dist = "cor", method.hclust = "average", nboot = 1000)
 
