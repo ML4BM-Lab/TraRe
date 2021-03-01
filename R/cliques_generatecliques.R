@@ -46,8 +46,8 @@
 #'    clioutput <- generatecliques(dataset = dataset)
 #'
 #' @export generatecliques
-generatecliques <- function(dataset = NULL, nassay = 1, method = "pearson", correlationth = 0.6, sparsecorrmatrix = TRUE, 
-    numcliques = "All", mandatorygenes = c(), selection = 1) {
+generatecliques <- function(dataset = NULL, nassay = 1, method = "pearson", correlationth = 0.6, sparsecorrmatrix = TRUE, numcliques = "All", 
+    mandatorygenes = c(), selection = 1) {
     # All but the last one to print it in a different way.
     
     # Check for SummarizedExperiment Object
@@ -100,10 +100,9 @@ generatecliques <- function(dataset = NULL, nassay = 1, method = "pearson", corr
     mandatorygenes_toinclude <- setdiff(mandatorygenes, unlist(ml))
     
     
-    # Substitute the bottom cliques with the mandatory ones. We can substitute a clique with more than 1 gene
-    # for a single gene...
+    # Substitute the bottom cliques with the mandatory ones. We can substitute a clique with more than 1 gene for a single gene...
     
-    for (i in length(ml):1) {
+    for (i in seq(length(ml), 1)) {
         if (!length(mandatorygenes_toinclude)) 
             break
         
@@ -124,38 +123,7 @@ generatecliques <- function(dataset = NULL, nassay = 1, method = "pearson", corr
     
     # Plot the selected method.
     
-    x_axis <- vapply(ml[], getAvgVariance, dat = pdobject, FUN.VALUE = 1)
-    y_axis <- vapply(ml[], getMedianCorrelation, dat = pdobject, FUN.VALUE = 1)  #Median Correlation
-    
-    
-    Palette <- c("#29bd00", "#ff04d1", "#1714b0", "#b30009", "#030303")
-    
-    col_fact <- c()
-    
-    mll <- vapply(ml[], length, FUN.VALUE = 1)
-    
-    for (i in seq_along(ml)) {
-        
-        clique_l <- length(ml[[i]])
-        
-        ch_cat <- which(c((clique_l == 1) & (sortparameter_ix_numcliques[i] < smobject$L), (clique_l > 1) & 
-            (clique_l <= 4), (clique_l > 4) & (clique_l <= 7), (clique_l > 7), (sortparameter_ix_numcliques[i] >= 
-            smobject$L)))
-        
-        col_fact <- c(col_fact, switch(ch_cat, "x == 1", "1 < x <= 4", "4 < x <= 7", "x > 7", "Singleton"))
-        
-    }
-    col_fact <- as.factor(col_fact)
-    
-    SelectedCliquesPlot <- ggplot2::ggplot() + ggplot2::geom_point(ggplot2::aes(y_axis, x_axis, color = col_fact), 
-        size = 3) + ggplot2::labs(x = "Median Correlation Value", y = "Avg Variance Per Clique", title = smobject$tittle, 
-        subtitle = paste("TotalNum: ", toString(sum(mll)), ", MedianOfMedian: ", toString(round(stats::median(y_axis[y_axis != 
-            1]), 4)), ", Total Singleton Cliques: ", toString(as.double(table(vapply(ml, length, FUN.VALUE = 1) == 
-            1)[2])), ", Number of Cliques: ", toString(numcliques), sep = "")) + ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, 
-        size = 15, face = "bold"), plot.subtitle = ggplot2::element_text(hjust = 0.5, size = 12)) + ggplot2::theme(legend.text = ggplot2::element_text(size = 15), 
-        axis.text = ggplot2::element_text(size = 15), axis.title = ggplot2::element_text(size = 15), legend.title = ggplot2::element_text(size = 15)) + 
-        ggplot2::scale_color_manual(name = "Genes/Cliques", values = c(`x == 1` = Palette[1], `1 < x <= 4` = Palette[2], 
-            `4 < x <= 7` = Palette[3], `x > 7` = Palette[4], Singleton = Palette[5]))
+    SelectedCliquesPlot <- plotcliques(ml, pdobject, sortparameter_ix_numcliques, smobject, numcliques)
     
     return(list(plot = SelectedCliquesPlot, cliques = RC_list, representatives = names(RC_list)))
 }
@@ -164,8 +132,9 @@ generatecliques <- function(dataset = NULL, nassay = 1, method = "pearson", corr
 preparedata <- function(dataset, method) {
     
     # Generate variance gene dictionary.
-    dataset_variance_dict <- hash::hash()  #we use a hash table.
-    dataset_variance_dict <- apply(dataset, 1, stats::var)
+    dataset_variance_dict <- matrixStats::rowVars(as.matrix(dataset))
+    names(dataset_variance_dict) <- rownames(dataset)
+    dataset_variance_dict <- hash::hash(dataset_variance_dict)
     
     # Generate the correlation matrix to work with.
     CorrMatrix <- abs(stats::cor(t(dataset), method = method))
@@ -214,11 +183,11 @@ selectmethod <- function(selection, ggoutput, pdoutput) {
     # Cliques<-vapply(igraph::max_cliques(ggoutput$graph)[],names,FUN.VALUE = c(''))
     Cliques <- sapply(igraph::max_cliques(ggoutput$graph)[], names)
     
-    SortingMethod <- switch(selection, length, function(x) getMedianCorrelation(x, dat = pdoutput), function(x) getAvgVariance(x, 
-        dat = pdoutput), function(x) getMedian_AvgVar(x, dat = pdoutput))
+    SortingMethod <- switch(selection, length, function(x) getMedianCorrelation(x, dat = pdoutput), function(x) getAvgVariance(x, dat = pdoutput), 
+        function(x) getMedian_AvgVar(x, dat = pdoutput))
     
-    SortingMethod_tittle <- switch(selection, "Maximizing Genes/Clique", "Maximize Median Correlation Value/Clique", 
-        "Maximize Avg Variance Correlation Value/Clique", "Maximize Sum(2,3)/Clique")
+    SortingMethod_tittle <- switch(selection, "Maximizing Genes/Clique", "Maximize Median Correlation Value/Clique", "Maximize Avg Variance Correlation Value/Clique", 
+        "Maximize Sum(2,3)/Clique")
     
     SortingMethod_chosen <- vapply(Cliques, SortingMethod, FUN.VALUE = 1)
     
@@ -233,6 +202,45 @@ selectmethod <- function(selection, ggoutput, pdoutput) {
     
     return(list(cliques = noduplcliques_r, tittle = SortingMethod_tittle, L = L))
     
+}
+#' @export
+#' @rdname generatecliques
+#' @param ml cliques from smobject
+#' @param pdobject output from preparedata()
+#' @param sortparameter_ix_numcliques parameter for sorting cliques.
+#' @param smobject output from selectmethod()
+plotcliques <- function(ml, pdobject, sortparameter_ix_numcliques, smobject, numcliques) {
+    
+    x_axis <- vapply(ml[], getAvgVariance, dat = pdobject, FUN.VALUE = 1)
+    y_axis <- vapply(ml[], getMedianCorrelation, dat = pdobject, FUN.VALUE = 1)  #Median Correlation
+    
+    Palette <- c("#29bd00", "#ff04d1", "#1714b0", "#b30009", "#030303")
+    
+    col_fact <- c()
+    
+    mll <- vapply(ml[], length, FUN.VALUE = 1)
+    
+    for (i in seq_along(ml)) {
+        
+        clique_l <- length(ml[[i]])
+        
+        ch_cat <- which(c((clique_l == 1) & (sortparameter_ix_numcliques[i] < smobject$L), (clique_l > 1) & (clique_l <= 4), (clique_l > 4) & 
+            (clique_l <= 7), (clique_l > 7), (sortparameter_ix_numcliques[i] >= smobject$L)))
+        
+        col_fact <- c(col_fact, switch(ch_cat, "x == 1", "1 < x <= 4", "4 < x <= 7", "x > 7", "Singleton"))
+        
+    }
+    col_fact <- as.factor(col_fact)
+    
+    SelectedCliquesPlot <- ggplot2::ggplot() + ggplot2::geom_point(ggplot2::aes(y_axis, x_axis, color = col_fact), size = 3) + ggplot2::labs(x = "Median Correlation Value", 
+        y = "Avg Variance Per Clique", title = smobject$tittle, subtitle = paste("TotalNum: ", toString(sum(mll)), ", MedianOfMedian: ", toString(round(stats::median(y_axis[y_axis != 
+            1]), 4)), ", Total Singleton Cliques: ", toString(as.double(table(vapply(ml, length, FUN.VALUE = 1) == 1)[2])), ", Number of Cliques: ", 
+            toString(numcliques), sep = "")) + ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, size = 15, face = "bold"), plot.subtitle = ggplot2::element_text(hjust = 0.5, 
+        size = 12)) + ggplot2::theme(legend.text = ggplot2::element_text(size = 15), axis.text = ggplot2::element_text(size = 15), axis.title = ggplot2::element_text(size = 15), 
+        legend.title = ggplot2::element_text(size = 15)) + ggplot2::scale_color_manual(name = "Genes/Cliques", values = c(`x == 1` = Palette[1], 
+        `1 < x <= 4` = Palette[2], `4 < x <= 7` = Palette[3], `x > 7` = Palette[4], Singleton = Palette[5]))
+    
+    return(SelectedCliquesPlot)
 }
 
 #---- Helpers ----
@@ -260,8 +268,7 @@ getMedianCorrelation <- function(clique, dat) {
         return(1)
     
     # CorrMatrix will change if drivers or targets are run.
-    return(stats::median(apply(utils::combn(which(rownames(dat$mat) %in% clique), 2), 2, function(x) dat$mat[x[1], 
-        x[2]])))
+    return(stats::median(apply(utils::combn(which(rownames(dat$mat) %in% clique), 2), 2, function(x) dat$mat[x[1], x[2]])))
     
 }
 

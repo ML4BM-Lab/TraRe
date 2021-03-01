@@ -5,6 +5,7 @@
 \alias{preparedata}
 \alias{generategraph}
 \alias{selectmethod}
+\alias{plotcliques}
 \title{Cliques generation and plot displaying.}
 \usage{
 generatecliques(
@@ -23,6 +24,8 @@ preparedata(dataset, method)
 generategraph(correlationth, sparsecorrmatrix, pdoutput)
 
 selectmethod(selection, ggoutput, pdoutput)
+
+plotcliques(ml, pdobject, sortparameter_ix_numcliques, smobject, numcliques)
 }
 \arguments{
 \item{dataset}{input expression file with genes as rows and samples as columns.}
@@ -47,6 +50,14 @@ the desired matrix. Default: 0}
 \item{pdoutput}{output from preparedata()}
 
 \item{ggoutput}{output from generategraph()}
+
+\item{ml}{cliques from smobject}
+
+\item{pdobject}{output from preparedata()}
+
+\item{sortparameter_ix_numcliques}{parameter for sorting cliques.}
+
+\item{smobject}{output from selectmethod()}
 }
 \value{
 List containing the plot generated and a list with all the generated cliques.
