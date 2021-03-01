@@ -163,7 +163,7 @@ geneinfo <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
 # We have to make sure geneinfo and lognorm
 # have same rows (same genes).
 
-geneinfo <- geneinfo[rownames(lognorm_est_counts),,drop=F]
+geneinfo <- geneinfo[rownames(lognorm_est_counts),,drop=FALSE]
 
 # Now we can generate the SE object.
 SeObject <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = lognorm_est_counts),
@@ -259,7 +259,7 @@ In order to run *Rewiring* test, *Trare* provides two functions: the `preparerew
 - **gene_info_p**: path of a two-column file containing genes and 'regulator' boolean variable.
 - **phenotype_p**: path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).
 - **nassays**: name of assays in case SummarizedObject is provided.
-- **final_signif_thresh**: Significance threshold for the rewiring method. The lower the threshold, the restrictive the method.
+- **final_signif_thresh**: Significance threshold for the rewiring method. The lower the threshold, the more  restrictive the method.
 - **regulator_info_col_name**: Column name of the gene_info_p. By default, 'regulator'
 
 
