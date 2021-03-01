@@ -1,6 +1,6 @@
 Package: TraRe
 Title: Transcriptional Rewiring 
-Version: 0.99.9
+Version: 0.99.13
 URL: https://github.com/ubioinformat/TraRe/tree/master
 Authors@R: 
     c(person(given = "Jesus",
@@ -38,12 +38,9 @@ Imports:
     	gplots,
     	gtools,
     	pvclust,
-    	doParallel,
     	R.utils,
     	dqrng,
-	parallel,
 	SummarizedExperiment,
-	BiocStyle,
 	BiocParallel,
 	matrixStats
 License: MIT + file LICENSE
@@ -56,5 +53,6 @@ Suggests:
     knitr,
     rmarkdown,
     BiocGenerics,
-    RUnit
+    RUnit,
+    BiocStyle
 VignetteBuilder: knitr
