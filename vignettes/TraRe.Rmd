@@ -256,8 +256,8 @@ In order to run *Rewiring* test, *Trare* provides two functions: the `preparerew
 - **linker_output_p**: Output file from linker function path.
 - **lognorm_est_counts_p**: Lognorm counts of the gene expression matrix path.
 - **SEObject_p**: SummarizedExperiment objects path.
-- **gene_info_p**: path of a two-column file containing genes and 'regulator' boolean variable.
-- **phenotype_p**: path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).
+- **gene_info_p**: path to file containing genes and 'regulator' boolean variable. First column must be gene names.
+- **phenotype_p**: path to a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).
 - **nassays**: name of assays in case SummarizedObject is provided.
 - **final_signif_thresh**: Significance threshold for the rewiring method. The lower the threshold, the more  restrictive the method.
 - **regulator_info_col_name**: Column name of the gene_info_p. By default, 'regulator'

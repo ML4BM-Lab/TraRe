@@ -72,5 +72,10 @@ Authors:
   \item Charles Blatti \email{blatti@illinois.edu} (\href{https://orcid.org/0000-0002-4683-6271}{ORCID}) [copyright holder]
 }
 
+Other contributors:
+\itemize{
+  \item Zikun (\href{https://orcid.org/0000-0002-9933-9658}{ORCID}) [contributor]
+}
+
 }
 \keyword{internal}

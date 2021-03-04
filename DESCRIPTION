@@ -17,7 +17,12 @@ Authors@R:
            family = "Blatti",
            role = c("aut", "cph"),
            email = "blatti@illinois.edu",
-           comment = c(ORCID = "0000-0002-4683-6271")))
+           comment = c(ORCID = "0000-0002-4683-6271")),
+    person(given = "Zikun",
+           family = "",
+           role = c("ctb"),
+           email = "",
+           comment = c(ORCID = "0000-0002-9933-9658")))
 Description: TraRe (Transcriptional Rewiring) is an R package which contains the necessary tools to carry out several functions. 
              Identification of module-based gene regulatory networks (GRN); score-based classification of these modules via 
              a rewiring test; visualization of rewired modules to analyze condition-based GRN deregulation and drop out genes 
@@ -42,6 +47,8 @@ Imports:
   dqrng,
   SummarizedExperiment,
   matrixStats,
+  BiocParallel,
+  scales,
   vioplot
 License: MIT + file LICENSE
 Encoding: UTF-8

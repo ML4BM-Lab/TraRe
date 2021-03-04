@@ -20,6 +20,7 @@ preparerewiring(
   orig_test_perms = 100,
   retest_thresh = 0.08,
   retest_perms = 1000,
+  use_graphs = TRUE,
   outdir = tempdir(),
   nrcores = 3
 )
@@ -34,11 +35,11 @@ threshold will be \code{paste()} to the folder's name.}
 
 \item{SEObject_p}{SummarizedExperiment objects path.}
 
-\item{gene_info_p}{path of a two-column file containing genes and 'regulator' boolean variable.}
+\item{gene_info_p}{Path of a two-column file containing genes and 'regulator' boolean variable.}
 
-\item{phenotype_p}{path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).}
+\item{phenotype_p}{Path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).}
 
-\item{nassays}{name of assays in case SummarizedObject is provided.}
+\item{nassays}{Name of assays in case SummarizedObject is provided.}
 
 \item{final_signif_thresh}{Significance threshold for the rewiring method. The lower the threshold, the restrictive the method.}
 
@@ -48,13 +49,15 @@ threshold will be \code{paste()} to the folder's name.}
 
 \item{phenotype_class_vals_string}{Boolean terms of the phenotype_p at the 'Class' column. By default, (NR,R).}
 
-\item{phenotype_class_vals_string_label}{Boolean terms of the phenotype_p values at the 'Class' column. By default (0,1)}
+\item{phenotype_class_vals_string_label}{Boolean terms of the phenotype_p values at the 'Class' column. By default (0,1).}
 
 \item{orig_test_perms}{Initial permutations for first test (default: 100) .}
 
 \item{retest_thresh}{Threshold if a second test is performed (default: 0.08) .}
 
 \item{retest_perms}{Permutations if a second test is performed (default: 1000) .}
+
+\item{use_graphs}{Boolean specifying the use of graphs as linkeroutput modules. (TRUE by default).}
 
 \item{outdir}{Directory for the output folder to be located (default: tempdir())}
 
