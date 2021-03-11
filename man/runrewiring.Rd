@@ -2,12 +2,64 @@
 % Please edit documentation in R/rewiring_runrewiring.R
 \name{runrewiring}
 \alias{runrewiring}
+\alias{gen_heatmap}
+\alias{rawsummary}
 \title{GRN Modules Rewiring Method.}
 \usage{
 runrewiring(ObjectList)
+
+gen_heatmap(
+  ObjectList,
+  module_membership_list,
+  allstats,
+  imgdir,
+  outdir,
+  indexpageinfo,
+  cmp = FALSE,
+  modmeth = "",
+  i = 0
+)
+
+rawsummary(
+  indexpageinfo,
+  rawrunmoddata,
+  rawsumm,
+  norm_expr_mat_keep,
+  outdir,
+  foldername_p,
+  modmeth,
+  cut = FALSE
+)
 }
 \arguments{
 \item{ObjectList}{Output from \code{preparerewiring()}containing some required parameters.}
+
+\item{module_membership_list}{hash list containing the pair module-significance
+from the rewiring test.}
+
+\item{allstats}{array containing information about module's rewiring.}
+
+\item{imgdir}{path to image directory.}
+
+\item{outdir}{path to the output directory.}
+
+\item{indexpageinfo}{list containing information about index.html page.}
+
+\item{cmp}{boolean indicating the joint heatmap case.}
+
+\item{modmeth}{method of evaluation from LINKER_run.}
+
+\item{i}{integer containing the dupla being evaluated.}
+
+\item{rawrunmoddata}{list containing regulators and target genes from multiplicity table.}
+
+\item{rawsumm}{list containing generated graph related information and cut variable.}
+
+\item{norm_expr_mat_keep}{gene expression matrix from ObjectList.}
+
+\item{foldername_p}{path to the current foldername.}
+
+\item{cut}{boolean to avoid errors from previous generated graphs.}
 }
 \value{
 It creates a folder (in tempdir() by default) containing the files explained above.

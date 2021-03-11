@@ -28,11 +28,14 @@ Html and txts containing the mentioned files.
 }
 \description{
 From input Gene Regulatory Network, an html is generated containing a table with
-driver to target phenotype dependent relationships. Brief summary containing
+driver to target phenotype dependent relationships. It is a brief summary containing
 drivers normalized xor sum, which is the ratio between drivers-targets connections
 present only in one of both phenotypes over all possible connections, and cliques, which are driver genes
 that are highly correlated (over a user-decision threshold), and may have been lost during
 the fitting process of the LINKER method.
+}
+\details{
+This functions takes place inside the runrewiring function, so it is not recommended to run it on its own.
 }
 \examples{
 
