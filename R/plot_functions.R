@@ -208,8 +208,13 @@ orderGraphWeights <- function(graph, edgelist) {
     return(list(commonedges = commonedges, weights = weights[commonedges, "weight"]))
     
 }
-
-
+#' @export
+#' @rdname heatmapplot
+#' @param heatm input matrix for plot.
+#' @param plotname name of the plot.
+#' @param myzlim the range of z values for which colors should be plotted.
+#' @param cvec vector of colors for the palette of the plot.
+#' @param showRows boolean specifying the option of showing row names.
 heatmapplot <- function(heatm, plotname = "", myzlim = c(min(heatm), max(heatm)), cvec = c("red", "white", "blue"), showRows = T) {
     colramp <- (grDevices::colorRampPalette(cvec))(21)
     heatm[heatm < myzlim[1]] <- myzlim[1]
@@ -226,8 +231,20 @@ heatmapplot <- function(heatm, plotname = "", myzlim = c(min(heatm), max(heatm))
         }
     }
 }
-
-
+#' @export
+#' @rdname plot_expression_row
+#' @param mymat input matrix for plot.
+#' @param rowdesc name uses to specify regulator.
+#' @param plotheight height of the plot.
+#' @param myshowrows boolean specifying the option of showing row names.
+#' @param samps2pheno matrix of sample to phenotype.
+#' @param phenostrs strings uses distinguish for phenotypes.
+#' @param htmlfile directory to html files.
+#' @param imgdir directory for image.
+#' @param modnum the number of supermodule.
+#' @param plotwidth width of the plot.
+#' @param mycvec vector of colors for the palette of the plot.
+#' @param plotzlim the range of z values for which colors should be plotted.
 plot_expression_row <- function(mymat = NULL, rowdesc = "Regulators", plotheight = 200, myshowrows = TRUE, samps2pheno = NULL, phenostrs = c("nonrespond", 
     "responder"), htmlfile = "./", imgdir = "imgs/", modnum = 1, plotwidth = 800, mycvec = c("darkorange", "gray100", "darkblue"), 
     plotzlim = c(-10, 10)) {
@@ -244,8 +261,21 @@ plot_expression_row <- function(mymat = NULL, rowdesc = "Regulators", plotheight
     }
     write(paste0("</tr>\n"), htmlfile, append = T)
 }
-
-
+#' @export
+#' @rdname plot_correlation_row
+#' @param cormats input correlation matrix for plot.
+#' @param rowdesc name uses to specify regulator.
+#' @param xnames names for the x axis.
+#' @param ynames names for the x axis.
+#' @param plotheight height of the plot.
+#' @param myshowrows boolean specifying the option of showing row names.
+#' @param htmlfile directory to html files.
+#' @param imgdir directory for image.
+#' @param modnum the number of supermodule.
+#' @param plotwidth width of the plot.
+#' @param mycvec vector of colors for the palette of the plot.
+#' @param plotzlim the range of z values for which colors should be plotted.
+#' @param plottitle the title of the plot.
 plot_correlation_row <- function(cormats = NULL, rowdesc = "regulators", xnames = NULL, ynames = NULL, plotheight = 200, myshowrows = TRUE, 
     htmlfile = "./", imgdir = "imgs/", modnum = 1, plotwidth = 200, mycvec = c("darkred", "gray100", "darkgreen"), plotzlim = c(-1, 
         1), plottitle = NULL) {
@@ -278,8 +308,16 @@ plot_correlation_row <- function(cormats = NULL, rowdesc = "regulators", xnames 
             plotwidth, "'> </td>\n"), htmlfile, append = T)
     }
 }
-
-### plot a pair of genes
+#' @export
+#' @rdname plot_gene_pair_scatter
+#' @param pname name for the plot.
+#' @param myx the coordinates of points of the first gene.
+#' @param myy the coordinates of points of the second gene.
+#' @param xgenename the names of the first gene. 
+#' @param ygenename the names of the second gene. 
+#' @param mylabels integer class labels.
+#' @param alltext text label for the plot.
+#' @param plotdir directory for the plot.
 plot_gene_pair_scatter <- function(pname, myx, myy, xgenename, ygenename, mylabels, alltext = NULL, plotdir = "") {
     mymax <- max(abs(c(myx, myy)))
     if (is.null(mylabels)) {
@@ -309,8 +347,17 @@ plot_gene_pair_scatter <- function(pname, myx, myy, xgenename, ygenename, mylabe
     
     grDevices::dev.off()
 }
-
-# plot a pair of genes
+#' @export
+#' @rdname plot_gene_pair_scatter_by_class
+#' @param pname name for the plot.
+#' @param myx the coordinates of points of the first gene.
+#' @param myy the coordinates of points of the second gene.
+#' @param xgenename the names of the first gene. 
+#' @param ygenename the names of the second gene. 
+#' @param mylabels integer class labels.
+#' @param lab1text text label of a class.
+#' @param lab2text text label of the other class.
+#' @param plotdir directory for the plot.
 plot_gene_pair_scatter_by_class <- function(plotdir, pname, myx, myy, xgenename, ygenename, mylabels, lab1text, lab2text, alltext) {
     
     mymax <- max(abs(c(myx, myy)))
