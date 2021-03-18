@@ -8,7 +8,7 @@
 #' @param supertype Secification of the type of supermodule, "refined" or "raw", (default:"refined")
 #' @param numdataset Integer specifying the dataset used, 1 when there is only one dataset (default:1).
 #'
-#' @return It creates a folder (in tempdir() by default) containing the html summary.
+#' @return htmlinfo the index page to the module summary.
 #'
 #' @examples
 #'
@@ -74,4 +74,6 @@ createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, super
     rankdf <- violinPlots(ObjectList$datasets[[numdataset]]$norm_expr_mat_keep, ObjectList$datasets[[numdataset]]$keepsamps, ObjectList$datasets[[numdataset]]$keeplabels, 
         modsumm$nodesumm, modsumm$fulledgesumm, modsumm$appendmat, htmlinfo)
     regulatorSummaryAndRank(rankdf, htmlinfo)
+
+    return(htmlinfo)
 }
