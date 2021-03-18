@@ -219,7 +219,7 @@ heatmapplot <- function(heatm, plotname = "", myzlim = c(min(heatm), max(heatm))
     colramp <- (grDevices::colorRampPalette(cvec))(21)
     heatm[heatm < myzlim[1]] <- myzlim[1]
     heatm[heatm > myzlim[2]] <- myzlim[2]
-    graphics::image(seq(ncol(heatm)), seq(ncol(heatm)), t(heatm), col = colramp, zlim = myzlim, axes = F, xlab = "", ylab = "")
+    graphics::image(seq(ncol(heatm)), seq(nrow(heatm)), t(heatm), col = colramp, zlim = myzlim, axes = F, xlab = "", ylab = "")
     
     graphics::title(main = plotname)
     if (showRows) {
