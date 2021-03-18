@@ -197,7 +197,7 @@ runrewiring <- function(ObjectList) {
             message("Cluster number: ", numclus)
 
             # Name the folder of supermodule numclus within method modmeth
-            foldername_p <- paste0(i,'.',modmeth,'.', numclus)
+            foldername_p <- paste0('supermodule',i,'.',modmeth,'.', numclus)
 
             # Create dir for cluster numclus
             dir.create(paste0(outdir, "/", foldername_p))

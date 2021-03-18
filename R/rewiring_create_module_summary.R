@@ -44,7 +44,7 @@ createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, super
     responder_idxs <- names(samps2pheno)[which(samps2pheno == ObjectList$phenotype_class_vals[2])]
     
     # include modmeth
-    modsumm_name <- paste0(ObjectList$outdir, "/supermod_rewiring/supermodule_", datasetnum,"_", modmeth, "_", numclus, "/", supertype, "summ.rds")
+    modsumm_name <- paste0(ObjectList$outdir, "/supermod_rewiring/supermodule", numdataset,".", modmeth, ".", numclus, "/", supertype, "summ.rds")
     if (file.exists(modsumm_name)) {
         modsumm <- readRDS(modsumm_name)
     } else {
