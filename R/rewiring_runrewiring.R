@@ -218,8 +218,12 @@ runrewiring <- function(ObjectList) {
             write(paste0("\nSupermodule ", numclus, ", mode ", modmeth, " ", i, " : ", mods, "\n"), logfile_p, append = TRUE)
 
             # add reference index to main index page
-            ref_message = paste0("<a href = '",indexpageinfo$htmldir, foldername_p, "/index.html'>Cluster",numclus,"_Summary</a><br>")
-            write(ref_message, paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
+            write(paste0("<a href = '",foldername_p, "/index.html'>Cluster",numclus,"_Summary</a><br>"), 
+                paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
+
+            # add reference index to main index page
+            write(paste0("<a href = '../index.html'>Main_Index</a><br>"),
+                paste0(indexpageinfo$htmldir, foldername_p, "/", indexpageinfo$indexpath), append = TRUE)
 
             for (clusmod in clusters$clusters[[numclus]]) {
 
@@ -501,7 +505,7 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
         grDevices::dev.off()
 
         # write plots to index page
-        write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", paste0("Rewiring Summary for Dataset", i, "using", modmeth), "</h1></td></tr></table><br>\n"),
+        write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", paste0("Rewiring Summary for Dataset", i, " using ", modmeth), "</h1></td></tr></table><br>\n"),
             paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
         write(paste0("<img src='", indexpageinfo$imgstr, myplotname, ".dendro.png", "' alt='", myplotname, "' height='", 300,
                      "' width='", 600, "'> &emsp; <br>\n"), paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)

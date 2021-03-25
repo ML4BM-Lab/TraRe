@@ -44,7 +44,8 @@ createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, super
     responder_idxs <- names(samps2pheno)[which(samps2pheno == ObjectList$phenotype_class_vals[2])]
     
     # include modmeth
-    modsumm_name <- paste0(ObjectList$outdir, "/supermod_rewiring/supermodule", numdataset,".", modmeth, ".", numclus, "/", supertype, "summ.rds")
+    dir_prefix <- paste0("/supermod_rewiring/supermodule", numdataset,".", modmeth, ".", numclus)
+    modsumm_name <- paste0(ObjectList$outdir, dir_prefix, "/", supertype, "summ.rds")
     if (file.exists(modsumm_name)) {
         modsumm <- readRDS(modsumm_name)
     } else {
@@ -61,6 +62,8 @@ createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, super
     
     orderobj <- geneOrder(modsumm, ObjectList$datasets[[numdataset]]$keepsamps, ObjectList$datasets[[numdataset]]$keeplabels, ObjectList$datasets[[numdataset]]$norm_expr_mat_keep)
     createLegendPlot(htmlinfo)
+    ref_cluster_index <- paste0("<a href = '../..",dir_prefix, "/index.html'>Return to Cluster Summary</a><br>")
+    write(ref_cluster_index, paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
     
     # Different Sections in the html summary
     superModuleStatistics(orderobj$modregs, orderobj$modtargs, orderobj$mat, ObjectList$datasets[[numdataset]]$keeplabels, htmlinfo)
