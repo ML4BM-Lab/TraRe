@@ -53,19 +53,19 @@ createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, super
     }
     
     # set up output html page
-    dir.create(paste0(ObjectList$outdir, "/rewiring_module_summary"))
+    dir.create(paste0(ObjectList$outdir, "/supermod_rewiring/rewiring_module_summary"))
     codedir <- paste0(system.file("extdata", package = "TraRe"), "/RewiringReport/")
-    dir.create(file.path(paste0(ObjectList$outdir, "/rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus, ".", supertype, 
+    dir.create(file.path(paste0(ObjectList$outdir, "/supermod_rewiring/rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus, ".", supertype, 
         "/")), showWarnings = FALSE)
-    htmlinfo <- create_index_page(outdir = paste0(ObjectList$outdir, "/rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus, 
+    htmlinfo <- create_index_page(outdir = paste0(ObjectList$outdir, "/supermod_rewiring/rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus, 
         ".", supertype), runtag = "", codedir = codedir)
     
     orderobj <- geneOrder(modsumm, ObjectList$datasets[[numdataset]]$keepsamps, ObjectList$datasets[[numdataset]]$keeplabels, ObjectList$datasets[[numdataset]]$norm_expr_mat_keep)
     createLegendPlot(htmlinfo)
-    ref_cluster_index <- paste0("<a href = '../..",dir_prefix, "/index.html'>Return to Cluster Summary</a><br>")
+    ref_cluster_index <- paste0("<a href = '..",dir_prefix, "/index.html'>Return to Cluster Summary</a><br>")
     write(ref_cluster_index, paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
 
-    ref_curr_index <- paste0("<a href = '../../rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus, ".", supertype, "/index.html'>Complete ",supertype," Rewiring Module Summary</a><br>")
+    ref_curr_index <- paste0("<a href = '../supermod_rewiring/rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus, ".", supertype, "/index.html'>Complete ",supertype," Rewiring Module Summary</a><br>")
     clustersumm_dir <- paste0(ObjectList$outdir, dir_prefix, "/index.html")
     write(ref_curr_index, clustersumm_dir, append = TRUE)
     
