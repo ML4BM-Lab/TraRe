@@ -64,6 +64,10 @@ createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, super
     createLegendPlot(htmlinfo)
     ref_cluster_index <- paste0("<a href = '../..",dir_prefix, "/index.html'>Return to Cluster Summary</a><br>")
     write(ref_cluster_index, paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
+
+    ref_curr_index <- paste0("<a href = '../../rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus, ".", supertype, "/index.html'>Complete Rewiring Module Summary</a><br>")
+    clustersumm_dir <- paste0(ObjectList$outdir, dir_prefix, "/index.html")
+    write(ref_curr_index, clustersumm_dir, append = TRUE)
     
     # Different Sections in the html summary
     superModuleStatistics(orderobj$modregs, orderobj$modtargs, orderobj$mat, ObjectList$datasets[[numdataset]]$keeplabels, htmlinfo)
