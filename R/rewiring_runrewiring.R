@@ -222,7 +222,7 @@ runrewiring <- function(ObjectList) {
                 paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
 
             # add reference index to main index page
-            write(paste0("<a href = '../index.html'>Main_Index</a><br>"),
+            write(paste0("<a href = '../index.html'>Return to Main Rewiring Summary</a><br>"),
                 paste0(indexpageinfo$htmldir, foldername_p, "/", indexpageinfo$indexpath), append = TRUE)
 
             for (clusmod in clusters$clusters[[numclus]]) {
