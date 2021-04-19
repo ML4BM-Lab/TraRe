@@ -444,14 +444,9 @@ expressionTableOfModuleGenes <- function(mymod, nodesumm, htmlinfo) {
     htmlidxs <- union(sortidxs[1:25], which(nodesumm[, "is-regulator"] == "1"))
     write(table2html(nodesumm[htmlidxs, ]), modhtmlfile, append = T)
 
-    # TODO : fix link
     sortidxs <- sort(as.numeric(nodesumm[, "t-stat"]), decreasing = F, index.return = T)$ix
     write_tables_all(nodesumm[sortidxs, ], tabletype = paste0(mymod, "_mod_node_summ"), filestr = "data", html_idxs = 1:dim(nodesumm)[1],
         htmlinfo = htmlinfo)
-
-    # resultspath = paste(sep = '.', 'mod_node_summ', mymod, 'txt') show(paste0('Writing table: ', resultspath)) write( paste0( '<a
-    # href = '', htmlinfo$txtstr, resultspath, '' target='_blank'>Download Full Module Node Table</a> <br>\n' ), modhtmlfile, append =
-    # T )
 }
 
 expressionPlotsOfModuleGenes <- function(mymod, regorder, targetorder, mat, samps2pheno, phenostrs, htmlinfo) {

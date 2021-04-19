@@ -113,7 +113,7 @@ preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_c
 
         } else {
 
-            input_expr_mat <- as.matrix(utils::read.delim(lognorm_est_counts_p[i]))
+            input_expr_mat <- as.matrix(utils::read.delim(lognorm_est_counts_p[i],header=T,row.names=1))
         }
 
         ExpMatSize <- c("Expression Matrix Size: ", "(", paste(dim(input_expr_mat), collapse = ","), ")")
