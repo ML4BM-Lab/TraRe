@@ -60,7 +60,7 @@ createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, super
     htmlinfo <- create_index_page(outdir = paste0(ObjectList$outdir, "/supermod_rewiring/rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus, 
         ".", supertype), runtag = "", codedir = codedir)
     
-    orderobj <- geneOrder(modsumm, ObjectList$datasets[[numdataset]]$keepsamps, ObjectList$datasets[[numdataset]]$keeplabels, ObjectList$datasets[[numdataset]]$norm_expr_mat_keep)
+    orderobj <- geneOrder(modsumm, ObjectList, numdataset)
     createLegendPlot(htmlinfo)
     ref_cluster_index <- paste0("<a href = '../../supermodule", numdataset,".", modmeth, ".", numclus, "/index.html'>Return to Cluster Summary</a><br>")
     write(ref_cluster_index, paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)

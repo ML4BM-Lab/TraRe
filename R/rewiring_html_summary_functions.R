@@ -333,10 +333,25 @@ bipartiteGraphsSumm <- function(numclus, modsumm, numdataset, modmeth, htmlinfo)
 
 }
 
-geneOrder <- function(modsumm, keepsamps, keeplabels, norm_mat_keep) {
+geneOrder <- function(modsumm, ObjectList, numdataset) {
+    allregs<- ObjectList$datasets[[numdataset]]$allregs
+    alltargs<- ObjectList$datasets[[numdataset]]$alltargs
+    keepsamps<- ObjectList$datasets[[numdataset]]$keepsamps
+    keeplabels<- ObjectList$datasets[[numdataset]]$keeplabels
+    norm_mat_keep<- ObjectList$datasets[[numdataset]]$norm_expr_mat_keep
 
-    modregs <- levels(unique(modsumm$fulledgesumm$reg))
-    modtargs <- levels(unique(modsumm$fulledgesumm$target))
+    modregs <- intersect(levels(unique(modsumm$fulledgesumm$reg)),allregs)
+    modtargs <- intersect(levels(unique(modsumm$fulledgesumm$target)),alltargs)
+    difftargs <- setdiff(levels(unique(modsumm$fulledgesumm$target)),alltargs)
+    diffregs <- setdiff(levels(unique(modsumm$fulledgesumm$reg)),allregs)
+    if (length(diffregs) != 0) {
+        message('List of regulators changed since ', length(diffregs),' regulators in the dataset that was used to generate runrewiring is missing in dataset ', numdataset, '.')
+    }
+    if (length(difftargs) != 0) {
+        message('List of targets changed since ', length(difftargs),' targets in the dataset that was used to generate runrewiring is missing in dataset ', numdataset, '.')
+    }
+
+
     keepfeat <- unique(c(modregs, modtargs))
     mat <- t(norm_mat_keep[keepfeat, keepsamps])
 

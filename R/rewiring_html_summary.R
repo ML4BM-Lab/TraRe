@@ -163,6 +163,6 @@ summarize_module <- function(norm_expr_mat_keep, runmoddata, name2idx, nonrespon
     fulledgesumm <- utils::type.convert(as.data.frame(cbind(edgesumm, appendmat), stringsAsFactors = FALSE))
     colnames(fulledgesumm) <- make.names(colnames(fulledgesumm))
 
-    return(list(nodesumm = nodesumm, fulledgesumm = fulledgesumm, full_graph = full_graph, respond_graph = respond_graph, nonresp_graph = nonresp_graph,
-        cut = cut))
+    return(list(nodesumm = nodesumm, fulledgesumm = fulledgesumm, full_graph = full_graph, respond_graph = respond_graph, nonresp_graph = nonresp_graph, 
+        appendmat = appendmat, runmoddata = runmoddata, cut = cut))
 }
