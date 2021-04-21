@@ -128,7 +128,7 @@ create_index_page <- function(outdir = "./", runtag = "run", codedir = "code/", 
     return(list(htmldir = htmldir, indexpath = indexpath, imgstr = imgstr, txtstr = txtstr, glossarypath = glossarypath, abspath = abspath))
 }
 
-violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edgesumm, appendmat, htmlinfo) {
+violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edgesumm, objtargs, htmlinfo) {
 
     modhtmlfile <- paste0(htmlinfo$htmldir, htmlinfo$indexpath)
     imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
@@ -136,8 +136,6 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
     normexpmat <- norm_expr_mat_keep[, keepsamps]
     nodesumm2 <- utils::type.convert(as.data.frame(nodesumm, stringsAsFactors = F))
     colnames(nodesumm2) <- make.names(colnames(nodesumm2))
-    # edgesumm2 = type.convert(as.data.frame(cbind(edgesumm, appendmat), stringsAsFactors=F)) colnames(edgesumm2) =
-    # make.names(colnames(edgesumm))
 
     reg_info <- nodesumm2[nodesumm2$is.regulator == 1, c("t.stat", "t.pval")]
     reg_info <- reg_info[order(reg_info$t.stat, decreasing = T), ]
@@ -191,7 +189,8 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
         nonzeroedges <- edgesumm[edgesumm[, paste0(cname, ".weights")] != 0, ]
         plotlist <- list()
         for (reg in reg_vec) {
-            targets <- as.character(nonzeroedges[nonzeroedges$reg == reg, "target"])
+            # targets <- as.character(nonzeroedges[nonzeroedges$reg == reg, "target"])
+            targets <- intersect(as.character(nonzeroedges[nonzeroedges$reg == reg, "target"]), objtargs)
             plotlist[[reg]] <- as.numeric(nodesumm2[targets, "t.stat"])
             methods::show(c(reg, length(targets), signif(mean(plotlist[[reg]]))))
         }
@@ -249,11 +248,13 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
 
         for (reg in reg_vec) {
             respondtars <- as.character(edgesumm$target[edgesumm$respond.weights != 0 & edgesumm$reg == reg])
-            nonresptars <- as.character(edgesumm$target[edgesumm$nonresp.weights != 0 & edgesumm$reg == reg])
+            nonresptars <- as.character(edgesumm$target[edgesumm$nonresp.weights != 0 & edgesumm$reg == reg])            
             if (loopmode == "all") {
                 respondtars <- as.character(edgesumm$target[edgesumm$all.weights != 0 & edgesumm$reg == reg])
                 nonresptars <- as.character(edgesumm$target[edgesumm$all.weights != 0 & edgesumm$reg == reg])
             }
+            respondtars <- intersect(respondtars,objtargs)
+            nonresptars <- intersect(nonresptars,objtargs)
             respond_plotlist[[reg]] <- as.numeric(corR[reg, respondtars])
             nonresp_plotlist[[reg]] <- as.numeric(corNR[reg, nonresptars])
 
@@ -311,24 +312,44 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
     return(rankdf)
 }
 
-bipartiteGraphsSumm <- function(numclus, modsumm, numdataset, modmeth, htmlinfo) {
+bipartiteGraphsSumm <- function(numclus, nodesumm, edgesumm, numdataset, modmeth, htmlinfo) {
+# bipartiteGraphsSumm <- function(ObjectList, numclus, modsumm, numdataset, modmeth, supertype, htmlinfo) {
     modhtmlfile <- paste0(htmlinfo$htmldir, htmlinfo$indexpath)
     imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
+    # norm_expr_mat_keep <- ObjectList$datasets[[numdataset]]$norm_expr_mat_keep
 
     write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Modules Summary", "</h1></td></tr></table><br>\n"), modhtmlfile,
         append = T)
+
+    # pname <- paste(sep = ".", "igraphs.", supertype, ".graphs")
+    # grDevices::png(paste0(imgdir, pname, ".png"), 1500, 750)
+    # graphics::par(mfrow = c(1, 3))
+
+    # mylayout <- return_layout_phenotype(refinedrunmoddata$regulators, refinedrunmoddata$target_genes, refinedsumm$nodesumm,
+    #     rownames(norm_expr_mat_keep))
+    # mylayout <- return_layout_phenotype(modsumm$runmoddata$regulators, modsumm$runmoddata$target_genes, modsumm$nodesumm,
+    #     rownames(norm_expr_mat_keep))
+
+    # try(plot_igraph(modsumm$full_graph, paste0(ncol(norm_expr_mat_keep), " Samples"), "black", mylayout))
+    # try(plot_igraph(modsumm$nonresp_graph, paste0(length(nonrespond_idxs), " Phenotype1"), "darkviolet", mylayout))
+    # try(plot_igraph(modsumm$respond_graph, paste0(length(responder_idxs), " Phenotype2"), "darkgoldenrod", mylayout))
+    # grDevices::dev.off()
+
+    # # write plot to index page
+    # write(paste0("<img src='", htmlinfo$imgstr, pname, ".png", "' alt='", pname,
+    #     "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"), modhtmlfile, append = TRUE)
 
     pname <- paste(sep = ".", "igraphs.refined.graphs")
     # write plot to index page
     write(paste0("<img src='", "../../supermodule", numdataset, ".", modmeth, ".", numclus, "/imgs/", pname, ".png", "' alt='", pname,
         "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"), modhtmlfile, append = TRUE)
 
-    sortidxs <- sort(as.numeric(modsumm$nodesumm[, "t-pval"]), decreasing = F, index.return = T)$ix
-    write_tables_all(modsumm$nodesumm[sortidxs, ], tabletype = paste0(modmeth, "_nodesumm"), filestr = "data", html_idxs = 1:dim(modsumm$nodesumm)[1],
+    sortidxs <- sort(as.numeric(nodesumm[, "t-pval"]), decreasing = F, index.return = T)$ix
+    write_tables_all(nodesumm[sortidxs, ], tabletype = paste0(modmeth, "_nodesumm"), filestr = "data", html_idxs = 1:dim(nodesumm)[1],
         htmlinfo = htmlinfo)
 
-    sortidxs <- sort(as.numeric(modsumm$fulledgesumm[, "all.weights"]), decreasing = F, index.return = T)$ix
-    write_tables_all(modsumm$fulledgesumm[sortidxs, ], tabletype = paste0(modmeth, "_edgesumm"), filestr = "data", html_idxs = 1:dim(modsumm$fulledgesumm)[1],
+    sortidxs <- sort(as.numeric(edgesumm[, "all-pearson"]), decreasing = F, index.return = T)$ix
+    write_tables_all(edgesumm[sortidxs, ], tabletype = paste0(modmeth, "_edgesumm"), filestr = "data", html_idxs = 1:dim(edgesumm)[1],
         htmlinfo = htmlinfo)
 
 }

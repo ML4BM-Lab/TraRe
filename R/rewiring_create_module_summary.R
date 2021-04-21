@@ -34,16 +34,6 @@
 #'
 #' @export
 createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, supertype = "refined", numdataset = 1) {
-    
-    alllabels <- ObjectList$datasets[[numdataset]]$responder[ObjectList$datasets[[numdataset]]$keepsamps]
-    samps2pheno <- alllabels
-    samps2pheno[which(alllabels == ObjectList$phenotype_class_vals_label[2])] <- ObjectList$phenotype_class_vals[2]
-    samps2pheno[which(alllabels == ObjectList$phenotype_class_vals_label[1])] <- ObjectList$phenotype_class_vals[1]
-    
-    nonrespond_idxs <- names(samps2pheno)[which(samps2pheno == ObjectList$phenotype_class_vals[1])]
-    responder_idxs <- names(samps2pheno)[which(samps2pheno == ObjectList$phenotype_class_vals[2])]
-    
-    # include modmeth
     dir_prefix <- paste0("/supermod_rewiring/supermodule", numdataset,".", modmeth, ".", numclus)
     modsumm_name <- paste0(ObjectList$outdir, dir_prefix, "/", supertype, "summ.rds")
     if (file.exists(modsumm_name)) {
@@ -68,18 +58,37 @@ createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, super
     ref_curr_index <- paste0("<a href = '../rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus, ".", supertype, "/index.html'>Complete Rewiring Module Summary ",supertype,"</a><br>")
     clustersumm_dir <- paste0(ObjectList$outdir, dir_prefix, "/index.html")
     write(ref_curr_index, clustersumm_dir, append = TRUE)
+
+    alllabels <- ObjectList$datasets[[numdataset]]$responder[ObjectList$datasets[[numdataset]]$keepsamps]
+    samps2pheno <- alllabels
+    samps2pheno[which(alllabels == ObjectList$phenotype_class_vals_label[2])] <- ObjectList$phenotype_class_vals[2]
+    samps2pheno[which(alllabels == ObjectList$phenotype_class_vals_label[1])] <- ObjectList$phenotype_class_vals[1]
     
+    nonrespond_idxs <- names(samps2pheno)[which(samps2pheno == ObjectList$phenotype_class_vals[1])]
+    responder_idxs <- names(samps2pheno)[which(samps2pheno == ObjectList$phenotype_class_vals[2])]
+
+    # obj_regs = intersect(modsumm$runmoddata$regulators,ObjectList$datasets[[numdataset]]$allregs)
+    # obj_targs = intersect(modsumm$runmoddata$target,ObjectList$datasets[[numdataset]]$alltargs)
+    obj_runmoddata <- list(regulators = orderobj$modregs, target_genes = orderobj$modtargs)
+    norm_expr_mat_keep <- ObjectList$datasets[[numdataset]]$norm_expr_mat_keep
+    name2idx <- ObjectList$datasets[[numdataset]]$name2idx
+    # obj_modsumm <- summarize_module(norm_expr_mat_keep, obj_runmoddata, ObjectList$datasets[[numdataset]]$name2idx, nonrespond_idxs, responder_idxs) 
+    
+    obj_nodesumm <- module_node_summary(norm_expr_mat_keep, obj_runmoddata, name2idx, nonrespond_idxs, responder_idxs)
+    obj_edgesumm <- module_edge_summary(norm_expr_mat_keep, obj_runmoddata, name2idx, nonrespond_idxs, responder_idxs)
+
     # Different Sections in the html summary
     superModuleStatistics(orderobj$modregs, orderobj$modtargs, orderobj$mat, ObjectList$datasets[[numdataset]]$keeplabels, htmlinfo)
     correlationOfModuleGene(supertype, orderobj$regorder, orderobj$targetorder, orderobj$mat, orderobj$cormats, ObjectList$keeplabels, 
         htmlinfo, ObjectList$phenotype_class_vals)
-    expressionTableOfModuleGenes(supertype, modsumm$nodesumm, htmlinfo)
+    expressionTableOfModuleGenes(supertype, obj_nodesumm, htmlinfo)
     expressionPlotsOfModuleGenes(supertype, orderobj$regorder, orderobj$targetorder, orderobj$mat, samps2pheno, ObjectList$phenotype_class_vals, 
         htmlinfo)
-    bipartiteGraphsSumm(numclus, modsumm, numdataset, modmeth, htmlinfo)
+    # bipartiteGraphsSumm(ObjectList, numclus, modsumm, numdataset, modmeth, supertype, htmlinfo)
+    bipartiteGraphsSumm(numclus, obj_nodesumm, obj_edgesumm, numdataset, modmeth, htmlinfo)
     nullDistributionOfRewiringStatistic(orderobj$mat, ObjectList$datasets[[numdataset]]$keeplabels, modmeth, supertype, htmlinfo)
     rankdf <- violinPlots(ObjectList$datasets[[numdataset]]$norm_expr_mat_keep, ObjectList$datasets[[numdataset]]$keepsamps, ObjectList$datasets[[numdataset]]$keeplabels, 
-        modsumm$nodesumm, modsumm$fulledgesumm, modsumm$appendmat, htmlinfo)
+        obj_nodesumm, modsumm$fulledgesumm, orderobj$modtargs, htmlinfo)
     regulatorSummaryAndRank(rankdf, htmlinfo)
 
     return(htmlinfo)
