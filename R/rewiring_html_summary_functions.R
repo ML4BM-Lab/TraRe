@@ -313,31 +313,11 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
 }
 
 bipartiteGraphsSumm <- function(numclus, nodesumm, edgesumm, numdataset, modmeth, htmlinfo) {
-# bipartiteGraphsSumm <- function(ObjectList, numclus, modsumm, numdataset, modmeth, supertype, htmlinfo) {
     modhtmlfile <- paste0(htmlinfo$htmldir, htmlinfo$indexpath)
     imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
-    # norm_expr_mat_keep <- ObjectList$datasets[[numdataset]]$norm_expr_mat_keep
 
     write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Modules Summary", "</h1></td></tr></table><br>\n"), modhtmlfile,
         append = T)
-
-    # pname <- paste(sep = ".", "igraphs.", supertype, ".graphs")
-    # grDevices::png(paste0(imgdir, pname, ".png"), 1500, 750)
-    # graphics::par(mfrow = c(1, 3))
-
-    # mylayout <- return_layout_phenotype(refinedrunmoddata$regulators, refinedrunmoddata$target_genes, refinedsumm$nodesumm,
-    #     rownames(norm_expr_mat_keep))
-    # mylayout <- return_layout_phenotype(modsumm$runmoddata$regulators, modsumm$runmoddata$target_genes, modsumm$nodesumm,
-    #     rownames(norm_expr_mat_keep))
-
-    # try(plot_igraph(modsumm$full_graph, paste0(ncol(norm_expr_mat_keep), " Samples"), "black", mylayout))
-    # try(plot_igraph(modsumm$nonresp_graph, paste0(length(nonrespond_idxs), " Phenotype1"), "darkviolet", mylayout))
-    # try(plot_igraph(modsumm$respond_graph, paste0(length(responder_idxs), " Phenotype2"), "darkgoldenrod", mylayout))
-    # grDevices::dev.off()
-
-    # # write plot to index page
-    # write(paste0("<img src='", htmlinfo$imgstr, pname, ".png", "' alt='", pname,
-    #     "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"), modhtmlfile, append = TRUE)
 
     pname <- paste(sep = ".", "igraphs.refined.graphs")
     # write plot to index page

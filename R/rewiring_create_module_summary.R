@@ -16,9 +16,13 @@
 #' ## the folder containing the examples files. After running the 'runrewiring()', running this 
 #' ## function will generate a module summary based on the ouput from 'runrewiring()'.
 #'
+#' ## To create html summary on previously run supermodel in new data, we will have generated a 
+#' ## new ObjectList using the new data by running ‘preparerewiring()’. Running the 
+#' ## ‘createModuleSummary()’ with the new ObjectList will create a module summary based on the 
+#' ## new dataset but with the gene module from the 'runrewiring()' results.
+#'   
 #' objectlist <- readRDS(file=paste0(system.file('extdata',package='TraRe'),
 #'                       '/prepared_rewiring_example.rds'))
-#'
 #'
 #' ## We are going to create the folder containing
 #' ## the graphs, reports, etc, and then we are deleting it.
@@ -67,12 +71,9 @@ createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, super
     nonrespond_idxs <- names(samps2pheno)[which(samps2pheno == ObjectList$phenotype_class_vals[1])]
     responder_idxs <- names(samps2pheno)[which(samps2pheno == ObjectList$phenotype_class_vals[2])]
 
-    # obj_regs = intersect(modsumm$runmoddata$regulators,ObjectList$datasets[[numdataset]]$allregs)
-    # obj_targs = intersect(modsumm$runmoddata$target,ObjectList$datasets[[numdataset]]$alltargs)
     obj_runmoddata <- list(regulators = orderobj$modregs, target_genes = orderobj$modtargs)
     norm_expr_mat_keep <- ObjectList$datasets[[numdataset]]$norm_expr_mat_keep
     name2idx <- ObjectList$datasets[[numdataset]]$name2idx
-    # obj_modsumm <- summarize_module(norm_expr_mat_keep, obj_runmoddata, ObjectList$datasets[[numdataset]]$name2idx, nonrespond_idxs, responder_idxs) 
     
     obj_nodesumm <- module_node_summary(norm_expr_mat_keep, obj_runmoddata, name2idx, nonrespond_idxs, responder_idxs)
     obj_edgesumm <- module_edge_summary(norm_expr_mat_keep, obj_runmoddata, name2idx, nonrespond_idxs, responder_idxs)
@@ -84,7 +85,6 @@ createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, super
     expressionTableOfModuleGenes(supertype, obj_nodesumm, htmlinfo)
     expressionPlotsOfModuleGenes(supertype, orderobj$regorder, orderobj$targetorder, orderobj$mat, samps2pheno, ObjectList$phenotype_class_vals, 
         htmlinfo)
-    # bipartiteGraphsSumm(ObjectList, numclus, modsumm, numdataset, modmeth, supertype, htmlinfo)
     bipartiteGraphsSumm(numclus, obj_nodesumm, obj_edgesumm, numdataset, modmeth, htmlinfo)
     nullDistributionOfRewiringStatistic(orderobj$mat, ObjectList$datasets[[numdataset]]$keeplabels, modmeth, supertype, htmlinfo)
     rankdf <- violinPlots(ObjectList$datasets[[numdataset]]$norm_expr_mat_keep, ObjectList$datasets[[numdataset]]$keepsamps, ObjectList$datasets[[numdataset]]$keeplabels, 
