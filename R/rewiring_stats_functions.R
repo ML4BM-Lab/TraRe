@@ -37,8 +37,9 @@ rewiring_test <- function(x, grp, perm = 500) {
     
     ## keep only rows with variance within groups
     bools <- rep(TRUE, p)
+    names(bools) = colnames(x)
     for (g in unique(grp)) {
-        bools <- bools & (matrixStats::colSds(x[grp == g, ]) != 0)
+        bools <- bools & (matrixStats::colSds(x[grp == g, ]) > .Machine$double.eps)
     }
     if (sum(bools) < p) {
         methods::show(paste(collapse = " ", c("...Rewiring Test - Dropping 0 Variance Genes:", paste(collapse = ",", names(which(bools == 
@@ -74,8 +75,9 @@ rewiring_test_pair_detail <- function(x, grp, perm = 500) {
     
     ## keep only rows with variance within groups
     bools <- rep(TRUE, p)
+    names(bools) = colnames(x)
     for (g in unique(grp)) {
-        bools <- bools & (matrixStats::colSds(x[grp == g, ]) != 0)
+        bools <- bools & (matrixStats::colSds(x[grp == g, ]) > .Machine$double.eps)
     }
     if (sum(bools) < p) {
         methods::show(paste(collapse = " ", c("...Detailed Rewiring Test - Dropping 0 Variance Genes:", paste(collapse = ",", names(which(bools == 

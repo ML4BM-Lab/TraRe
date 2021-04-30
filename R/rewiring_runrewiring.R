@@ -197,7 +197,7 @@ runrewiring <- function(ObjectList) {
             message("Cluster number: ", numclus)
 
             # Name the folder of supermodule numclus within method modmeth
-            foldername_p <- paste0(i,'.',modmeth,'.', numclus)
+            foldername_p <- paste0('supermodule',i,'.',modmeth,'.', numclus)
 
             # Create dir for cluster numclus
             dir.create(paste0(outdir, "/", foldername_p))
@@ -216,6 +216,14 @@ runrewiring <- function(ObjectList) {
 
             # Add to logfile
             write(paste0("\nSupermodule ", numclus, ", mode ", modmeth, " ", i, " : ", mods, "\n"), logfile_p, append = TRUE)
+
+            # add reference index to main index page
+            write(paste0("<a href = '",foldername_p, "/index.html'>Cluster",numclus,"_Summary</a><br>"), 
+                paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
+
+            # add reference index to main index page
+            write(paste0("<a href = '../index.html'>Return to Main Rewiring Summary</a><br>"),
+                paste0(indexpageinfo$htmldir, foldername_p, "/", indexpageinfo$indexpath), append = TRUE)
 
             for (clusmod in clusters$clusters[[numclus]]) {
 
@@ -495,7 +503,10 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
                           cellnote = round(heatm, 0), trace = "none", density.info = "none", notecol = "black", margins = c(8, 8), cexRow = 1.5,
                           cexCol = 1.5, lmat = rbind(c(4, 4), c(2, 1), c(0, 3)), lwid = c(1, 4), lhei = c(1, 8, 0.1))
         grDevices::dev.off()
-        # write plot to index page
+
+        # write plots to index page
+        write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", paste0("Rewiring Summary for Dataset", i, " using ", modmeth), "</h1></td></tr></table><br>\n"),
+            paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
         write(paste0("<img src='", indexpageinfo$imgstr, myplotname, ".dendro.png", "' alt='", myplotname, "' height='", 300,
                      "' width='", 600, "'> &emsp; <br>\n"), paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
         write(paste0("<img src='", indexpageinfo$imgstr, myplotname, ".heatm.png", "' alt='", myplotname, "' height='", 600,
