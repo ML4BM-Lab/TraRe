@@ -59,9 +59,9 @@
 #'
 #'
 #' @export
-LINKER_run <- function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, nassay = 1, regulator = "regulator", 
-    link_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"), graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"), 
-    module_rep = "MEAN", NrModules = 100, corrClustNrIter = 100, Nr_bootstraps = 10, FDR = 0.05, NrCores = 1) {
+LINKER_run <- function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, nassay = 1, regulator = "regulator", link_mode = c("VBSR", 
+    "LASSOmin", "LASSO1se", "LM"), graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"), module_rep = "MEAN", NrModules = 100, corrClustNrIter = 100, 
+    Nr_bootstraps = 10, FDR = 0.05, NrCores = 1) {
     
     # Check for SummarizedExperiment Object
     
@@ -118,9 +118,9 @@ LINKER_run <- function(lognorm_est_counts, target_filtered_idx, regulator_filter
     # Link modes
     
     res <- lapply(seq_along(link_mode), function(x) {
-        LINKER_runPhase1(lognorm_est_counts = lognorm_est_counts, target_filtered_idx = target_filtered_idx, 
-            regulator_filtered_idx = regulator_filtered_idx, NrModules = NrModules, NrCores = NrCores, mode = link_mode[x], 
-            used_method = module_rep, corrClustNrIter = corrClustNrIter, Nr_bootstraps = Nr_bootstraps)
+        LINKER_runPhase1(lognorm_est_counts = lognorm_est_counts, target_filtered_idx = target_filtered_idx, regulator_filtered_idx = regulator_filtered_idx, 
+            NrModules = NrModules, NrCores = NrCores, mode = link_mode[x], used_method = module_rep, corrClustNrIter = corrClustNrIter, 
+            Nr_bootstraps = Nr_bootstraps)
     })
     
     names(res) <- link_mode
