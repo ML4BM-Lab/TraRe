@@ -218,7 +218,7 @@ runrewiring <- function(ObjectList) {
             write(paste0("\nSupermodule ", numclus, ", mode ", modmeth, " ", i, " : ", mods, "\n"), logfile_p, append = TRUE)
 
             # add reference index to main index page
-            write(paste0("<a href = '",foldername_p, "/index.html'>Cluster",numclus,"_Summary</a><br>"), 
+            write(paste0("<a href = '",foldername_p, "/index.html'>Cluster",numclus,"_Summary</a><br>"),
                 paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
 
             # add reference index to main index page
@@ -366,8 +366,6 @@ runrewiring <- function(ObjectList) {
         #Write back
         utils::write.table(cmb_txt,paste0(outdir,'/txts/sigmodules_combined.txt'),
                     sep='\t',quote=FALSE,row.names=FALSE)
-
-        #Do the clustering (TODO)
     }
 }
 
