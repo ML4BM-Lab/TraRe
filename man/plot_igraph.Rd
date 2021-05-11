@@ -5,6 +5,11 @@
 \alias{return_layout}
 \alias{return_layout_phenotype}
 \alias{orderGraphWeights}
+\alias{heatmapplot}
+\alias{plot_expression_row}
+\alias{plot_correlation_row}
+\alias{plot_gene_pair_scatter}
+\alias{plot_gene_pair_scatter_by_class}
 \title{Plotting functions for Gene Regulatory Network.}
 \usage{
 plot_igraph(mygraph = NULL, mytitle = "", titlecol = "black", mylayout = NULL)
@@ -19,6 +24,69 @@ return_layout_phenotype(
 )
 
 orderGraphWeights(graph, edgelist)
+
+heatmapplot(
+  heatm,
+  plotname = "",
+  myzlim = c(min(heatm), max(heatm)),
+  cvec = c("red", "white", "blue"),
+  showRows = T
+)
+
+plot_expression_row(
+  mymat = NULL,
+  rowdesc = "Regulators",
+  plotheight = 200,
+  myshowrows = TRUE,
+  samps2pheno = NULL,
+  phenostrs = c("nonrespond", "responder"),
+  htmlfile = "./",
+  imgdir = "imgs/",
+  modnum = 1,
+  plotwidth = 800,
+  mycvec = c("darkorange", "gray100", "darkblue"),
+  plotzlim = c(-10, 10)
+)
+
+plot_correlation_row(
+  cormats = NULL,
+  rowdesc = "regulators",
+  xnames = NULL,
+  ynames = NULL,
+  plotheight = 200,
+  myshowrows = TRUE,
+  htmlfile = "./",
+  imgdir = "imgs/",
+  modnum = 1,
+  plotwidth = 200,
+  mycvec = c("darkred", "gray100", "darkgreen"),
+  plotzlim = c(-1, 1),
+  plottitle = NULL
+)
+
+plot_gene_pair_scatter(
+  pname,
+  myx,
+  myy,
+  xgenename,
+  ygenename,
+  mylabels,
+  alltext = NULL,
+  plotdir = ""
+)
+
+plot_gene_pair_scatter_by_class(
+  plotdir,
+  pname,
+  myx,
+  myy,
+  xgenename,
+  ygenename,
+  mylabels,
+  lab1text,
+  lab2text,
+  alltext
+)
 }
 \arguments{
 \item{mygraph}{igraph object returned from \code{NET_run()}.}
@@ -43,6 +111,68 @@ a boolean variable for regulator (1) - no regulator (0) column.}
 \item{graph}{igraph object}
 
 \item{edgelist}{list containing the edges of the igraph object.}
+
+\item{heatm}{input matrix for plot.}
+
+\item{plotname}{name of the plot.}
+
+\item{myzlim}{the range of z values for which colors should be plotted.}
+
+\item{cvec}{vector of colors for the palette of the plot.}
+
+\item{showRows}{boolean specifying the option of showing row names.}
+
+\item{mymat}{input matrix for plot.}
+
+\item{rowdesc}{name uses to specify regulator.}
+
+\item{plotheight}{height of the plot.}
+
+\item{myshowrows}{boolean specifying the option of showing row names.}
+
+\item{samps2pheno}{matrix of sample to phenotype.}
+
+\item{phenostrs}{strings uses distinguish for phenotypes.}
+
+\item{htmlfile}{directory to html files.}
+
+\item{imgdir}{directory for image.}
+
+\item{modnum}{the number of supermodule.}
+
+\item{plotwidth}{width of the plot.}
+
+\item{mycvec}{vector of colors for the palette of the plot.}
+
+\item{plotzlim}{the range of z values for which colors should be plotted.}
+
+\item{cormats}{input correlation matrix for plot.}
+
+\item{xnames}{names for the x axis.}
+
+\item{ynames}{names for the x axis.}
+
+\item{plottitle}{the title of the plot.}
+
+\item{pname}{name for the plot.}
+
+\item{myx}{the coordinates of points of the first gene.}
+
+\item{myy}{the coordinates of points of the second gene.}
+
+\item{xgenename}{the names of the first gene.}
+
+\item{ygenename}{the names of the second gene.}
+
+\item{mylabels}{integer class labels.}
+
+\item{alltext}{text label for the plot.}
+
+\item{plotdir}{directory for the plot.}
+
+\item{lab1text}{text label of a class.}
+
+\item{lab2text}{text label of the other class.}
 }
 \value{
 plot of the desired single GRN using a specific layout.

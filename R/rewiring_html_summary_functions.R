@@ -134,16 +134,16 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
     imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
 
     normexpmat <- norm_expr_mat_keep[, keepsamps]
-    nodesumm2 <- utils::type.convert(as.data.frame(nodesumm, stringsAsFactors = F))
+    nodesumm2 <- utils::type.convert(as.data.frame(nodesumm, stringsAsFactors = FALSE))
     colnames(nodesumm2) <- make.names(colnames(nodesumm2))
 
     reg_info <- nodesumm2[nodesumm2$is.regulator == 1, c("t.stat", "t.pval")]
-    reg_info <- reg_info[order(reg_info$t.stat, decreasing = T), ]
+    reg_info <- reg_info[order(reg_info$t.stat, decreasing = TRUE), ]
     reg_vec <- rownames(reg_info)
 
     # --- regulator expression distributions ---
     write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Regulator Expression Levels", "</h1></td></tr></table><br>\n"),
-        modhtmlfile, append = T)
+        modhtmlfile, append = TRUE)
 
     respond_plotlist <- list()
     nonresp_plotlist <- list()
@@ -160,9 +160,9 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
     grDevices::png(paste0(imgdir, myplotname, ".png"), width = plotwidth, height = plotheight)
 
     vioplot::vioplot(x = respond_plotlist, col = "palevioletred", side = "right", names = paste(sep = "||", rownames(reg_info), signif(reg_info$t.pval,
-        2)), plotCentre = "line", horizontal = T, cex.axis = 0.8)
+        2)), plotCentre = "line", horizontal = TRUE, cex.axis = 0.8)
 
-    vioplot::vioplot(x = nonresp_plotlist, col = "lightblue", side = "left", add = T, plotCentre = "line", horizontal = T)
+    vioplot::vioplot(x = nonresp_plotlist, col = "lightblue", side = "left", add = TRUE, plotCentre = "line", horizontal = TRUE)
 
     graphics::abline(v = -5:5 * 2, col = "lightgrey")
     graphics::title(xlab = "Expression Value (CQN)", ylab = "Regulator")
@@ -170,20 +170,20 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
     graphics::legend("topleft", fill = c("palevioletred", "lightblue"), legend = c("R", "NR"), title = "Outcome", cex = 0.5)
     grDevices::dev.off()
 
-    rankdf <- data.frame(matrix(vector(), length(reg_vec), 0, dimnames = list(sample(reg_vec), c())), stringsAsFactors = F)
+    rankdf <- data.frame(matrix(vector(), length(reg_vec), 0, dimnames = list(sample(reg_vec), c())), stringsAsFactors = FALSE)
     rankdfcols <- c()
     rankdfcols <- c(rankdfcols, "regulator", "reg.expr.tpval", "reg.expr.rank")
     rankdf <- cbind(rankdf[rownames(reg_info), ], rownames(reg_info), signif(reg_info$t.pval, 2), rank(reg_info$t.pval))
     colnames(rankdf) <- rankdfcols
 
     write(paste0("<img src='", htmlinfo$imgstr, myplotname, ".png", "' alt='", myplotname, "' height='", plotheight, "' width='", plotwidth,
-        "'><br>\n"), modhtmlfile, append = T)
+        "'><br>\n"), modhtmlfile, append = TRUE)
 
     # --- target expression diff distributions ---
     write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Target Expression Diff Distributions", "</h1></td></tr></table><br>\n"),
-        modhtmlfile, append = T)
-    write("<table style='width:100%'> ", modhtmlfile, append = T)
-    write(paste0("<tr>"), modhtmlfile, append = T)
+        modhtmlfile, append = TRUE)
+    write("<table style='width:100%'> ", modhtmlfile, append = TRUE)
+    write(paste0("<tr>"), modhtmlfile, append = TRUE)
 
     for (cname in c("all", "nonresp", "respond")) {
         nonzeroedges <- edgesumm[edgesumm[, paste0(cname, ".weights")] != 0, ]
@@ -194,7 +194,7 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
             plotlist[[reg]] <- as.numeric(nodesumm2[targets, "t.stat"])
             methods::show(c(reg, length(targets), signif(mean(plotlist[[reg]]))))
         }
-        plotlist <- plotlist[names(sort(unlist(lapply(plotlist, mean)), decreasing = T))]
+        plotlist <- plotlist[names(sort(unlist(lapply(plotlist, mean)), decreasing = TRUE))]
         plotlist[["supmod"]] <- as.numeric(nodesumm2[, "t.stat"])
 
         # added png
@@ -205,7 +205,7 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
         grDevices::png(paste0(imgdir, myplotname0, ".png"), width = plotwidth, height = plotheight)
 
         vioplot::vioplot(x = plotlist, col = "goldenrod", side = "right", main = cname, names = paste(sep = "||", names(plotlist),
-            unlist(lapply(plotlist, length)), signif(unlist(lapply(plotlist, mean)), 3)), plotCentre = "line", horizontal = T, cex.axis = 0.6)
+            unlist(lapply(plotlist, length)), signif(unlist(lapply(plotlist, mean)), 3)), plotCentre = "line", horizontal = TRUE, cex.axis = 0.6)
 
         graphics::abline(v = -5:5 * 2, col = "lightgrey")
         graphics::title(xlab = "T Statistic: Higher in Responders <-> Not Signficant <-> Higher in Non-Responders", ylab = "Regulator Targets")
@@ -219,16 +219,16 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
         }
 
         write(paste0(" <img src='", htmlinfo$imgstr, myplotname0, ".png", "' alt='", myplotname0, "' height='", plotheight, "' width='",
-            plotwidth, "'> &emsp; \n"), modhtmlfile, append = T)
+            plotwidth, "'> &emsp; \n"), modhtmlfile, append = TRUE)
     }
-    write(paste0("</tr>\n"), modhtmlfile, append = T)
-    write(paste0("</table>"), modhtmlfile, append = T)
+    write(paste0("</tr>\n"), modhtmlfile, append = TRUE)
+    write(paste0("</table>"), modhtmlfile, append = TRUE)
 
     # --- target regulator correlation distributions ---
     write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Target Regulator Correlation Distributions", "</h1></td></tr></table><br>\n"),
-        modhtmlfile, append = T)
-    write("<table style='width:100%'> ", modhtmlfile, append = T)
-    write(paste0("<tr>"), modhtmlfile, append = T)
+        modhtmlfile, append = TRUE)
+    write("<table style='width:100%'> ", modhtmlfile, append = TRUE)
+    write(paste0("<tr>"), modhtmlfile, append = TRUE)
 
     # calculate module correlation
     modmat <- t(normexpmat[rownames(nodesumm2), ])
@@ -248,7 +248,7 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
 
         for (reg in reg_vec) {
             respondtars <- as.character(edgesumm$target[edgesumm$respond.weights != 0 & edgesumm$reg == reg])
-            nonresptars <- as.character(edgesumm$target[edgesumm$nonresp.weights != 0 & edgesumm$reg == reg])            
+            nonresptars <- as.character(edgesumm$target[edgesumm$nonresp.weights != 0 & edgesumm$reg == reg])
             if (loopmode == "all") {
                 respondtars <- as.character(edgesumm$target[edgesumm$all.weights != 0 & edgesumm$reg == reg])
                 nonresptars <- as.character(edgesumm$target[edgesumm$all.weights != 0 & edgesumm$reg == reg])
@@ -273,8 +273,8 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
             methods::show(c(reg, length(respondtars), length(nonresptars), signif(mean(respond_plotlist[[reg]])), signif(mean(nonresp_plotlist[[reg]])),
                 as.numeric(mypvals[reg])))
         }
-        respond_plotlist <- respond_plotlist[names(sort(mypvals, decreasing = T))]
-        nonresp_plotlist <- nonresp_plotlist[names(sort(mypvals, decreasing = T))]
+        respond_plotlist <- respond_plotlist[names(sort(mypvals, decreasing = TRUE))]
+        nonresp_plotlist <- nonresp_plotlist[names(sort(mypvals, decreasing = TRUE))]
     }
 
     for (loopmode in c("all", "specific")) {
@@ -287,9 +287,9 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
 
         vioplot::vioplot(x = respond_plotlist, col = "palevioletred", side = "right", main = loopmode, names = paste(sep = "||", names(respond_plotlist),
             unlist(lapply(respond_plotlist, length)), unlist(lapply(nonresp_plotlist, length)), mypvals[names(respond_plotlist)]),
-            plotCentre = "line", horizontal = T, cex.axis = 0.6)
+            plotCentre = "line", horizontal = TRUE, cex.axis = 0.6)
 
-        vioplot::vioplot(x = nonresp_plotlist, col = "lightblue", side = "left", add = T, plotCentre = "line", horizontal = T)
+        vioplot::vioplot(x = nonresp_plotlist, col = "lightblue", side = "left", add = TRUE, plotCentre = "line", horizontal = TRUE)
 
         graphics::abline(v = -5:5/5, col = "lightgrey")
         graphics::title(xlab = "Pearson Correlation", ylab = "Regulator Targets")
@@ -304,10 +304,10 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
         }
 
         write(paste0("<img src='", htmlinfo$imgstr, myplotname, ".png", "' alt='", myplotname, "' height='", plotheight, "' width='",
-            plotwidth, "'> &emsp; \n"), modhtmlfile, append = T)
+            plotwidth, "'> &emsp; \n"), modhtmlfile, append = TRUE)
     }
-    write(paste0("</tr>\n"), modhtmlfile, append = T)
-    write(paste0("</table>"), modhtmlfile, append = T)
+    write(paste0("</tr>\n"), modhtmlfile, append = TRUE)
+    write(paste0("</table>"), modhtmlfile, append = TRUE)
 
     return(rankdf)
 }
@@ -317,19 +317,21 @@ bipartiteGraphsSumm <- function(numclus, nodesumm, edgesumm, numdataset, modmeth
     imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
 
     write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Modules Summary", "</h1></td></tr></table><br>\n"), modhtmlfile,
-        append = T)
+        append = TRUE)
 
     pname <- paste(sep = ".", "igraphs.refined.graphs")
     # write plot to index page
     write(paste0("<img src='", "../../supermodule", numdataset, ".", modmeth, ".", numclus, "/imgs/", pname, ".png", "' alt='", pname,
         "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"), modhtmlfile, append = TRUE)
 
-    sortidxs <- sort(as.numeric(nodesumm[, "t-pval"]), decreasing = F, index.return = T)$ix
-    write_tables_all(nodesumm[sortidxs, ], tabletype = paste0(modmeth, "_nodesumm"), filestr = "data", html_idxs = 1:dim(nodesumm)[1],
+    sortidxs <- sort(as.numeric(nodesumm[, "t-pval"]), decreasing = FALSE, index.return = TRUE)$ix
+    #write_tables_all(nodesumm[sortidxs, ], tabletype = paste0(modmeth, "_nodesumm"), filestr = "data", html_idxs = 1:dim(nodesumm)[1],
+    write_tables_all(nodesumm[sortidxs, ], tabletype = paste0(modmeth, "_nodesumm"), filestr = "data", html_idxs = seq(nrow(nodesumm)),
         htmlinfo = htmlinfo)
 
-    sortidxs <- sort(as.numeric(edgesumm[, "all-pearson"]), decreasing = F, index.return = T)$ix
-    write_tables_all(edgesumm[sortidxs, ], tabletype = paste0(modmeth, "_edgesumm"), filestr = "data", html_idxs = 1:dim(edgesumm)[1],
+    sortidxs <- sort(as.numeric(edgesumm[, "all-pearson"]), decreasing = FALSE, index.return = TRUE)$ix
+    #write_tables_all(edgesumm[sortidxs, ], tabletype = paste0(modmeth, "_edgesumm"), filestr = "data", html_idxs = 1:dim(edgesumm)[1],
+    write_tables_all(edgesumm[sortidxs, ], tabletype = paste0(modmeth, "_edgesumm"), filestr = "data", html_idxs = seq(nrow(edgesumm)),
         htmlinfo = htmlinfo)
 
 }
@@ -389,8 +391,8 @@ superModuleStatistics <- function(modregs, modtargs, mat, keeplabels, htmlinfo) 
     stattab <- cbind(statsnames, stats)
 
     write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "SuperModule Statistics", "</h1></td></tr></table><br>\n"),
-        paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = T)
-    write(table2html(stattab), modhtmlfile, append = T)
+        paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
+    write(table2html(stattab), modhtmlfile, append = TRUE)
 }
 
 createLegendPlot <- function(htmlinfo) {
@@ -404,7 +406,7 @@ createLegendPlot <- function(htmlinfo) {
     vals <- seq(-1, 1, length.out = ngroups)
 
     colramp <- (grDevices::colorRampPalette(c("darkred", "gray100", "darkgreen")))(ngroups)
-    graphics::image(vals, 1, as.matrix(vals, ngroups, 1), col = colramp, axes = F, main = "", xlab = "", ylab = "")
+    graphics::image(vals, 1, as.matrix(vals, ngroups, 1), col = colramp, axes = FALSE, main = "", xlab = "", ylab = "")
     graphics::axis(1, vals, cex.axis = 2)
     grDevices::dev.off()
 
@@ -414,7 +416,7 @@ createLegendPlot <- function(htmlinfo) {
     vals <- seq(-10, 10, length.out = ngroups)
 
     colramp <- (grDevices::colorRampPalette(c("darkorange", "gray100", "darkblue")))(ngroups)
-    graphics::image(vals, 1, as.matrix(vals, ngroups, 1), col = colramp, axes = F, main = "", xlab = "", ylab = "")
+    graphics::image(vals, 1, as.matrix(vals, ngroups, 1), col = colramp, axes = FALSE, main = "", xlab = "", ylab = "")
     graphics::axis(1, vals, cex.axis = 2)
     grDevices::dev.off()
 }
@@ -425,12 +427,12 @@ correlationOfModuleGene <- function(mymod, regorder, targetorder, mat, cormats, 
     imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
 
     write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Correlation Of Module Genes ", "</h1></td></tr></table><br>\n"),
-        modhtmlfile, append = T)
+        modhtmlfile, append = TRUE)
 
     write(paste0("<img src='", htmlinfo$imgstr, "correlation_colorscale", ".png", "' alt='", "correlation_colorscale", "' height='",
-        150, "' width='", 450, "'><br>\n"), modhtmlfile, append = T)
+        150, "' width='", 450, "'><br>\n"), modhtmlfile, append = TRUE)
 
-    write("<table style='width:100%'> ", modhtmlfile, append = T)
+    write("<table style='width:100%'> ", modhtmlfile, append = TRUE)
     plot_correlation_row(cormats = cormats, rowdesc = "targets", xnames = targetorder, ynames = targetorder, plotheight = 450, myshowrows = TRUE,
         htmlfile = modhtmlfile, imgdir = imgdir, modnum = mymod, plotwidth = 450, mycvec = c("darkred", "gray100", "darkgreen"), plotzlim = c(-1,
             1), plottitle = phenotype_class_vals)
@@ -446,7 +448,7 @@ correlationOfModuleGene <- function(mymod, regorder, targetorder, mat, cormats, 
         htmlfile = modhtmlfile, imgdir = imgdir, modnum = mymod, plotwidth = 200, mycvec = c("darkred", "gray100", "darkgreen"), plotzlim = c(-1,
             1), plottitle = phenotype_class_vals)
 
-    write(paste0("</table>"), modhtmlfile, append = T)
+    write(paste0("</table>"), modhtmlfile, append = TRUE)
 
 }
 
@@ -454,14 +456,16 @@ expressionTableOfModuleGenes <- function(mymod, nodesumm, htmlinfo) {
     modhtmlfile <- paste0(htmlinfo$htmldir, htmlinfo$indexpath)
 
     write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Expression Table of Module Genes", "</h1></td></tr></table><br>\n"),
-        modhtmlfile, append = T)
+        modhtmlfile, append = TRUE)
 
-    sortidxs <- sort(as.numeric(nodesumm[, "t-pval"]), decreasing = F, index.return = T)$ix
-    htmlidxs <- union(sortidxs[1:25], which(nodesumm[, "is-regulator"] == "1"))
-    write(table2html(nodesumm[htmlidxs, ]), modhtmlfile, append = T)
+    sortidxs <- sort(as.numeric(nodesumm[, "t-pval"]), decreasing = FALSE, index.return = TRUE)$ix
+    #htmlidxs <- union(sortidxs[1:25], which(nodesumm[, "is-regulator"] == "1"))
+    htmlidxs <- union(sortidxs[seq(25)], which(nodesumm[, "is-regulator"] == "1"))
+    write(table2html(nodesumm[htmlidxs, ]), modhtmlfile, append = TRUE)
 
-    sortidxs <- sort(as.numeric(nodesumm[, "t-stat"]), decreasing = F, index.return = T)$ix
-    write_tables_all(nodesumm[sortidxs, ], tabletype = paste0(mymod, "_mod_node_summ"), filestr = "data", html_idxs = 1:dim(nodesumm)[1],
+    sortidxs <- sort(as.numeric(nodesumm[, "t-stat"]), decreasing = FALSE, index.return = TRUE)$ix
+    #write_tables_all(nodesumm[sortidxs, ], tabletype = paste0(mymod, "_mod_node_summ"), filestr = "data", html_idxs = 1:dim(nodesumm)[1],
+    write_tables_all(nodesumm[sortidxs, ], tabletype = paste0(mymod, "_mod_node_summ"), filestr = "data", html_idxs = seq(nrow(nodesumm)),
         htmlinfo = htmlinfo)
 }
 
@@ -470,15 +474,15 @@ expressionPlotsOfModuleGenes <- function(mymod, regorder, targetorder, mat, samp
     imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
 
     write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Expression Plots of Module Genes ", "</h1></td></tr></table><br>\n"),
-        modhtmlfile, append = T)
+        modhtmlfile, append = TRUE)
 
     write(paste0("<img src='", htmlinfo$imgstr, "expression_colorscale", ".png", "' alt='", "correlation_colorscale", "' height='",
-        150, "' width='", 450, "'><br>\n"), modhtmlfile, append = T)
+        150, "' width='", 450, "'><br>\n"), modhtmlfile, append = TRUE)
 
-    write("<table style='width:100%'> ", modhtmlfile, append = T)
+    write("<table style='width:100%'> ", modhtmlfile, append = TRUE)
 
     # plot regulator expression
-    plot_expression_row(mymat = t(mat)[regorder, , drop = F], rowdesc = "regulators", plotheight = 200, myshowrows = TRUE, samps2pheno = samps2pheno,
+    plot_expression_row(mymat = t(mat)[regorder, , drop = FALSE], rowdesc = "regulators", plotheight = 200, myshowrows = TRUE, samps2pheno = samps2pheno,
         phenostrs = phenostrs, htmlfile = modhtmlfile, imgdir = imgdir, modnum = mymod, plotwidth = 800, mycvec = c("darkorange", "gray100",
             "darkblue"), plotzlim = c(-10, 10))
 
@@ -486,7 +490,7 @@ expressionPlotsOfModuleGenes <- function(mymod, regorder, targetorder, mat, samp
     plot_expression_row(mymat = t(mat)[targetorder, ], rowdesc = "targets", plotheight = 600, myshowrows = TRUE, samps2pheno = samps2pheno,
         phenostrs = phenostrs, htmlfile = modhtmlfile, imgdir = imgdir, modnum = mymod, plotwidth = 800, mycvec = c("darkorange", "gray100",
             "darkblue"), plotzlim = c(-10, 10))
-    write(paste0("</table>"), modhtmlfile, append = T)
+    write(paste0("</table>"), modhtmlfile, append = TRUE)
 }
 
 nullDistributionOfRewiringStatistic <- function(mat, keeplabels, modmeth, mymod, htmlinfo) {
@@ -497,7 +501,7 @@ nullDistributionOfRewiringStatistic <- function(mat, keeplabels, modmeth, mymod,
     result <- rewiring_test_pair_detail(mat, keeplabels + 1, perm = 1000)
 
     write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Null Distribution of Rewiring Statistic", "</h1></td></tr></table><br>\n"),
-        modhtmlfile, append = T)
+        modhtmlfile, append = TRUE)
 
     # plot histogram of dave stats
     plotwidth <- 400
@@ -510,14 +514,14 @@ nullDistributionOfRewiringStatistic <- function(mat, keeplabels, modmeth, mymod,
     grDevices::dev.off()
 
     write(paste0("<img src='", htmlinfo$imgstr, myplotname, ".png", "' alt='", myplotname, "' height='", plotheight, "' width='", plotwidth,
-        "'><br>\n"), modhtmlfile, append = T)
+        "'><br>\n"), modhtmlfile, append = TRUE)
 }
 
 regulatorSummaryAndRank <- function(rankdf, htmlinfo) {
     modhtmlfile <- paste0(htmlinfo$htmldir, htmlinfo$indexpath)
 
     write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Regulator Summary And Rank", "</h1></td></tr></table><br>\n"),
-        modhtmlfile, append = T)
-    write(table2html(rankdf), modhtmlfile, append = T)
+        modhtmlfile, append = TRUE)
+    write(table2html(rankdf), modhtmlfile, append = TRUE)
 }
 

@@ -13,14 +13,15 @@
 #' @examples
 #'
 #' ## Lets assume that we have already generated the ObjectList, we will load it from
-#' ## the folder containing the examples files. After running the 'runrewiring()', running this 
+#' ## the folder containing the examples files. After running the 'runrewiring()', running this
 #' ## function will generate a module summary based on the ouput from 'runrewiring()'.
 #'
-#' ## To create html summary on previously run supermodel in new data, we will have generated a 
-#' ## new ObjectList using the new data by running ‘preparerewiring()’. Running the 
-#' ## ‘createModuleSummary()’ with the new ObjectList will create a module summary based on the 
-#' ## new dataset but with the gene module from the 'runrewiring()' results.
-#'   
+#' ## To create html summary on previously run supermodel in new data, we will have
+#' ## generated a new ObjectList using the new data by running ‘preparerewiring()’.
+#' ##  Running the #' ## ‘createModuleSummary()’ with the new ObjectList will create
+#' ## a module summary based on the new dataset but with the gene module from the
+#' ## 'runrewiring()' results.
+#'
 #' objectlist <- readRDS(file=paste0(system.file('extdata',package='TraRe'),
 #'                       '/prepared_rewiring_example.rds'))
 #'
@@ -31,9 +32,10 @@
 #' ## We are modifying output directory for this example.
 #' objectlist$outdir <- paste(getwd(),'examplefolder',sep='/')
 #'
-#' runrewiring(ObjectList = objectlist)
-#' createModuleSummary(ObjectList = objectlist, modmeth = "VBSR", numclus = 1, supertype = "refined", numdataset = 1)
-#' unlink(objectlist$outdir,recursive = TRUE)
+#' ## runrewiring(ObjectList = objectlist)
+#' ##createModuleSummary(ObjectList = objectlist, modmeth = "VBSR", numclus = 1,
+#' ##                    supertype = "refined", numdataset = 1)
+#' ##unlink(objectlist$outdir,recursive = TRUE)
 #'
 #'
 #' @export
@@ -45,15 +47,15 @@ createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, super
     } else {
         stop(paste0("Rewiring file ", modsumm_name," does not exist, please run runrewiring() before creating module summary."))
     }
-    
+
     # set up output html page
     dir.create(paste0(ObjectList$outdir, "/supermod_rewiring/rewiring_module_summary"))
     codedir <- paste0(system.file("extdata", package = "TraRe"), "/RewiringReport/")
-    dir.create(file.path(paste0(ObjectList$outdir, "/supermod_rewiring/rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus, ".", supertype, 
+    dir.create(file.path(paste0(ObjectList$outdir, "/supermod_rewiring/rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus, ".", supertype,
         "/")), showWarnings = FALSE)
-    htmlinfo <- create_index_page(outdir = paste0(ObjectList$outdir, "/supermod_rewiring/rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus, 
+    htmlinfo <- create_index_page(outdir = paste0(ObjectList$outdir, "/supermod_rewiring/rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus,
         ".", supertype), runtag = "", codedir = codedir)
-    
+
     orderobj <- geneOrder(modsumm, ObjectList, numdataset)
     createLegendPlot(htmlinfo)
     ref_cluster_index <- paste0("<a href = '../../supermodule", numdataset,".", modmeth, ".", numclus, "/index.html'>Return to Cluster Summary</a><br>")
@@ -67,27 +69,27 @@ createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, super
     samps2pheno <- alllabels
     samps2pheno[which(alllabels == ObjectList$phenotype_class_vals_label[2])] <- ObjectList$phenotype_class_vals[2]
     samps2pheno[which(alllabels == ObjectList$phenotype_class_vals_label[1])] <- ObjectList$phenotype_class_vals[1]
-    
+
     nonrespond_idxs <- names(samps2pheno)[which(samps2pheno == ObjectList$phenotype_class_vals[1])]
     responder_idxs <- names(samps2pheno)[which(samps2pheno == ObjectList$phenotype_class_vals[2])]
 
     obj_runmoddata <- list(regulators = orderobj$modregs, target_genes = orderobj$modtargs)
     norm_expr_mat_keep <- ObjectList$datasets[[numdataset]]$norm_expr_mat_keep
     name2idx <- ObjectList$datasets[[numdataset]]$name2idx
-    
+
     obj_nodesumm <- module_node_summary(norm_expr_mat_keep, obj_runmoddata, name2idx, nonrespond_idxs, responder_idxs)
     obj_edgesumm <- module_edge_summary(norm_expr_mat_keep, obj_runmoddata, name2idx, nonrespond_idxs, responder_idxs)
 
     # Different Sections in the html summary
     superModuleStatistics(orderobj$modregs, orderobj$modtargs, orderobj$mat, ObjectList$datasets[[numdataset]]$keeplabels, htmlinfo)
-    correlationOfModuleGene(supertype, orderobj$regorder, orderobj$targetorder, orderobj$mat, orderobj$cormats, ObjectList$keeplabels, 
+    correlationOfModuleGene(supertype, orderobj$regorder, orderobj$targetorder, orderobj$mat, orderobj$cormats, ObjectList$keeplabels,
         htmlinfo, ObjectList$phenotype_class_vals)
     expressionTableOfModuleGenes(supertype, obj_nodesumm, htmlinfo)
-    expressionPlotsOfModuleGenes(supertype, orderobj$regorder, orderobj$targetorder, orderobj$mat, samps2pheno, ObjectList$phenotype_class_vals, 
+    expressionPlotsOfModuleGenes(supertype, orderobj$regorder, orderobj$targetorder, orderobj$mat, samps2pheno, ObjectList$phenotype_class_vals,
         htmlinfo)
     bipartiteGraphsSumm(numclus, obj_nodesumm, obj_edgesumm, numdataset, modmeth, htmlinfo)
     nullDistributionOfRewiringStatistic(orderobj$mat, ObjectList$datasets[[numdataset]]$keeplabels, modmeth, supertype, htmlinfo)
-    rankdf <- violinPlots(ObjectList$datasets[[numdataset]]$norm_expr_mat_keep, ObjectList$datasets[[numdataset]]$keepsamps, ObjectList$datasets[[numdataset]]$keeplabels, 
+    rankdf <- violinPlots(ObjectList$datasets[[numdataset]]$norm_expr_mat_keep, ObjectList$datasets[[numdataset]]$keepsamps, ObjectList$datasets[[numdataset]]$keeplabels,
         obj_nodesumm, modsumm$fulledgesumm, orderobj$modtargs, htmlinfo)
     regulatorSummaryAndRank(rankdf, htmlinfo)
 
