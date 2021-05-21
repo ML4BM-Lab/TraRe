@@ -192,7 +192,7 @@ runrewiring <- function(ObjectList) {
 
         # select every cluster we have found except the last one.
 
-        for (numclus in utils::head(seq_along(clusters$clusters), -1)) {
+        for (numclus in seq_along(clusters$clusters)) {
 
             message("Cluster number: ", numclus)
 

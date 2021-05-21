@@ -30,7 +30,7 @@ heatmapplot(
   plotname = "",
   myzlim = c(min(heatm), max(heatm)),
   cvec = c("red", "white", "blue"),
-  showRows = T
+  showRows = TRUE
 )
 
 plot_expression_row(
