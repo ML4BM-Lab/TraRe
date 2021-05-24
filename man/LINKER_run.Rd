@@ -52,7 +52,7 @@ discovered may differ from this value). By default, 100 modules.}
 
 \item{Nr_bootstraps}{Number of bootstrap of Phase I. By default, 10.}
 
-\item{FDR}{The False Discovery Rate correction used for the enrichment analysis. By default, 0.05.}
+\item{FDR}{The False Discovery Rate correction used for the modules and graphs GRN uncovering. By default, 0.05.}
 
 \item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that the parallelization
 is NOT initialized in any of the functions. By default, 2.}

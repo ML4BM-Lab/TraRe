@@ -24,7 +24,8 @@ LINKER_runPhase1(
   used_method = "MEAN",
   NrCores = 1,
   corrClustNrIter = 100,
-  Nr_bootstraps = 1
+  Nr_bootstraps = 1,
+  FDR = 0.05
 )
 
 LINKER_init(
@@ -33,7 +34,8 @@ LINKER_init(
   NrModules,
   NrCores = 3,
   corrClustNrIter = 21,
-  Parameters
+  Parameters,
+  FDR
 )
 
 LINKER_ReassignGenesToClusters(
@@ -64,7 +66,8 @@ LINKER_LearnRegulatoryPrograms(
   pmax,
   mode,
   used_method = "MEAN",
-  NrCores = 1
+  NrCores = 1,
+  FDR
 )
 }
 \arguments{
@@ -104,6 +107,8 @@ is NOT initialized in any of the functions. By default, 2.}
 \item{corrClustNrIter}{Number of iteration for the phase I part of the method.}
 
 \item{Nr_bootstraps}{Number of bootstrap of Phase I. By default, 1.}
+
+\item{FDR}{The False Discovery Rate correction used for the modules and graphs GRN uncovering. By default, 0.05.}
 
 \item{MA_matrix_Var}{Matrix of log-normalized estimated counts of the gene expression data, centered and scaled, containing
 only the train samples.}

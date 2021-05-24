@@ -12,6 +12,7 @@
 #' is NOT initialized in any of the functions. By default, 2.
 #' @param modules Modules obtained from the phase I linker output.
 #' @param alpha alpha parameter if a LASSO model is chosen.
+#' @param FDR The False Discovery Rate correction used for the modules and graphs GRN uncovering. By default, 0.05.
 #'
 #'
 #' @examples
@@ -47,101 +48,101 @@
 #' @return igraph object containing the related drivers and targets in the form of a bipartitive graph.
 #' @export
 
-LINKER_runPhase2 <- function(modules, Data, NrCores, mode = "VBSR", alpha = 1 - 1e-06) {
-    
+LINKER_runPhase2 <- function(modules, Data, NrCores, mode = "VBSR", alpha = 1 - 1e-06, FDR = 0.05) {
+
     bp_g <- list()
     i <- 1
-    
+
     # this will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
-    
+
     parallClass <- BiocParallel::bpparam()
     parallClass$workers <- NrCores
-    
+
     runPhase2Bettas <- function(mod_idx) {
-        
+
         targetgenes <- unlist(modules[[mod_idx]]$target_genes)
         regulators <- unlist(modules[[mod_idx]]$regulators)
         X <- Data[regulators, ]
-        
+
         # We need to handle the special case where only one regulator regulates a module/community
         if (length(regulators) < 2) {
-            
+
             non_zero_beta <- modules[[mod_idx]]$regulatory_program[which(modules[[mod_idx]]$regulatory_program != 0)]
             if (length(non_zero_beta) != 1) {
                 warning("NON_ZERO_BETA != 1")
             }
-            
+
             driverMat <- matrix(data = non_zero_beta, nrow = length(targetgenes), ncol = length(regulators))
-            
+
             rownames(driverMat) <- targetgenes
             colnames(driverMat) <- regulators
         } else {
-            
+
             driverMat <- matrix(data = NA, nrow = length(targetgenes), ncol = length(regulators))
-            
+
             for (idx_gene in seq_along(targetgenes)) {
                 y <- Data[targetgenes[idx_gene], ]
-                
+
                 if (mode == "VBSR") {
                   res <- vbsr::vbsr(y, t(X), n_orderings = 15, family = "normal")
                   betas <- res$beta
-                  betas[res$pval > 0.05/(length(regulators) * length(targetgenes))] <- 0
+                  betas[res$pval > FDR/(length(regulators) * length(targetgenes))] <- 0
                   driverMat[idx_gene, ] <- betas
-                  
+
                 } else if (mode == "LASSOmin") {
                   fit <- glmnet::cv.glmnet(t(X), y, alpha = alpha)
-                  
+
                   b_o <- stats::coef(fit, s = fit$lambda.min)
                   b_opt <- c(b_o[2:length(b_o)])  # removing the intercept.
                   driverMat[idx_gene, ] <- b_opt
-                  
+
                 } else if (mode == "LASSO1se") {
                   fit <- glmnet::cv.glmnet(t(X), y, alpha = alpha)
-                  
+
                   b_o <- stats::coef(fit, s = fit$lambda.1se)
                   b_opt <- c(b_o[2:length(b_o)])  # removing the intercept.
                   driverMat[idx_gene, ] <- b_opt
-                  
+
                 } else if (mode == "LM") {
                   for (idx_regs in seq_along(regulators)) {
                     x <- t(X)[, idx_regs]
                     fit <- stats::lm(y ~ x)
                     s <- summary(fit)
-                    driverMat[idx_gene, idx_regs] <- s$coefficients[2, "Pr(>|t|)"] < 0.05/(length(targetgenes) * length(regulators))
+                    driverMat[idx_gene, idx_regs] <- s$coefficients[2, "Pr(>|t|)"] < FDR/(length(targetgenes) * length(regulators))
                   }
                 } else {
                   warning("MODE NOT RECOGNIZED")
                 }
-                
+
             }
-            
+
             rownames(driverMat) <- targetgenes
             colnames(driverMat) <- regulators
-            
+
             regulated_genes <- which(rowSums(abs(driverMat)) != 0)
             regulatory_genes <- which(colSums(abs(driverMat)) != 0)
-            
+
             # We need to treat the special cases independently
             if (length(regulated_genes) < 2) {
                 driverMat <- driverMat[regulated_genes, ]
                 driverMat <- driverMat[regulatory_genes]
-                
+
             } else if (length(regulatory_genes) < 2) {
                 driverMat <- driverMat[, regulatory_genes]
                 driverMat <- driverMat[regulated_genes]
-                
+
             } else {
                 driverMat <- driverMat[, regulatory_genes]
                 driverMat <- driverMat[regulated_genes, ]
             }
-            
+
         }
-        
+
         igraph::graph_from_incidence_matrix(driverMat)
-        
+
     }
-    
+
     bp_g <- BiocParallel::bplapply(seq_along(modules), runPhase2Bettas, BPPARAM = parallClass)
-    
+
     return(bp_g)
 }

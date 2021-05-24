@@ -30,6 +30,7 @@
 #' @param alpha Alpha variable for Lasso models.
 #' @param pmax Maximum numbers of regulators that we want.
 #' @param corrClustNrIter Number of iteration for the phase I part of the method.
+#' @param FDR The False Discovery Rate correction used for the modules and graphs GRN uncovering. By default, 0.05.
 #'
 #' @return igraph object containing the modules containing the related drivers and targets within bootstraps.
 #'
@@ -61,7 +62,7 @@
 
 LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, nassay = 1, regulator = "regulator",
     NrModules, Lambda = 1e-04, alpha = 1 - 1e-06, pmax = 10, mode = "VBSR", used_method = "MEAN", NrCores = 1, corrClustNrIter = 100,
-    Nr_bootstraps = 1) {
+    Nr_bootstraps = 1, FDR = 0.05) {
 
     # Check for SummarizedExperiment Object
 
@@ -102,7 +103,7 @@ LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_
         MA_matrix_Var_validation <- t(scale(t(lognorm_est_counts[target_filtered_idx, validation_samples])))
 
         LINKERinit <- LINKER_init(MA_matrix_Var = MA_matrix_Var_train, RegulatorData = Regulator_data_train, NrModules = NrModules,
-            NrCores = NrCores, corrClustNrIter = corrClustNrIter, Parameters = Parameters)
+            NrCores = NrCores, corrClustNrIter = corrClustNrIter, Parameters = Parameters, FDR = FDR)
 
         tmp <- LINKER_corrClust(LINKERinit)
         bootstrap_results[[boost_idx]] <- tmp
@@ -125,7 +126,7 @@ LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_
 #' @param Parameters List of parameters containig lambda, pmax, alpha, mode and used method.
 #' @param NrModules Number of modules that are a priori to be found (note that the final number of modules
 #' discovered may differ from this value). By default, 100 modules.
-LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, NrCores = 3, corrClustNrIter = 21, Parameters) {
+LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, NrCores = 3, corrClustNrIter = 21, Parameters, FDR) {
 
     if (nrow(MA_matrix_Var) > NrModules) {
 
@@ -208,7 +209,7 @@ LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, NrCores = 3, co
     names(ModuleMembership) <- rownames(MA_matrix_Var)
 
     return(list(MA_matrix_Var = MA_matrix_Var, RegulatorData = RegulatorData, ModuleMembership = ModuleMembership, Parameters = Parameters,
-        NrCores = NrCores, corrClustNrIter = corrClustNrIter))
+        NrCores = NrCores, corrClustNrIter = corrClustNrIter, FDR = FDR))
 
 }
 #' @export
@@ -322,7 +323,7 @@ LINKER_corrClust <- function(LINKERinit) {
 
     # STEP 1: learning the regulatory program for each cluster
     regulatoryPrograms <- LINKER_LearnRegulatoryPrograms(Data, Clusters, RegulatorData, Lambda = Parameters$Lambda, alpha = Parameters$alpha,
-        pmax = Parameters$pmax, mode = Parameters$mode, used_method = Parameters$used_method, NrCores = NrCores)
+        pmax = Parameters$pmax, mode = Parameters$mode, used_method = Parameters$used_method, NrCores = NrCores, FDR = LINKERinit$FDR)
 
     jj <- 1
     while (jj < NrIterations) {
@@ -336,7 +337,7 @@ LINKER_corrClust <- function(LINKERinit) {
 
         # STEP 1: learning the regulatory program for each cluster
         regulatoryPrograms <- LINKER_LearnRegulatoryPrograms(Data, Clusters, RegulatorData, Lambda = Parameters$Lambda, alpha = Parameters$alpha,
-            pmax = Parameters$pmax, mode = Parameters$mode, used_method = Parameters$used_method, NrCores = NrCores)
+            pmax = Parameters$pmax, mode = Parameters$mode, used_method = Parameters$used_method, NrCores = NrCores, FDR = LINKERinit$FDR)
 
     }
 
@@ -500,7 +501,7 @@ LINKER_EvaluateTestSet <- function(LINKERresults, MA_Data_TestSet, RegulatorData
 #' @param Data Matrix of log-normalized estimated counts of the gene expression data, centered and scaled, containing
 #' only the train samples.
 #' @param Clusters Clusters generated from the linkerinit function.
-LINKER_LearnRegulatoryPrograms <- function(Data, Clusters, RegulatorData, Lambda, alpha, pmax, mode, used_method = "MEAN", NrCores = 1) {
+LINKER_LearnRegulatoryPrograms <- function(Data, Clusters, RegulatorData, Lambda, alpha, pmax, mode, used_method = "MEAN", NrCores = 1, FDR) {
 
     RegulatorData_rownames <- rownames(RegulatorData)
     Data_rownames <- rownames(Data)
@@ -584,7 +585,7 @@ LINKER_LearnRegulatoryPrograms <- function(Data, Clusters, RegulatorData, Lambda
             res <- vbsr::vbsr(y, t(X), n_orderings = 15, family = "normal")
             betas <- res$beta
             max_beta <- max(abs(betas))
-            betas[res$pval > 0.05/(nrow(RegulatorData) * nrow(Data))] <- 0  #Bonferroni
+            betas[res$pval > FDR/(nrow(RegulatorData) * nrow(Data))] <- 0  #Bonferroni
             b_opt <- betas
             b_o <- 0
 
@@ -595,7 +596,7 @@ LINKER_LearnRegulatoryPrograms <- function(Data, Clusters, RegulatorData, Lambda
                 x <- X[i, ]
                 fit <- stats::lm(y ~ x)
                 s <- summary(fit)
-                if (s$coefficients[2, "Pr(>|t|)"] < 0.05/(nrow(RegulatorData) * nrow(Data))) {
+                if (s$coefficients[2, "Pr(>|t|)"] < FDR/(nrow(RegulatorData) * nrow(Data))) {
                   b_opt[i] <- s$coefficients[2, 1]
                 } else {
                   b_opt[i] <- 0
