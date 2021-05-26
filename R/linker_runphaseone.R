@@ -61,7 +61,7 @@
 #' @export LINKER_runPhase1
 
 LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, nassay = 1, regulator = "regulator",
-    NrModules, Lambda = 1e-04, alpha = 1 - 1e-06, pmax = 10, mode = "VBSR", used_method = "MEAN", NrCores = 1, corrClustNrIter = 100,
+    NrModules, Lambda = 5, alpha = 1 - 1e-06, pmax = 10, mode = "VBSR", used_method = "MEAN", NrCores = 1, corrClustNrIter = 100,
     Nr_bootstraps = 1, FDR = 0.05) {
 
     # Check for SummarizedExperiment Object
@@ -584,6 +584,8 @@ LINKER_LearnRegulatoryPrograms <- function(Data, Clusters, RegulatorData, Lambda
 
             fit <- glmnet::cv.glmnet(t(X), y, alpha = alpha)
 
+            fitquants <- stats::quantile(fit$lambda,probs=seq(0,1,1/9))
+
             nonZeroLambdas <- fit$lambda[which(fit$nzero > 0)]
             nonZeroCVMs <- fit$cvm[which(fit$nzero > 0)]
 
@@ -597,7 +599,8 @@ LINKER_LearnRegulatoryPrograms <- function(Data, Clusters, RegulatorData, Lambda
             } else {
                 bestNonZeroLambda <- nonZeroLambdas[which(nonZeroCVMs == min(nonZeroCVMs, na.rm = TRUE))]
             }
-            b_o <- stats::coef(fit, s = Lambda)
+
+            b_o <- stats::coef(fit, s = fitquants[Lambda])
             b_opt <- c(b_o[2:length(b_o)])  # removing the intercept.
 
         } else if (mode == "VBSR") {

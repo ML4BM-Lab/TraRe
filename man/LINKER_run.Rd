@@ -17,7 +17,7 @@ LINKER_run(
   corrClustNrIter = 100,
   Nr_bootstraps = 10,
   FDR = 0.05,
-  Lambda = 1e-04,
+  Lambda = 5,
   NrCores = 1,
   onlymods = FALSE
 )

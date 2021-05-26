@@ -63,7 +63,7 @@
 #' @export
 LINKER_run <- function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, nassay = 1, regulator = "regulator", link_mode = c("VBSR",
     "LASSOmin", "LASSO1se", "LM"), graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"), module_rep = "MEAN", NrModules = 100, corrClustNrIter = 100,
-    Nr_bootstraps = 10, FDR = 0.05, Lambda = 1e-04, NrCores = 1, onlymods = FALSE) {
+    Nr_bootstraps = 10, FDR = 0.05, Lambda = 5, NrCores = 1, onlymods = FALSE) {
 
     # Check for SummarizedExperiment Object
 
@@ -136,7 +136,6 @@ LINKER_run <- function(lognorm_est_counts, target_filtered_idx, regulator_filter
     message("Link modes completed!")
 
     # Graphs
-
     if (!onlymods){
         graphs <- lapply(link_mode, function(x) {
 

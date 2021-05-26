@@ -17,7 +17,7 @@ LINKER_runPhase1(
   nassay = 1,
   regulator = "regulator",
   NrModules,
-  Lambda = 1e-04,
+  Lambda = 5,
   alpha = 1 - 1e-06,
   pmax = 10,
   mode = "VBSR",
