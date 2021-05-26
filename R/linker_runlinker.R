@@ -151,7 +151,9 @@ LINKER_run <- function(lognorm_est_counts, target_filtered_idx, regulator_filter
         graphs <- lapply(graphs, function(x) stats::setNames(x, graph_mode))  #Set names for graph_mode
 
         message("Graphs computed!")
+
+        return(list(raw_results = res, modules = modules, graphs = graphs))
     }
 
-    return(list(raw_results = res, modules = modules, graphs = graphs))
+    return(list(raw_results = res, modules = modules))
 }
