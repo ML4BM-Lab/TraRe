@@ -21,7 +21,7 @@
 #' rowData() variable to build target_filtered_idx and regulator_filtered_idx. This variable must be one
 #' for driver genes and zero for target genes. Default: 'regulator'
 #' @param mode Chosen method(s) to link module eigengenes to regulators. The available options are
-#' 'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. Default set to 'VBSR'
+#' 'VBSR', 'LASSOmin', 'LASSO1se', 'LASSOparam' and 'LM'. Default set to 'VBSR'
 #' @param used_method Method selected for use. Default set to MEAN.
 #' @param Nr_bootstraps Number of bootstrap of Phase I. By default, 1.
 #' @param NrCores Nr of computer cores for the parallel parts of the method. Note that the parallelization
@@ -578,6 +578,26 @@ LINKER_LearnRegulatoryPrograms <- function(Data, Clusters, RegulatorData, Lambda
                 bestNonZeroLambda <- nonZeroLambdas[which(nonZeroCVMs == min(nonZeroCVMs, na.rm = TRUE))]
             }
             b_o <- stats::coef(fit, s = fit$lambda.1se)
+            b_opt <- c(b_o[2:length(b_o)])  # removing the intercept.
+
+        } else if (mode == 'LASSOparam'){
+
+            fit <- glmnet::cv.glmnet(t(X), y, alpha = alpha)
+
+            nonZeroLambdas <- fit$lambda[which(fit$nzero > 0)]
+            nonZeroCVMs <- fit$cvm[which(fit$nzero > 0)]
+
+            if (length(which(nonZeroCVMs == min(nonZeroCVMs, na.rm = TRUE))) == 0) {
+
+                # for now: just print a warning, *although* this error WILL cause LINKER to crash in a few steps.
+                warnMessage <- paste0("\nOn cluster ", i, " there were no cv.glm results that gave non-zero coefficients.")
+                warning(warnMessage)
+                bestNonZeroLambda <- fit$lambda.min
+
+            } else {
+                bestNonZeroLambda <- nonZeroLambdas[which(nonZeroCVMs == min(nonZeroCVMs, na.rm = TRUE))]
+            }
+            b_o <- stats::coef(fit, s = Lambda)
             b_opt <- c(b_o[2:length(b_o)])  # removing the intercept.
 
         } else if (mode == "VBSR") {

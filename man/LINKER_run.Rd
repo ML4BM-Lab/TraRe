@@ -17,7 +17,8 @@ LINKER_run(
   corrClustNrIter = 100,
   Nr_bootstraps = 10,
   FDR = 0.05,
-  NrCores = 1
+  NrCores = 1,
+  onlymods = FALSE
 )
 }
 \arguments{
@@ -56,6 +57,8 @@ discovered may differ from this value). By default, 100 modules.}
 
 \item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that the parallelization
 is NOT initialized in any of the functions. By default, 2.}
+
+\item{onlymods}{Whether to infer only modules or modules and graphs. Default: FALSE}
 }
 \value{
 List containing the GRN raw results, GRN modules and GRN graphs.

@@ -97,7 +97,7 @@ discovered may differ from this value). By default, 100 modules.}
 \item{pmax}{Maximum numbers of regulators that we want.}
 
 \item{mode}{Chosen method(s) to link module eigengenes to regulators. The available options are
-'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. Default set to 'VBSR'}
+'VBSR', 'LASSOmin', 'LASSO1se', 'LASSOparam' and 'LM'. Default set to 'VBSR'}
 
 \item{used_method}{Method selected for use. Default set to MEAN.}
 

@@ -26,6 +26,7 @@
 #' @param FDR The False Discovery Rate correction used for the modules and graphs GRN uncovering. By default, 0.05.
 #' @param NrCores Nr of computer cores for the parallel parts of the method. Note that the parallelization
 #' is NOT initialized in any of the functions. By default, 2.
+#' @param onlymods Whether to infer only modules or modules and graphs. Default: FALSE
 #'
 #'
 #' @return List containing the GRN raw results, GRN modules and GRN graphs.
@@ -61,7 +62,7 @@
 #' @export
 LINKER_run <- function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, nassay = 1, regulator = "regulator", link_mode = c("VBSR",
     "LASSOmin", "LASSO1se", "LM"), graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"), module_rep = "MEAN", NrModules = 100, corrClustNrIter = 100,
-    Nr_bootstraps = 10, FDR = 0.05, NrCores = 1) {
+    Nr_bootstraps = 10, FDR = 0.05, NrCores = 1, onlymods = FALSE) {
 
     # Check for SummarizedExperiment Object
 
@@ -135,20 +136,21 @@ LINKER_run <- function(lognorm_est_counts, target_filtered_idx, regulator_filter
 
     # Graphs
 
-    graphs <- lapply(link_mode, function(x) {
+    if (!onlymods){
+        graphs <- lapply(link_mode, function(x) {
 
-        lapply(graph_mode, function(y) {
+            lapply(graph_mode, function(y) {
 
-            LINKER_runPhase2(modules[[x]], lognorm_est_counts, mode = y, NrCores = NrCores, FDR = FDR)
+                LINKER_runPhase2(modules[[x]], lognorm_est_counts, mode = y, NrCores = NrCores, FDR = FDR)
 
+            })
         })
-    })
 
-    names(graphs) <- link_mode  #Set names for link_mode
-    graphs <- lapply(graphs, function(x) stats::setNames(x, graph_mode))  #Set names for graph_mode
+        names(graphs) <- link_mode  #Set names for link_mode
+        graphs <- lapply(graphs, function(x) stats::setNames(x, graph_mode))  #Set names for graph_mode
 
-    message("Graphs computed!")
-
+        message("Graphs computed!")
+    }
 
     return(list(raw_results = res, modules = modules, graphs = graphs))
 }
