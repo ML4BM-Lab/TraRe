@@ -600,7 +600,11 @@ LINKER_LearnRegulatoryPrograms <- function(Data, Clusters, RegulatorData, Lambda
                 bestNonZeroLambda <- nonZeroLambdas[which(nonZeroCVMs == min(nonZeroCVMs, na.rm = TRUE))]
             }
 
-            b_o <- stats::coef(fit, s = fitquants[Lambda])
+            if (Lambda>0){
+                b_o <- stats::coef(fit, s = fitquants[Lambda])
+            }else{
+                b_o <- stats::coef(fit, s = 0)
+            }
             b_opt <- c(b_o[2:length(b_o)])  # removing the intercept.
 
         } else if (mode == "VBSR") {
