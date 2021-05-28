@@ -493,12 +493,12 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
         my_col_breaks <- c(seq(0, lower_bound, length = 100), seq(lower_bound + 0.1, higher_bound, length = 100), seq(higher_bound +
                                                                                                                           1, 300 * new_compensate_const, length = 100))
 
-        grDevices::png(paste0(imgdir, myplotname, ".heatm.png"), width = 8 * 320, height = 8 * 320, res = 300, pointsize = 8)
+        grDevices::png(paste0(imgdir, myplotname, ".heatm.png"), width = 8 * 300, height = 8 * 300, res = 300, pointsize = 8)
         row_order <- labels(stats::as.dendrogram(pvc_result$hclust))
         # show(row_order)
         heatm <- simmat[row_order, row_order]
         gplots::heatmap.2(heatm, Rowv = FALSE, Colv = FALSE, scale = "none", col = my_palette, breaks = my_col_breaks, dendrogram = "none",
-                          cellnote = round(heatm, 0), trace = "none", density.info = "none", notecol = "black", margins = c(8, 8), cexRow = 1.5,
+                          cellnote = round(heatm, 0), trace = "none", density.info = "none", notecol = "black", margins = c(10, 10), cexRow = 1.5,
                           cexCol = 1.5, lmat = rbind(c(4, 4), c(2, 1), c(0, 3)), lwid = c(1, 4), lhei = c(1, 8, 0.1))
         grDevices::dev.off()
 
