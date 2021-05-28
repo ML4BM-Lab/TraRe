@@ -477,6 +477,25 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
         # Generate the color palette
         my_palette <- (grDevices::colorRampPalette(c("darkgrey", "yellow", "green")))(n = 299)
 
+        #hex to rgb
+        my_palette_rgb <- t(sapply(my_palette,grDevices::col2rgb))/255
+        #select only viridis and cividis (E and F)
+        viridis_cividis_rows <- which(viridis::viridis.map[,'opt']%in%c('D','E'))
+        viridis_map_rgb <- viridis::viridis.map[viridis_cividis_rows,c(1,2,3)]
+
+        #rgb to hex
+        hex_viridis <- function(x){ grDevices::rgb(x[1],x[2],x[3],maxColorValue = 1)}
+
+        #obtain the viridis closest color
+        colorramp_to_viridis <- as.character(apply(my_palette_rgb,1,function(x){
+            #closest viridis color
+            closets_viridis <- which.min(colSums((t(viridis_map_rgb) - x)^2))
+            hex_viridis(viridis_map_rgb[closets_viridis,c(1,2,3)])
+        }))
+
+        #assign the new palette
+        my_palette <- colorramp_to_viridis
+
         # Generate a const to compensate pvals
         compensate_const <- pval_max/300
 
