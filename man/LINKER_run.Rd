@@ -19,7 +19,8 @@ LINKER_run(
   FDR = 0.05,
   Lambda = 5,
   NrCores = 1,
-  onlymods = FALSE
+  onlymods = FALSE,
+  only_train = FALSE
 )
 }
 \arguments{
@@ -62,6 +63,8 @@ discovered may differ from this value). By default, 100 modules.}
 is NOT initialized in any of the functions. By default, 2.}
 
 \item{onlymods}{Whether to infer only modules or modules and graphs. Default: FALSE}
+
+\item{only_train}{whether to use only training samples within LINKER run. Default: FALSE}
 }
 \value{
 List containing the GRN raw results, GRN modules and GRN graphs.

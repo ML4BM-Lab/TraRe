@@ -28,6 +28,7 @@
 #' @param NrCores Nr of computer cores for the parallel parts of the method. Note that the parallelization
 #' is NOT initialized in any of the functions. By default, 2.
 #' @param onlymods Whether to infer only modules or modules and graphs. Default: FALSE
+#' @param only_train whether to use only training samples within LINKER run. Default: FALSE
 #'
 #'
 #' @return List containing the GRN raw results, GRN modules and GRN graphs.
@@ -63,7 +64,7 @@
 #' @export
 LINKER_run <- function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, nassay = 1, regulator = "regulator", link_mode = c("VBSR",
     "LASSOmin", "LASSO1se", "LM"), graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"), module_rep = "MEAN", NrModules = 100, corrClustNrIter = 100,
-    Nr_bootstraps = 10, FDR = 0.05, Lambda = 5, NrCores = 1, onlymods = FALSE) {
+    Nr_bootstraps = 10, FDR = 0.05, Lambda = 5, NrCores = 1, onlymods = FALSE, only_train=FALSE) {
 
     # Check for SummarizedExperiment Object
 
@@ -122,7 +123,7 @@ LINKER_run <- function(lognorm_est_counts, target_filtered_idx, regulator_filter
     res <- lapply(seq_along(link_mode), function(x) {
         LINKER_runPhase1(lognorm_est_counts = lognorm_est_counts, target_filtered_idx = target_filtered_idx, regulator_filtered_idx = regulator_filtered_idx,
             NrModules = NrModules, NrCores = NrCores, mode = link_mode[x], used_method = module_rep, corrClustNrIter = corrClustNrIter,
-            Nr_bootstraps = Nr_bootstraps, FDR = FDR, Lambda = Lambda)
+            Nr_bootstraps = Nr_bootstraps, FDR = FDR, Lambda = Lambda, only_train=only_train)
     })
 
     names(res) <- link_mode

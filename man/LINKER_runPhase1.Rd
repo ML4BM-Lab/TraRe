@@ -25,7 +25,8 @@ LINKER_runPhase1(
   NrCores = 1,
   corrClustNrIter = 100,
   Nr_bootstraps = 1,
-  FDR = 0.05
+  FDR = 0.05,
+  only_train = FALSE
 )
 
 LINKER_init(
@@ -109,6 +110,8 @@ is NOT initialized in any of the functions. By default, 2.}
 \item{Nr_bootstraps}{Number of bootstrap of Phase I. By default, 1.}
 
 \item{FDR}{The False Discovery Rate correction used for the modules and graphs GRN uncovering. By default, 0.05.}
+
+\item{only_train}{whether to use only training samples within LINKER run. Default: FALSE}
 
 \item{MA_matrix_Var}{Matrix of log-normalized estimated counts of the gene expression data, centered and scaled, containing
 only the train samples.}

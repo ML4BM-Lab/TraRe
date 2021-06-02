@@ -31,6 +31,7 @@
 #' @param pmax Maximum numbers of regulators that we want.
 #' @param corrClustNrIter Number of iteration for the phase I part of the method.
 #' @param FDR The False Discovery Rate correction used for the modules and graphs GRN uncovering. By default, 0.05.
+#' @param only_train whether to use only training samples within LINKER run. Default: FALSE
 #'
 #' @return igraph object containing the modules containing the related drivers and targets within bootstraps.
 #'
@@ -62,7 +63,7 @@
 
 LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, nassay = 1, regulator = "regulator",
     NrModules, Lambda = 5, alpha = 1 - 1e-06, pmax = 10, mode = "VBSR", used_method = "MEAN", NrCores = 1, corrClustNrIter = 100,
-    Nr_bootstraps = 1, FDR = 0.05) {
+    Nr_bootstraps = 1, FDR = 0.05,only_train=FALSE) {
 
     # Check for SummarizedExperiment Object
 
@@ -108,14 +109,21 @@ LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_
         tmp <- LINKER_corrClust(LINKERinit)
         bootstrap_results[[boost_idx]] <- tmp
 
-        EvaluateTestSet[[boost_idx]] <- LINKER_EvaluateTestSet(bootstrap_results[[boost_idx]], MA_matrix_Var_validation, Regulator_data_validation,
-            used_method = Parameters$used_method)
+        if (!only_train){
+
+            EvaluateTestSet[[boost_idx]] <- LINKER_EvaluateTestSet(bootstrap_results[[boost_idx]], MA_matrix_Var_validation, Regulator_data_validation,
+                used_method = Parameters$used_method)
+            print(matrixStats::colMeans2(EvaluateTestSet[[boost_idx]]))
+
+        }
 
         R.utils::printf("Bootstrap %d, NrModules %d:\n", boost_idx, bootstrap_results[[boost_idx]]$NrModules)
 
-        print(matrixStats::colMeans2(EvaluateTestSet[[boost_idx]]))
     }
-    return(list(bootstrapResults = bootstrap_results, bootstrapTestStats = EvaluateTestSet))
+    if (!only_train){
+        return(list(bootstrapResults = bootstrap_results, bootstrapTestStats = EvaluateTestSet))
+    }
+    return(list(bootstrapResults = bootstrap_results))
 
 }
 #' @export
@@ -236,36 +244,11 @@ LINKER_ReassignGenesToClusters <- function(Data, RegulatorData, Beta, Clusters, 
     ModuleVectors <- Beta %*% X1
     GeneNames <- rownames(Data)
 
+    #Compute genes to centroid correlations
+    g_c_corr <- t(stats::cor(t(ModuleVectors),t(Data)))
 
-    # This will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
-    parallClass <- BiocParallel::bpparam()
-    parallClass$workers <- NrCores
-
-    # reassigning genes and generate new clusters:
-    ReassignGenes <- function(i, Data) {
-
-        OldModule <- Clusters[i]
-        CurrentGeneVector <- Data[i, , drop = FALSE]
-        Correlations <- (stats::cor(t(CurrentGeneVector), t(ModuleVectors)))
-
-        corr <- data.matrix(Correlations, rownames.force = NA)
-        MaxCorrelation <- max(corr, na.rm = TRUE)
-        MaxPosition <- which(signif(corr, digits = 7) == signif(MaxCorrelation, digits = 7))
-        MaxPosition <- MaxPosition[1]  # this is new, to avoid two different reassignements
-
-        if (MaxPosition != OldModule) {
-            NrReassignGenes <- NrReassignGenes + 1
-        }
-        NewClusters <- MaxPosition
-
-        return(NewClusters)
-
-    }
-    nc <- BiocParallel::bplapply(seq_len(NrGenes), ReassignGenes, Data, BPPARAM = parallClass)
-
-    # Transform list of bettas into matrix, as .combine=c in foreach
-    nc <- do.call(c, nc)
-
+    #Compute new assigns based on correlations
+    nc <- as.numeric(apply(g_c_corr,1,function(x) which.max(x[!is.na(x)])))
 
     # Remove cluster with too few genes. Avoids singularities. Could be solved imposing priors. future work
     for (i in unique(nc)) {
