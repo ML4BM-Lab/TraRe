@@ -499,11 +499,12 @@ LINKER_LearnRegulatoryPrograms <- function(Data, Clusters, RegulatorData, Lambda
 
     # This will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
 
-    parallClass <- BiocParallel::bpparam()
-    parallClass$workers <- NrCores
+    #parallClass <- BiocParallel::bpparam()
+    #parallClass$workers <- NrCores
 
     # Calculate Bettas
-    CalcBettas <- function(i, Data, Clusters, RegulatorData, Lambda, alpha, mode, used_method) {
+    BetaY_all <- lapply(seq_len(NrClusters), function(i){
+    #CalcBettas <- function(i, Data, Clusters, RegulatorData, Lambda, alpha, mode, used_method) {
 
         CurrentClusterPositions <- which(Clusters %in% ClusterIDs[i])
         nrGenesInClusters <- length(CurrentClusterPositions)
@@ -620,11 +621,11 @@ LINKER_LearnRegulatoryPrograms <- function(Data, Clusters, RegulatorData, Lambda
 
         return(list(b_opt, y, b_o[1]))
 
-    }
+    })
 
     # Initialize
-    BetaY_all <- BiocParallel::bplapply(seq_len(NrClusters), CalcBettas, Data, Clusters, RegulatorData, Lambda, alpha, mode, used_method,
-        BPPARAM = parallClass)
+    #BetaY_all <- BiocParallel::bplapply(seq_len(NrClusters), CalcBettas, Data, Clusters, RegulatorData, Lambda, alpha, mode, used_method,
+    #    BPPARAM = parallClass)
 
     # Transform list of bettas into matrix, as .combine=cbind in foreach
     BetaY_all <- do.call(cbind, BetaY_all)
