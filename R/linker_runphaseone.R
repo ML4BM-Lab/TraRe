@@ -318,6 +318,11 @@ LINKER_corrClust <- function(LINKERinit) {
         NrReassignGenes <- ReassignGenesToClusters$NrReassignGenes
         Clusters <- ReassignGenesToClusters$Clusters
 
+        #check if Clusters exists
+        if (!length(Clusters)){
+            stop('Unable to infer any GRN module.')
+        }
+
         # STEP 1: learning the regulatory program for each cluster
         regulatoryPrograms <- LINKER_LearnRegulatoryPrograms(Data, Clusters, RegulatorData, Lambda = Parameters$Lambda, alpha = Parameters$alpha,
             pmax = Parameters$pmax, mode = Parameters$mode, used_method = Parameters$used_method, NrCores = NrCores, FDR = LINKERinit$FDR)
