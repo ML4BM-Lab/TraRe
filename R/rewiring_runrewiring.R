@@ -535,8 +535,10 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
         # write plots to index page
         write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", paste0("Rewiring Summary for Dataset", i, " using ", modmeth), "</h1></td></tr></table><br>\n"),
             paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
-        write(paste0("<img src='", indexpageinfo$imgstr, myplotname, ".dendro.png", "' alt='", myplotname, "' height='", 300,
-                     "' width='", 600, "'> &emsp; <br>\n"), paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
+        if (length(clusters$clusters) > 1) {
+            write(paste0("<img src='", indexpageinfo$imgstr, myplotname, ".dendro.png", "' alt='", myplotname, "' height='", 300,
+             "' width='", 600, "'> &emsp; <br>\n"), paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
+        }
         write(paste0("<img src='", indexpageinfo$imgstr, myplotname, ".heatm.png", "' alt='", myplotname, "' height='", 600,
                      "' width='", 600, "'> &emsp; <br>\n"), paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
 
