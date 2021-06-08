@@ -455,21 +455,26 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
     rownames(simmat) <- gsub(paste0("mod."), "", rownames(simmat))
     colnames(simmat) <- gsub(paste0("mod."), "", colnames(simmat))
 
+    if (length(all_modules) > 4) {
+        pvc_result <- pvclust::pvclust(simmat, method.dist = "cor", method.hclust = "average", nboot = 1000)
 
-    pvc_result <- pvclust::pvclust(simmat, method.dist = "cor", method.hclust = "average", nboot = 1000)
+        clusters <- pvclust::pvpick(pvc_result)
 
-    clusters <- pvclust::pvpick(pvc_result)
+        if (cmp){
+            myplotname <- paste0("mod_sim.", modmeth)
+        }else{
+            myplotname <- paste0("mod_sim.", modmeth, ".", i)
+        }
 
-    if (cmp){
-        myplotname <- paste0("mod_sim.", modmeth)
-    }else{
-        myplotname <- paste0("mod_sim.", modmeth, ".", i)
+        grDevices::png(paste0(imgdir, myplotname, ".dendro.png"), width = 8 * 300, height = 4 * 300, res = 300, pointsize = 8)
+        plot(pvc_result, hang = -1, cex = 1)
+        pvclust::pvrect(pvc_result, alpha = 0.9)
+        grDevices::dev.off()
+    } else {
+        clusters <- list()
+        clusters$clusters <- list()
+        clusters$clusters[[1]] <- colnames(lung)
     }
-
-    grDevices::png(paste0(imgdir, myplotname, ".dendro.png"), width = 8 * 300, height = 4 * 300, res = 300, pointsize = 8)
-    plot(pvc_result, hang = -1, cex = 1)
-    pvclust::pvrect(pvc_result, alpha = 0.9)
-    grDevices::dev.off()
 
     # create heatmap plot
     if (length(all_modules) > 1) {
@@ -516,7 +521,10 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
                                                                                                                           1, 300 * new_compensate_const, length = 100))
 
         grDevices::png(paste0(imgdir, myplotname, ".heatm.png"), width = 8 * 300, height = 8 * 300, res = 300, pointsize = 8)
-        row_order <- labels(stats::as.dendrogram(pvc_result$hclust))
+        row_order <- colnames(simmat)
+        if (length(clusters$clusters) > 1) {
+            row_order <- labels(stats::as.dendrogram(pvc_result$hclust))
+        }
         # show(row_order)
         heatm <- simmat[row_order, row_order]
         gplots::heatmap.2(heatm, Rowv = FALSE, Colv = FALSE, scale = "none", col = my_palette, breaks = my_col_breaks, dendrogram = "none",
