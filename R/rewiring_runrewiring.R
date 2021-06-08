@@ -473,7 +473,7 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
     } else {
         clusters <- list()
         clusters$clusters <- list()
-        clusters$clusters[[1]] <- colnames(lung)
+        clusters$clusters[[1]] <- colnames(simmat)
     }
 
     # create heatmap plot
