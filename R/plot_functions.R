@@ -304,10 +304,13 @@ plot_correlation_row <- function(cormats = NULL, rowdesc = "regulators", xnames 
         titlename <- paste0(titlename, ".", rowdesc)
 
         # show(myplotname)
-        grDevices::png(paste0(imgdir, myplotname, ".png"), width = plotwidth, height = plotheight)
+        # grDevices::png(paste0(imgdir, myplotname, ".png"), width = plotwidth, height = plotheight)
+        grDevices::pdf(paste0(imgdir, myplotname, ".pdf"), width = plotwidth/96, height = plotheight/96)
         heatmapplot(cormats[[mattype]][xnames, ynames, drop = FALSE], plotname = titlename, myzlim = plotzlim, cvec = mycvec, showRows = myshowrows)
         grDevices::dev.off()
-        write(paste0("<td> <img src='", "imgs/", myplotname, ".png", "' alt='", myplotname, "' height='", plotheight, "' width='",
+        # write(paste0("<td> <img src='", "imgs/", myplotname, ".png", "' alt='", myplotname, "' height='", plotheight, "' width='",
+        #     plotwidth, "'> </td>\n"), htmlfile, append = TRUE)
+        write(paste0("<td> <embed src='", "imgs/", myplotname, ".pdf", "' alt='", myplotname, "' height='", plotheight, "' width='",
             plotwidth, "'> </td>\n"), htmlfile, append = TRUE)
     }
 }

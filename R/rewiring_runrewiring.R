@@ -285,7 +285,8 @@ runrewiring <- function(ObjectList) {
                 paste0(indexpageinfo$htmldir, foldername_p, "/", indexpageinfo$indexpath), append = TRUE)
 
             pname <- paste(sep = ".", "igraphs.refined.graphs")
-            grDevices::png(paste0(outdir, "/", foldername_p, "/imgs/", pname, ".png"), 1500, 750)
+            #grDevices::png(paste0(outdir, "/", foldername_p, "/imgs/", pname, ".png"), 1500, 750)
+            grDevices::pdf(paste0(outdir, "/", foldername_p, "/imgs/", pname, ".pdf"), 15.625, 7.8125)
             graphics::par(mfrow = c(1, 3))
 
             mylayout <- return_layout_phenotype(refinedrunmoddata$regulators, refinedrunmoddata$target_genes, refinedsumm$nodesumm,
@@ -298,7 +299,7 @@ runrewiring <- function(ObjectList) {
             grDevices::dev.off()
 
             # write plot to index page
-            write(paste0("<img src='", "imgs/", pname, ".png", "' alt='", pname, "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
+            write(paste0("<embed src='", "imgs/", pname, ".pdf", "' alt='", pname, "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
                 paste0(indexpageinfo$htmldir, foldername_p, "/", indexpageinfo$indexpath), append = TRUE)
 
             # Write tables for refinedsumm
@@ -455,26 +456,22 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
     rownames(simmat) <- gsub(paste0("mod."), "", rownames(simmat))
     colnames(simmat) <- gsub(paste0("mod."), "", colnames(simmat))
 
-    if (length(all_modules) > 4) {
-        pvc_result <- pvclust::pvclust(simmat, method.dist = "cor", method.hclust = "average", nboot = 1000)
 
-        clusters <- pvclust::pvpick(pvc_result)
+    pvc_result <- pvclust::pvclust(simmat, method.dist = "cor", method.hclust = "average", nboot = 1000)
 
-        if (cmp){
-            myplotname <- paste0("mod_sim.", modmeth)
-        }else{
-            myplotname <- paste0("mod_sim.", modmeth, ".", i)
-        }
+    clusters <- pvclust::pvpick(pvc_result)
 
-        grDevices::png(paste0(imgdir, myplotname, ".dendro.png"), width = 8 * 300, height = 4 * 300, res = 300, pointsize = 8)
-        plot(pvc_result, hang = -1, cex = 1)
-        pvclust::pvrect(pvc_result, alpha = 0.9)
-        grDevices::dev.off()
-    } else {
-        clusters <- list()
-        clusters$clusters <- list()
-        clusters$clusters[[1]] <- colnames(simmat)
+    if (cmp){
+        myplotname <- paste0("mod_sim.", modmeth)
+    }else{
+        myplotname <- paste0("mod_sim.", modmeth, ".", i)
     }
+
+    #grDevices::png(paste0(imgdir, myplotname, ".dendro.png"), width = 8 * 300, height = 4 * 300, res = 300, pointsize = 8)
+    grDevices::pdf(paste0(imgdir, myplotname, ".dendro.pdf"), width = 25, height = 12.5, pointsize = 8)
+    plot(pvc_result, hang = -1, cex = 1)
+    pvclust::pvrect(pvc_result, alpha = 0.9)
+    grDevices::dev.off()
 
     # create heatmap plot
     if (length(all_modules) > 1) {
@@ -520,11 +517,9 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
         my_col_breaks <- c(seq(0, lower_bound, length = 100), seq(lower_bound + 0.1, higher_bound, length = 100), seq(higher_bound +
                                                                                                                           1, 300 * new_compensate_const, length = 100))
 
-        grDevices::png(paste0(imgdir, myplotname, ".heatm.png"), width = 8 * 300, height = 8 * 300, res = 300, pointsize = 8)
-        row_order <- colnames(simmat)
-        if (length(clusters$clusters) > 1) {
-            row_order <- labels(stats::as.dendrogram(pvc_result$hclust))
-        }
+        #grDevices::png(paste0(imgdir, myplotname, ".heatm.png"), width = 8 * 300, height = 8 * 300, res = 300, pointsize = 8)
+        grDevices::pdf(paste0(imgdir, myplotname, ".heatm.pdf"), width = 25, height = 25, pointsize = 8)
+        row_order <- labels(stats::as.dendrogram(pvc_result$hclust))
         # show(row_order)
         heatm <- simmat[row_order, row_order]
         gplots::heatmap.2(heatm, Rowv = FALSE, Colv = FALSE, scale = "none", col = my_palette, breaks = my_col_breaks, dendrogram = "none",
@@ -535,12 +530,10 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
         # write plots to index page
         write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", paste0("Rewiring Summary for Dataset", i, " using ", modmeth), "</h1></td></tr></table><br>\n"),
             paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
-        if (length(clusters$clusters) > 1) {
-            write(paste0("<img src='", indexpageinfo$imgstr, myplotname, ".dendro.png", "' alt='", myplotname, "' height='", 300,
-             "' width='", 600, "'> &emsp; <br>\n"), paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
-        }
-        write(paste0("<img src='", indexpageinfo$imgstr, myplotname, ".heatm.png", "' alt='", myplotname, "' height='", 600,
-                     "' width='", 600, "'> &emsp; <br>\n"), paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
+        write(paste0("<embed src='", indexpageinfo$imgstr, myplotname, ".dendro.pdf", "' alt='", myplotname, "' height='", 750,
+                     "' width='", 1500, "'> &emsp; <br>\n"), paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
+        write(paste0("<embed src='", indexpageinfo$imgstr, myplotname, ".heatm.pdf", "' alt='", myplotname, "' height='", 1500,
+                     "' width='", 1500, "'> &emsp; <br>\n"), paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
 
     } else warning("Unique module found, heatmap can not be generated")
     # end module simularity if
@@ -588,14 +581,15 @@ rawsummary <- function(indexpageinfo, rawrunmoddata,rawsumm, norm_expr_mat_keep,
               paste0(indexpageinfo$htmldir, foldername_p, "/", indexpageinfo$indexpath), append = TRUE)
 
         pname <- paste(sep = ".", "igraphs.raw.full_graph")
-        grDevices::png(paste0(outdir, "/", foldername_p, "/imgs/", pname, ".png"), 1500, 750)
+        #grDevices::png(paste0(outdir, "/", foldername_p, "/imgs/", pname, ".png"), 1500, 750)
+        grDevices::pdf(paste0(outdir, "/", foldername_p, "/imgs/", pname, ".pdf"), 15.625, 7.8125)
         mylayout <- return_layout_phenotype(rawrunmoddata$regulators, rawrunmoddata$target_genes, rawsumm$nodesumm, rownames(norm_expr_mat_keep))
 
         try(plot_igraph(rawsumm$full_graph, paste0(ncol(norm_expr_mat_keep), " Samples"), "black", mylayout))
         grDevices::dev.off()
 
         # write plot to index page
-        write(paste0("<img src='", "imgs/", pname, ".png", "' alt='", pname, "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
+        write(paste0("<img src='", "imgs/", pname, ".pdf", "' alt='", pname, "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
               paste0(indexpageinfo$htmldir, foldername_p, "/", indexpageinfo$indexpath), append = TRUE)
     }
 

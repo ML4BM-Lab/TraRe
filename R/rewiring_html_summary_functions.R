@@ -157,7 +157,8 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
     plotheight <- 800
     myplotname <- paste0("violin.regexp")
 
-    grDevices::png(paste0(imgdir, myplotname, ".png"), width = plotwidth, height = plotheight)
+    # grDevices::png(paste0(imgdir, myplotname, ".png"), width = plotwidth, height = plotheight)
+    grDevices::pdf(paste0(imgdir, myplotname, ".pdf"), width = plotwidth/96, height = plotheight/96)
 
     vioplot::vioplot(x = respond_plotlist, col = "palevioletred", side = "right", names = paste(sep = "||", rownames(reg_info), signif(reg_info$t.pval,
         2)), plotCentre = "line", horizontal = TRUE, cex.axis = 0.8)
@@ -176,7 +177,7 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
     rankdf <- cbind(rankdf[rownames(reg_info), ], rownames(reg_info), signif(reg_info$t.pval, 2), rank(reg_info$t.pval))
     colnames(rankdf) <- rankdfcols
 
-    write(paste0("<img src='", htmlinfo$imgstr, myplotname, ".png", "' alt='", myplotname, "' height='", plotheight, "' width='", plotwidth,
+    write(paste0("<embed src='", htmlinfo$imgstr, myplotname, ".pdf", "' alt='", myplotname, "' height='", plotheight, "' width='", plotwidth,
         "'><br>\n"), modhtmlfile, append = TRUE)
 
     # --- target expression diff distributions ---
@@ -202,7 +203,8 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
         plotheight <- 800
         myplotname0 <- paste0("violin.tarexpdiff.", cname)
 
-        grDevices::png(paste0(imgdir, myplotname0, ".png"), width = plotwidth, height = plotheight)
+        # grDevices::png(paste0(imgdir, myplotname0, ".png"), width = plotwidth, height = plotheight)
+        grDevices::pdf(paste0(imgdir, myplotname0, ".pdf"), width = plotwidth/96, height = plotheight/96)
 
         vioplot::vioplot(x = plotlist, col = "goldenrod", side = "right", main = cname, names = paste(sep = "||", names(plotlist),
             unlist(lapply(plotlist, length)), signif(unlist(lapply(plotlist, mean)), 3)), plotCentre = "line", horizontal = TRUE, cex.axis = 0.6)
@@ -218,7 +220,7 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
             colnames(rankdf) <- rankdfcols
         }
 
-        write(paste0(" <img src='", htmlinfo$imgstr, myplotname0, ".png", "' alt='", myplotname0, "' height='", plotheight, "' width='",
+        write(paste0(" <embed src='", htmlinfo$imgstr, myplotname0, ".pdf", "' alt='", myplotname0, "' height='", plotheight, "' width='",
             plotwidth, "'> &emsp; \n"), modhtmlfile, append = TRUE)
     }
     write(paste0("</tr>\n"), modhtmlfile, append = TRUE)
@@ -283,7 +285,8 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
         plotheight <- 800
         myplotname <- paste0("violin.tarregcorr.", loopmode)
 
-        grDevices::png(paste0(imgdir, myplotname, ".png"), width = plotwidth, height = plotheight)
+        # grDevices::png(paste0(imgdir, myplotname, ".png"), width = plotwidth, height = plotheight)
+        grDevices::pdf(paste0(imgdir, myplotname, ".pdf"), width = plotwidth/96, height = plotheight/96)
 
         vioplot::vioplot(x = respond_plotlist, col = "palevioletred", side = "right", main = loopmode, names = paste(sep = "||", names(respond_plotlist),
             unlist(lapply(respond_plotlist, length)), unlist(lapply(nonresp_plotlist, length)), mypvals[names(respond_plotlist)]),
@@ -303,7 +306,7 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
             colnames(rankdf) <- rankdfcols
         }
 
-        write(paste0("<img src='", htmlinfo$imgstr, myplotname, ".png", "' alt='", myplotname, "' height='", plotheight, "' width='",
+        write(paste0("<embed src='", htmlinfo$imgstr, myplotname, ".pdf", "' alt='", myplotname, "' height='", plotheight, "' width='",
             plotwidth, "'> &emsp; \n"), modhtmlfile, append = TRUE)
     }
     write(paste0("</tr>\n"), modhtmlfile, append = TRUE)
@@ -321,7 +324,7 @@ bipartiteGraphsSumm <- function(numclus, nodesumm, edgesumm, numdataset, modmeth
 
     pname <- paste(sep = ".", "igraphs.refined.graphs")
     # write plot to index page
-    write(paste0("<img src='", "../../supermodule", numdataset, ".", modmeth, ".", numclus, "/imgs/", pname, ".png", "' alt='", pname,
+    write(paste0("<embed src='", "../../supermodule", numdataset, ".", modmeth, ".", numclus, "/imgs/", pname, ".pdf", "' alt='", pname,
         "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"), modhtmlfile, append = TRUE)
 
     sortidxs <- sort(as.numeric(nodesumm[, "t-pval"]), decreasing = FALSE, index.return = TRUE)$ix
