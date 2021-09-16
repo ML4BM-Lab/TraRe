@@ -49,7 +49,7 @@ previous GRN.
 Along with every step description and explanation, we will be working with a subset of the Stand Up To Cancer (SU2C) clinical trial dataset containing 1.2k genes ($\approx$ 200 transcription factors or driver 
 genes) and 121 samples from metasatic castration resistant prostate cancer patients. Patients were divided into two groups depending on the treatment: 
 Abiraterone (ABI) and ABI/ENZA (ARSI). For the phenotype dependent *Rewiring*, we will be 
-focusing on only ARSI patients (35 samples). The pathway we will follow is:
+focusing on only ARSI patients (35 samples). The pathway to follow is:
   
 * Run *LINKER* using the available gene expression matrix (GEM), 1149 genes and 121 samples, to generate all possible modules (GRN).
 
@@ -256,8 +256,8 @@ In order to run *Rewiring* test, *Trare* provides two functions: the `preparerew
 - **linker_output_p**: Output file from linker function path.
 - **lognorm_est_counts_p**: Lognorm counts of the gene expression matrix path.
 - **SEObject_p**: SummarizedExperiment objects path.
-- **gene_info_p**: path of a two-column file containing genes and 'regulator' boolean variable.
-- **phenotype_p**: path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).
+- **gene_info_p**: path to file containing genes and 'regulator' boolean variable. First column must be gene names.
+- **phenotype_p**: path to a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).
 - **nassays**: name of assays in case SummarizedObject is provided.
 - **final_signif_thresh**: Significance threshold for the rewiring method. The lower the threshold, the more  restrictive the method.
 - **regulator_info_col_name**: Column name of the gene_info_p. By default, 'regulator'
@@ -492,3 +492,8 @@ dataset. After generating the plots where a possible deregulation from one pheno
 may be appreciated, we can extract more specific driver to target information.
 
 ![Html Generation](Html.png){width=650 height=200px}
+
+# Session Information
+```{r}
+sessionInfo()
+```

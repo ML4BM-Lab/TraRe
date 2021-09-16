@@ -16,10 +16,11 @@ generatecliques(
   sparsecorrmatrix = TRUE,
   numcliques = "All",
   mandatorygenes = c(),
-  selection = 1
+  selection = 1,
+  table_cliques = TRUE
 )
 
-preparedata(dataset, method)
+preparedata(dataset, method, table_cliques, correlationth)
 
 generategraph(correlationth, sparsecorrmatrix, pdoutput)
 
@@ -46,6 +47,8 @@ the desired matrix. Default: 0}
 \item{selection}{integer selecting method. The available options are: 1 - Maximize Genes/Clique,
 2 - Maximize Median Correlation Value/Clique, 3- Maximize Avg Variance Correlation Value/Clique or
 4 - Maximize Sum(option two, option three).}
+
+\item{table_cliques}{boolean indicating to return all possible correlated genes instead of groups of cliques.}
 
 \item{pdoutput}{output from preparedata()}
 

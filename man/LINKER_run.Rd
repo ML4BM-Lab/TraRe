@@ -17,7 +17,10 @@ LINKER_run(
   corrClustNrIter = 100,
   Nr_bootstraps = 10,
   FDR = 0.05,
-  NrCores = 1
+  Lambda = 5,
+  NrCores = 1,
+  onlymods = FALSE,
+  only_train = FALSE
 )
 }
 \arguments{
@@ -52,10 +55,16 @@ discovered may differ from this value). By default, 100 modules.}
 
 \item{Nr_bootstraps}{Number of bootstrap of Phase I. By default, 10.}
 
-\item{FDR}{The False Discovery Rate correction used for the enrichment analysis. By default, 0.05.}
+\item{FDR}{The False Discovery Rate correction used for the modules and graphs GRN uncovering. By default, 0.05.}
+
+\item{Lambda}{Lambda variable for Lasso models.}
 
 \item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that the parallelization
 is NOT initialized in any of the functions. By default, 2.}
+
+\item{onlymods}{Whether to infer only modules or modules and graphs. Default: FALSE}
+
+\item{only_train}{whether to use only training samples within LINKER run. Default: FALSE}
 }
 \value{
 List containing the GRN raw results, GRN modules and GRN graphs.

@@ -4,7 +4,14 @@
 \alias{LINKER_runPhase2}
 \title{Phase II : bipartitive graphs generation}
 \usage{
-LINKER_runPhase2(modules, Data, NrCores, mode = "VBSR", alpha = 1 - 1e-06)
+LINKER_runPhase2(
+  modules,
+  Data,
+  NrCores,
+  mode = "VBSR",
+  alpha = 1 - 1e-06,
+  FDR = 0.05
+)
 }
 \arguments{
 \item{modules}{Modules obtained from the phase I linker output.}
@@ -19,6 +26,8 @@ is NOT initialized in any of the functions. By default, 2.}
 'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. By default, all methods are chosen.}
 
 \item{alpha}{alpha parameter if a LASSO model is chosen.}
+
+\item{FDR}{The False Discovery Rate correction used for the modules and graphs GRN uncovering. By default, 0.05.}
 }
 \value{
 igraph object containing the related drivers and targets in the form of a bipartitive graph.

@@ -109,10 +109,10 @@ NET_run <- function(lognorm_est_counts, target_filtered_idx, regulator_filtered_
     
     graphs <- list()
     for (j in seq_along(graph_mode)) {
-        graphs[[graph_mode[j]]] <- switch(graph_mode[j], VBSR = NET_compute_graph_all_VBSR(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx, 
-            NrCores), LASSOmin = NET_compute_graph_all_LASSOmin(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx, NrCores), 
-            LASSO1se = NET_compute_graph_all_LASSO1se(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx, NrCores), LM = NET_compute_graph_all_LM(lognorm_est_counts, 
-                regulator_filtered_idx, target_filtered_idx, NrCores))
+        graphs[[graph_mode[j]]] <- switch(graph_mode[j], VBSR = NET_compute_graph_all_VBSR(lognorm_est_counts, regulator_filtered_idx, 
+            target_filtered_idx, NrCores), LASSOmin = NET_compute_graph_all_LASSOmin(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx, 
+            NrCores), LASSO1se = NET_compute_graph_all_LASSO1se(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx, NrCores), 
+            LM = NET_compute_graph_all_LM(lognorm_est_counts, regulator_filtered_idx, target_filtered_idx, NrCores))
         
         message("Graphs for (", graph_mode[j], ") computed!")
     }
@@ -292,7 +292,8 @@ NET_compute_graph_all_VBSR <- function(lognorm_est_counts, regulator_filtered_id
         }
     }
     
-    driverMat <- BiocParallel::bplapply(target_filtered_idx, VBSR, lognorm_est_counts, X, regulator_filtered_idx, target_filtered_idx, BPPARAM = parallClass)
+    driverMat <- BiocParallel::bplapply(target_filtered_idx, VBSR, lognorm_est_counts, X, regulator_filtered_idx, target_filtered_idx, 
+        BPPARAM = parallClass)
     
     # Transform list of bettas into matrix, as .combine=rbind in foreach
     driverMat <- do.call(rbind, driverMat)

@@ -1,11 +1,13 @@
 #' Html generation
 #'
 #' From input Gene Regulatory Network, an html is generated containing a table with
-#' driver to target phenotype dependent relationships. Brief summary containing
+#' driver to target phenotype dependent relationships. It is a brief summary containing
 #' drivers normalized xor sum, which is the ratio between drivers-targets connections
 #' present only in one of both phenotypes over all possible connections, and cliques, which are driver genes
 #' that are highly correlated (over a user-decision threshold), and may have been lost during
 #' the fitting process of the LINKER method.
+#'
+#' This functions takes place inside the runrewiring function, so it is not recommended to run it on its own.
 #'
 #'
 #' @param gpath path to the graph object ('refinedsumm.rds'). (RDS format)
@@ -96,7 +98,7 @@ html_from_graph <- function(gpath = NULL, wpath = paste0(tempdir()), user_mode =
     drivers_xor_sum <- vapply(drivers_xor, sum, FUN.VALUE = c(1))
 
     # Normalization
-    normalized_sum <- round(drivers_xor_sum/lengths(drivers_xor))
+    normalized_sum <- round(drivers_xor_sum/lengths(drivers_xor),3)
 
     if (cliquesbool) {
 
@@ -116,7 +118,7 @@ html_from_graph <- function(gpath = NULL, wpath = paste0(tempdir()), user_mode =
             }
         }
 
-        Cliques <- vapply(Cliques, function(x) paste(x, collapse = ","), FUN.VALUE = c("C"))
+        Cliques <- vapply(Cliques, function(x) paste(x, collapse = ", "), FUN.VALUE = c("C"))
 
         # Reorder (in normalized_sum they are in alphabetical order, in Cliques as they come out from the cliques object)
         Cliques <- Cliques[order(names(Cliques))]

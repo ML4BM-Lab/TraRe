@@ -17,14 +17,16 @@ LINKER_runPhase1(
   nassay = 1,
   regulator = "regulator",
   NrModules,
-  Lambda = 1e-04,
+  Lambda = 5,
   alpha = 1 - 1e-06,
   pmax = 10,
   mode = "VBSR",
   used_method = "MEAN",
   NrCores = 1,
   corrClustNrIter = 100,
-  Nr_bootstraps = 1
+  Nr_bootstraps = 1,
+  FDR = 0.05,
+  only_train = FALSE
 )
 
 LINKER_init(
@@ -33,7 +35,8 @@ LINKER_init(
   NrModules,
   NrCores = 3,
   corrClustNrIter = 21,
-  Parameters
+  Parameters,
+  FDR
 )
 
 LINKER_ReassignGenesToClusters(
@@ -64,7 +67,8 @@ LINKER_LearnRegulatoryPrograms(
   pmax,
   mode,
   used_method = "MEAN",
-  NrCores = 1
+  NrCores = 1,
+  FDR
 )
 }
 \arguments{
@@ -94,7 +98,7 @@ discovered may differ from this value). By default, 100 modules.}
 \item{pmax}{Maximum numbers of regulators that we want.}
 
 \item{mode}{Chosen method(s) to link module eigengenes to regulators. The available options are
-'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. Default set to 'VBSR'}
+'VBSR', 'LASSOmin', 'LASSO1se', 'LASSOparam' and 'LM'. Default set to 'VBSR'}
 
 \item{used_method}{Method selected for use. Default set to MEAN.}
 
@@ -104,6 +108,10 @@ is NOT initialized in any of the functions. By default, 2.}
 \item{corrClustNrIter}{Number of iteration for the phase I part of the method.}
 
 \item{Nr_bootstraps}{Number of bootstrap of Phase I. By default, 1.}
+
+\item{FDR}{The False Discovery Rate correction used for the modules and graphs GRN uncovering. By default, 0.05.}
+
+\item{only_train}{whether to use only training samples within LINKER run. Default: FALSE}
 
 \item{MA_matrix_Var}{Matrix of log-normalized estimated counts of the gene expression data, centered and scaled, containing
 only the train samples.}
