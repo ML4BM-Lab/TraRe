@@ -11,6 +11,7 @@
 #' @param include_cliques Boolean specifying to include cliques in the returned score matrix. Default set to FALSE.
 #' @param ImpTH Threshold for the refinement of the returned list. Default set to 0.05.
 #' @param cliquesTH Correlation threshold if include_cliques is set to TRUE. Default set to 0.8.
+#' @param nrcores Number of cores to run the parallelization within the rewiring test (default: 3).
 #'
 #'
 #' @return Return a matrix containing, for each gene (or genes if include_cliques is set to TRUE) the pvalue and odds ratio
@@ -25,7 +26,8 @@ rewiring_gene_level <- function(linker_output_p,
                                final_sig_th=0.05,
                                include_cliques=FALSE,
                                ImpTH=0.05,
-                               cliquesTH=0.8){
+                               cliquesTH=0.8,
+                               nrcores=3){
 
   #Do fast rewiring
   fast_rew <- function(ObjectList){
@@ -338,19 +340,6 @@ rewiring_gene_level <- function(linker_output_p,
 
     }
 
-  #define fpath (check default value)
-  if (filepath==''){
-
-    fpath <- paste0(getwd(),'/rewiring_gene_level','_fs_',final_sig_th,'.txt')
-
-  }
-  #(check extension to add final sig th)
-  if (substr(filepath,nchar(filepath)-3,nchar(filepath)-3)=='.'){
-    fpath <- paste0(substr(filepath,1,nchar(filepath)-4),'_fs_',final_sig_th,'.txt')
-  }else{
-    fpath <-paste0(filepath,'_fs_',final_sig_th,'.txt')
-  }
-
   message('Preparing rewiring object')
 
   #Prepare rewiring creating object
@@ -358,8 +347,27 @@ rewiring_gene_level <- function(linker_output_p,
                                              lognorm_est_counts_p = lognorm_est_counts_p,
                                              gene_info_p = gene_info_p,
                                              phenotype_p = phenotype_p,
-                                           final_signif_thresh = final_sig_th)
+                                           final_signif_thresh = final_sig_th,
+                                           nrcores=nrcores)
   if (!file.exists(fpath)){
+
+    #define fpath (check default value)
+    if (filepath==''){
+
+      fpath <- paste0(getwd(),'/rewiring_gene_level','_fs_',final_sig_th,'.txt')
+
+    }else{
+
+      message('Adding significant threshold to output file name')
+
+      #(check extension to add final sig th)
+      if (substr(filepath,nchar(filepath)-3,nchar(filepath)-3)=='.'){
+        fpath <- paste0(substr(filepath,1,nchar(filepath)-4),'_fs_',final_sig_th,'.txt')
+      }else{
+        fpath <-paste0(filepath,'_fs_',final_sig_th,'.txt')
+      }
+
+    }
 
     message('Performing fast rewiring')
     #Do the fast rewiring
@@ -374,7 +382,7 @@ rewiring_gene_level <- function(linker_output_p,
   }
 
   #read file
-  rew_list_names <- utils::read.delim(fpath)[,1]
+  rew_list_names <- utils::read.delim(fpath,header=FALSE)[,1]
 
   #Intersect genes to obtain TFs
   gene_info_tfs <- utils::read.delim(gene_info_p)[,c('uniq_isos','regulator')]

@@ -13,7 +13,8 @@ rewiring_gene_level(
   final_sig_th = 0.05,
   include_cliques = FALSE,
   ImpTH = 0.05,
-  cliquesTH = 0.8
+  cliquesTH = 0.8,
+  nrcores = 3
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ rewiring_gene_level(
 \item{ImpTH}{Threshold for the refinement of the returned list. Default set to 0.05.}
 
 \item{cliquesTH}{Correlation threshold if include_cliques is set to TRUE. Default set to 0.8.}
+
+\item{nrcores}{Number of cores to run the parallelization within the rewiring test (default: 3).}
 }
 \value{
 Return a matrix containing, for each gene (or genes if include_cliques is set to TRUE) the pvalue and odds ratio
