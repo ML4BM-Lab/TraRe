@@ -2,7 +2,7 @@
 #'
 #' Perform the rewiring test to check if regulators are enriched in rewiring modules using a hypergeometric test.
 #'
-#' @param filepath Desired path for the rewiring file to be generated.
+#' @param fpath Desired path for the rewiring file to be generated.
 #' @param linker_output_p Output file from linker function path. RDS format is required.
 #' @param lognorm_est_counts_p Lognorm counts of the gene expression matrix path.
 #' @param gene_info_p Path of a two-column file containing genes and 'regulator' boolean variable.
@@ -22,7 +22,7 @@ rewiring_gene_level <- function(linker_output_p,
                                lognorm_est_counts_p,
                                gene_info_p,
                                phenotype_p,
-                               filepath='',
+                               fpath='',
                                final_sig_th=0.05,
                                include_cliques=FALSE,
                                ImpTH=0.05,
@@ -352,7 +352,7 @@ rewiring_gene_level <- function(linker_output_p,
   if (!file.exists(fpath)){
 
     #define fpath (check default value)
-    if (filepath==''){
+    if (fpath==''){
 
       fpath <- paste0(getwd(),'/rewiring_gene_level','_fs_',final_sig_th,'.txt')
 
@@ -361,10 +361,10 @@ rewiring_gene_level <- function(linker_output_p,
       message('Adding significant threshold to output file name')
 
       #(check extension to add final sig th)
-      if (substr(filepath,nchar(filepath)-3,nchar(filepath)-3)=='.'){
-        fpath <- paste0(substr(filepath,1,nchar(filepath)-4),'_fs_',final_sig_th,'.txt')
+      if (substr(fpath,nchar(fpath)-3,nchar(fpath)-3)=='.'){
+        fpath <- paste0(substr(fpath,1,nchar(fpath)-4),'_fs_',final_sig_th,'.txt')
       }else{
-        fpath <-paste0(filepath,'_fs_',final_sig_th,'.txt')
+        fpath <-paste0(fpath,'_fs_',final_sig_th,'.txt')
       }
 
     }
