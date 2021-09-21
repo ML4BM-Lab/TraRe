@@ -324,13 +324,13 @@ rewiring_gene_level <- function(linker_output_p,
   add_cliques <- function(regs_mrm,score_matrix,cliquesTH){
 
     #Generate cliques
-    gcliques <- generatecliques(utils::read.delim(lognorm_est_counts_p)[regs_mrm,],
+    gcliques <- TraRe::generatecliques(utils::read.delim(lognorm_est_counts_p)[regs_mrm,],
                                 correlationth=cliquesTH)
 
     #retrieve gene-level drivers
     rew_gl_drivers <- rownames(score_matrix)
 
-    cliqued_rew_gl <- sapply(rew_gl_drivers,function(drive){paste0(gcliques[[drive]],collapse='||')},
+    cliqued_rew_gl <- sapply(rew_gl_drivers,function(drive){paste0(c(drive,setdiff(gcliques[[drive]],drive)),collapse='||')},
                              USE.NAMES = FALSE)
 
     #change the rownames
