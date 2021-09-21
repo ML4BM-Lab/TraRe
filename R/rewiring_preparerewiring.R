@@ -297,10 +297,6 @@ graph_to_modules <- function(linkeroutput, geneinfo, regulator_info_col_name){
 
         })
 
-        # module_list <- list(module_list)
-        #
-        # names(module_list) <- x
-
         #generate old index
         orig_index <- unlist(sapply(seq_along(module_list),function(x){
 
@@ -308,32 +304,29 @@ graph_to_modules <- function(linkeroutput, geneinfo, regulator_info_col_name){
 
         }))
 
+
         module_list <- Filter(Negate(function(X) {
 
             length(X) == 0
 
         }),module_list)
 
-        return(list(modules=module_list,index=orig_index))
+        return(list(modules=module_list,graphs=linkeroutput$graphs[[x]][[selected]][orig_index]))
 
     })
 
     names(linkeroutput) <- linkeroutput_names
 
     #initialize the final linkeroutut
-    new_linkeroutput <- list(modules=list())
+    new_linkeroutput <- list(modules=list(),graphs=list())
 
     for (method in names(linkeroutput)){
 
         #assign the modules
         new_linkeroutput[['modules']][[method]] <- linkeroutput[[method]][['modules']]
-        #assign the index
-        index_n <- paste0(method,'_original_index')
-        new_linkeroutput[[index_n]] <- linkeroutput[[method]][['index']]
-
+        #assign the graphs
+        new_linkeroutput[['graphs']][[method]] <- linkeroutput[[method]][['graphs']]
     }
-
-
 
     return(new_linkeroutput)
 
