@@ -9,7 +9,7 @@ rewiring_gene_level(
   lognorm_est_counts_p,
   gene_info_p,
   phenotype_p,
-  filepath = "",
+  fpath = "",
   final_sig_th = 0.05,
   include_cliques = FALSE,
   ImpTH = 0.05,
@@ -26,7 +26,7 @@ rewiring_gene_level(
 
 \item{phenotype_p}{Path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).}
 
-\item{filepath}{Desired path for the rewiring file to be generated.}
+\item{fpath}{Desired path for the rewiring file to be generated.}
 
 \item{final_sig_th}{Significance threshold for the rewiring method. The lower the threshold, the restrictive the method. Default set to 0.05.}
 

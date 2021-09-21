@@ -253,12 +253,18 @@ preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_c
 }
 
 # Helper function
-graph_to_modules <- function(linkeroutput,geneinfo,regulator_info_col_name){
+graph_to_modules <- function(linkeroutput, geneinfo, regulator_info_col_name){
 
     ## The structure we want to get is
     ## linkeroutput$modules[[link_mode]][[graph_mode]][[num_module]]$(target or regs)
 
-    linkeroutput <- lapply(names(linkeroutput$modules),function(x){
+    #load geneinfo_TFs
+    gene_info_TFs <- rownames(geneinfo)[geneinfo[,regulator_info_col_name]==1]
+
+    #names of linkeroutput
+    linkeroutput_names <- names(linkeroutput$modules)
+
+    linkeroutput <- lapply(linkeroutput_names,function(x){
 
         graph_modes <- names(linkeroutput$graphs[[x]])
 
@@ -276,7 +282,7 @@ graph_to_modules <- function(linkeroutput,geneinfo,regulator_info_col_name){
 
             totgenes <- unique(names(igraph::V(graph)))
 
-            regulators <- intersect(totgenes,rownames(geneinfo)[geneinfo[,regulator_info_col_name]==1])
+            regulators <- intersect(totgenes,gene_info_TFs)
 
             if (identical(regulators,character(0))){
 
@@ -291,22 +297,44 @@ graph_to_modules <- function(linkeroutput,geneinfo,regulator_info_col_name){
 
         })
 
-        module_list <- list(module_list)
+        # module_list <- list(module_list)
+        #
+        # names(module_list) <- x
 
-        names(module_list) <- x
+        #generate old index
+        orig_index <- unlist(sapply(seq_along(module_list),function(x){
 
-        module_list[[selected]] <- Filter(Negate(function(X) {
+            if (!is.null(module_list[[x]])){return(x)}
+
+        }))
+
+        module_list <- Filter(Negate(function(X) {
 
             length(X) == 0
 
-        }),module_list[[selected]])
+        }),module_list)
 
-        return(module_list)
+        return(list(modules=module_list,index=orig_index))
 
     })
 
-    names(linkeroutput) <- 'modules'
+    names(linkeroutput) <- linkeroutput_names
 
-    return(linkeroutput)
+    #initialize the final linkeroutut
+    new_linkeroutput <- list(modules=list())
+
+    for (method in names(linkeroutput)){
+
+        #assign the modules
+        new_linkeroutput[['modules']][[method]] <- linkeroutput[[method]][['modules']]
+        #assign the index
+        index_n <- paste0(method,'_original_index')
+        new_linkeroutput[[index_n]] <- linkeroutput[[method]][['index']]
+
+    }
+
+
+
+    return(new_linkeroutput)
 
 }
