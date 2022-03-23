@@ -436,18 +436,19 @@ LINKER_EvaluateTestSet <- function(LINKERresults, MA_Data_TestSet, RegulatorData
         if (length(modules[[i]]) != 0) {
             if (length(currentClusterGenes) > 1) {
                 cx <- MA_Data_TestSet[currentClusterGenes, ]
-                module_SVD <- svd(cx)
 
                 if (used_method == "LINKER") {
+                  module_SVD <- svd(cx)
                   outcome <- module_SVD$v[, 1]
                   if (stats::cor(predictions, outcome) < 0) {
                     outcome <- -outcome
                   }
+                  varEx <- module_SVD$d[1]^2/sum(module_SVD$d^2)
                 } else {
                   outcome <- matrixStats::colMeans2(cx)
+                  varEx <- 0
                 }
 
-                varEx <- module_SVD$d[1]^2/sum(module_SVD$d^2)
             } else {
                 outcome <- MA_Data_TestSet[currentClusterGenes, ]
                 varEx <- 0

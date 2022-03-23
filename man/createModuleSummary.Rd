@@ -36,8 +36,8 @@ Create module summary for supermodule after the rewiring step.
 ## function will generate a module summary based on the ouput from 'runrewiring()'.
 
 ## To create html summary on previously run supermodel in new data, we will have
-## generated a new ObjectList using the new data by running â€˜preparerewiring()â€™.
-##  Running the #' ## â€˜createModuleSummary()â€™ with the new ObjectList will create
+## generated a new ObjectList using the new data by running ‘preparerewiring()’.
+##  Running the #' ## ‘createModuleSummary()’ with the new ObjectList will create
 ## a module summary based on the new dataset but with the gene module from the
 ## 'runrewiring()' results.
 

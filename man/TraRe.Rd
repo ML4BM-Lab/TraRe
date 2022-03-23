@@ -6,11 +6,7 @@
 \alias{TraRe-package}
 \title{Transcriptional Rewiring package for R.}
 \description{
-TraRe (Transcriptional Rewiring) is an R package which contains the necessary tools to carry out several functions. 
-             Identification of module-based gene regulatory networks (GRN); score-based classification of these modules via 
-             a rewiring test; visualization of rewired modules to analyze condition-based GRN deregulation and drop out genes 
-             recovering via cliques methodology. For each tool, an html report can be generated containing useful information about
-             the generated GRN and statistical data about the performed tests. These tools have been developed considering sequenced data (RNA-Seq).
+TraRe (Transcriptional Rewiring) is an R package which contains the necessary tools to carry out several functions. Identification of module-based gene regulatory networks (GRN); score-based classification of these modules via a rewiring test; visualization of rewired modules to analyze condition-based GRN deregulation and drop out genes recovering via cliques methodology. For each tool, an html report can be generated containing useful information about the generated GRN and statistical data about the performed tests. These tools have been developed considering sequenced data (RNA-Seq).
 }
 \section{Available tools}{
 
@@ -64,7 +60,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Jesus De La Fuente Cedeño \email{jdelafuentec@unav.es} (\href{https://orcid.org/0000-0003-1856-2469}{ORCID}) [copyright holder]
+\strong{Maintainer}: Jesus de la Fuente Cedeño \email{jdelafuentec@unav.es} (\href{https://orcid.org/0000-0003-1856-2469}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
@@ -75,6 +71,7 @@ Authors:
 Other contributors:
 \itemize{
   \item Zikun (\href{https://orcid.org/0000-0002-9933-9658}{ORCID}) [contributor]
+  \item Irene Marin Goñi \email{imarin.4@alumni.unav.es} (\href{https://orcid.org/0000-0002-5060-0712}{ORCID}) [contributor]
 }
 
 }
