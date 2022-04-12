@@ -22,7 +22,8 @@ preparerewiring(
   retest_perms = 1000,
   use_graphs = TRUE,
   outdir = tempdir(),
-  nrcores = 3
+  nrcores = 3,
+  last_cluster = FALSE
 )
 }
 \arguments{
@@ -62,6 +63,8 @@ threshold will be \code{paste()} to the folder's name.}
 \item{outdir}{Directory for the output folder to be located (default: tempdir())}
 
 \item{nrcores}{Number of cores to run the parallelization within the rewiring test (default: 3).}
+
+\item{last_cluster}{Boolean specifying whether to include the last_cluster in the rewiring or not. (default: FALSE)}
 }
 \value{
 Return a list containing: LINKER's output, expression matrix, boolean array from phenotype file,

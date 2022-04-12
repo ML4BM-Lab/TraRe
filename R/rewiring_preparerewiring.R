@@ -21,6 +21,7 @@
 #' @param use_graphs Boolean specifying the use of graphs as linkeroutput modules. (TRUE by default).
 #' @param outdir Directory for the output folder to be located (default: tempdir())
 #' @param nrcores Number of cores to run the parallelization within the rewiring test (default: 3).
+#' @param last_cluster Boolean specifying whether to include the last_cluster in the rewiring or not. (default: FALSE)
 #'
 #'
 #' @return Return a list containing: LINKER's output, expression matrix, boolean array from phenotype file,
@@ -55,7 +56,7 @@
 preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_counts_p = NULL, SEObject_p = NULL, gene_info_p = NULL,
     phenotype_p = NULL, nassays = 1, final_signif_thresh = 0.001, regulator_info_col_name = "regulator", phenotype_col_name = "Class",
     phenotype_class_vals_string = "NR,R", phenotype_class_vals_string_label = "0,1", orig_test_perms = 100, retest_thresh = 0.08, retest_perms = 1000,
-    use_graphs = TRUE, outdir = tempdir(), nrcores = 3) {
+    use_graphs = TRUE, outdir = tempdir(), nrcores = 3, last_cluster = FALSE) {
 
     # checks
 
@@ -240,6 +241,7 @@ preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_c
     rewobjects$retest_thresh <- retest_thresh
     rewobjects$retest_perms <- retest_perms
     rewobjects$NrCores <- nrcores
+    rewobjects$last_cluster <- last_cluster
 
     # Create logfile
 

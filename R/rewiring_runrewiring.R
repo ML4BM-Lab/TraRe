@@ -44,6 +44,7 @@ runrewiring <- function(ObjectList) {
     retest_thresh <- ObjectList$retest_thresh
     retest_perms <- ObjectList$retest_perms
     logfile <- ObjectList$logfile
+    last_cluster <- ObjectList$last_cluster
 
     # set up output html page, we use the first argv.
     dir.create(ObjectList$outdir)
@@ -189,9 +190,15 @@ runrewiring <- function(ObjectList) {
         # Detection of clusters
         message(length(clusters$clusters), " clusters detected!")
 
+        if (!last_cluster){
+
+          message("Generating rewiring only for ",length(clusters$clusters)-1)
+
+        }
+
         # select every cluster we have found except the last one.
 
-        for (numclus in seq_along(clusters$clusters)) {
+        for (numclus in seq(length(clusters$clusters)-!last_cluster)) {
 
             message("Cluster number: ", numclus)
 
@@ -294,7 +301,7 @@ runrewiring <- function(ObjectList) {
 
             try(plot_igraph(refinedsumm$full_graph, paste0(ncol(norm_expr_mat_keep), " Samples"), "black", mylayout))
             try(plot_igraph(refinedsumm$nonresp_graph, paste0(length(nonrespond_idxs), " Phenotype1"), "darkviolet", mylayout))
-            try(plot_igraph(refinedsumm$respond_graph, paste0(length(responder_idxs), " Phenotype2"), "darkgoldenrod", mylayout))
+            try(plot_igraph(refinedsumm$respond_graph, paste0(length(responder_idxs), " Phenotype2"), "darkgoldenrod", mylayout,TRUE))
             grDevices::dev.off()
 
             # write plot to index page
@@ -586,11 +593,11 @@ rawsummary <- function(indexpageinfo, rawrunmoddata,rawsumm, norm_expr_mat_keep,
         grDevices::pdf(paste0(outdir, "/", foldername_p, "/imgs/", pname, ".pdf"), 15.625, 7.8125)
         mylayout <- return_layout_phenotype(rawrunmoddata$regulators, rawrunmoddata$target_genes, rawsumm$nodesumm, rownames(norm_expr_mat_keep))
 
-        try(plot_igraph(rawsumm$full_graph, paste0(ncol(norm_expr_mat_keep), " Samples"), "black", mylayout))
+        try(plot_igraph(rawsumm$full_graph, paste0(ncol(norm_expr_mat_keep), " Samples"), "black", mylayout,TRUE))
         grDevices::dev.off()
 
         # write plot to index page
-        write(paste0("<img src='", "imgs/", pname, ".pdf", "' alt='", pname, "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
+        write(paste0("<embed src='", "imgs/", pname, ".pdf", "' alt='", pname, "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"),
               paste0(indexpageinfo$htmldir, foldername_p, "/", indexpageinfo$indexpath), append = TRUE)
     }
 

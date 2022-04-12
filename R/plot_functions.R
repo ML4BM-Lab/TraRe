@@ -9,6 +9,7 @@
 #' @param mytitle Desired tittle.
 #' @param titlecol Color for the tittle.
 #' @param mylayout desired layout.
+#' @param includelegend whether to include legend, boolean. (Default: FALSE)
 #'
 #' @return plot of the desired single GRN using a specific layout.
 #'
@@ -67,40 +68,56 @@
 #'
 #' @export plot_igraph
 
-plot_igraph <- function(mygraph = NULL, mytitle = "", titlecol = "black", mylayout = NULL) {
+plot_igraph <- function(mygraph = NULL, mytitle = "", titlecol = "black", mylayout = NULL, includelegend=FALSE) {
 
-    if (is.null(mygraph)) {
-        stop("graph object field empty")
-    }
-    if (is.null(mylayout)) {
-        stop("layout field empty")
-    }
+  if (is.null(mygraph)) {
+    stop("graph object field empty")
+  }
+  if (is.null(mylayout)) {
+    stop("layout field empty")
+  }
 
-    if (is.null(igraph::E(mygraph)$weight)) {
-        igraph::E(mygraph)$weight <- rep(1, length(igraph::E(mygraph)))
-    }
+  if (is.null(igraph::E(mygraph)$weight)) {
+    igraph::E(mygraph)$weight <- rep(1, length(igraph::E(mygraph)))
+  }
 
-    nodecol <- c("darkblue", "darkorange")
-    framecol <- c("black", "darkorange")
-    shape <- c("circle", "square")
-    edge_cscale <- grDevices::colorRamp(c("darkred", "lightgrey", "darkgreen"))
+  nodecol <- c("darkblue", "darkorange")
+  framecol <- c("black", "darkorange")
+  shape <- c("circle", "square")
+  edge_cscale <- grDevices::colorRamp(c("darkred", "lightgrey", "darkgreen"))
 
-    maxw <- max(abs(igraph::E(mygraph)$weight))
-    tweight <- (igraph::E(mygraph)$weight + maxw)/(2 * maxw)
-    igraph::E(mygraph)$color <- apply(edge_cscale(tweight), 1, function(x) grDevices::rgb(x[1]/255, x[2]/255, x[3]/255, 0.8))
+  maxw <- max(abs(igraph::E(mygraph)$weight))
+  minw <- min(abs(igraph::E(mygraph)$weight))
+  tweight <- (igraph::E(mygraph)$weight + maxw)/(2 * maxw)
+  igraph::E(mygraph)$color <- apply(edge_cscale(tweight), 1, function(x) grDevices::rgb(x[1]/255, x[2]/255, x[3]/255, 0.8))
 
-    degrees <- igraph::degree(mygraph, igraph::V(mygraph)$name)
-    nodenames <- mylayout$genesnames[igraph::V(mygraph)$name]
-    regdegrees <- degrees[nodenames]
-    regdegrees[which(is.na(regdegrees))] <- ""
-    finalnames <- apply(cbind(nodenames, regdegrees), 1, paste, collapse = " - ")
+  degrees <- igraph::degree(mygraph, igraph::V(mygraph)$name)
+  nodenames <- mylayout$genesnames[igraph::V(mygraph)$name]
+  regdegrees <- degrees[nodenames]
+  regdegrees[which(is.na(regdegrees))] <- ""
+  finalnames <- apply(cbind(nodenames, regdegrees), 1, paste, collapse = " - ")
 
-    plot(mygraph, vertex.color = nodecol[as.numeric(igraph::V(mygraph)$type) + 1], vertex.shape = shape[as.numeric(igraph::V(mygraph)$type) +
-        1], vertex.label = finalnames, vertex.label.cex = 1.5, vertex.frame.color = framecol[as.numeric(igraph::V(mygraph)$type) +
-        1], vertex.size = as.numeric(igraph::V(mygraph)$type) * 5 + 5, layout = cbind(mylayout$genesx[igraph::V(mygraph)$name], mylayout$genesy[igraph::V(mygraph)$name]))
-    graphics::title(paste0(mytitle, " ", sum(igraph::V(mygraph)$type == 1), "&", sum(igraph::V(mygraph)$type == 0)), cex.main = 2,
-        col.main = titlecol)
-    graphics::abline(h = 0, col = grDevices::rgb(0, 0, 0, alpha = 0.3))
+  plot(mygraph, vertex.color = nodecol[as.numeric(igraph::V(mygraph)$type) + 1], vertex.shape = shape[as.numeric(igraph::V(mygraph)$type) + 1],
+       vertex.label = finalnames, vertex.label.cex = 1.5,
+       vertex.frame.color = framecol[as.numeric(igraph::V(mygraph)$type) +1],
+       vertex.size = as.numeric(igraph::V(mygraph)$type) * 5 + 5,
+       layout = cbind(mylayout$genesx[igraph::V(mygraph)$name], mylayout$genesy[igraph::V(mygraph)$name]))
+  if (includelegend){
+    graphics::legend(x=1.25,y=0.4,
+                     col=c("darkblue","darkorange"),
+                     legend=c("Targets","Drivers"),
+                     pch=c(20,15),pt.cex=2,
+                     y.intersp = 0.5,
+                     border='white',
+                     bty="n")
+    graphics::text(x=1.615,y=0.135,labels="Edge's weight")
+    colors <- apply(edge_cscale(sort(tweight)), 1, function(x) grDevices::rgb(x[1]/255, x[2]/255, x[3]/255, 0.8))
+    legend_image <- grDevices::as.raster(matrix(colors, nrow=1))
+    graphics::rasterImage(legend_image, xleft=1.3, xright=1.4, ybottom=0.1, ytop=0.17,angle=0)
+  }
+  graphics::title(paste0(mytitle, " ", sum(igraph::V(mygraph)$type == 1), "&", sum(igraph::V(mygraph)$type == 0)), cex.main = 2,
+                  col.main = titlecol)
+  graphics::abline(h = 0, col = grDevices::rgb(0, 0, 0, alpha = 0.3))
 }
 #' @export
 #' @rdname plot_igraph

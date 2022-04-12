@@ -12,7 +12,13 @@
 \alias{plot_gene_pair_scatter_by_class}
 \title{Plotting functions for Gene Regulatory Network.}
 \usage{
-plot_igraph(mygraph = NULL, mytitle = "", titlecol = "black", mylayout = NULL)
+plot_igraph(
+  mygraph = NULL,
+  mytitle = "",
+  titlecol = "black",
+  mylayout = NULL,
+  includelegend = FALSE
+)
 
 return_layout(regs = NULL, targets = NULL, namehash = NULL)
 
@@ -96,6 +102,8 @@ plot_gene_pair_scatter_by_class(
 \item{titlecol}{Color for the tittle.}
 
 \item{mylayout}{desired layout.}
+
+\item{includelegend}{whether to include legend, boolean. (Default: FALSE)}
 
 \item{regs}{regulators name list}
 

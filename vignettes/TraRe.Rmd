@@ -17,7 +17,7 @@ vignette: >
 
 ```{r LoadFunctions, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
 library(knitr)
-opts_chunk$set(error = FALSE)
+opts_chunk$set(error = FALSE, warning=FALSE)
 library(TraRe)
 ```
 
