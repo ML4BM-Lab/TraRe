@@ -266,7 +266,7 @@ filter_regulons <- function(regulons_uniq){
   dfs <- lapply(regulons_uniq[bool_reg], function(x){
     y <- as.data.frame(x)
     y <- y[y$p_value<=0.05,]
-    y[order(y$multiplicity,decreasing = TRUE),]
+    y <- y[order(y$multiplicity,decreasing = TRUE),]
     rownames( y ) <- seq_len( nrow( y ) )
     return(y)
   })
