@@ -7,6 +7,8 @@ out genes recovering via cliques methodology. For each tool, html report can be 
 information about the generated GRN and statistical data about the performed tests. These tools have been 
 developed considering sequenced data (RNA-Seq).
 
+BiorXive
+
 ![TraRe Package](https://github.com/ubioinformat/TraRe/blob/master/vignettes/Trare.png)
 
 # Installation 
