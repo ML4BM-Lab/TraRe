@@ -84,7 +84,7 @@ LINKER_runPhase2 <- function(modules, Data, NrCores, mode = "VBSR", alpha = 1 - 
                 y <- Data[targetgenes[idx_gene], ]
 
                 if (mode == "VBSR") {
-                  res <- vbsr::vbsr(y, t(X), n_orderings = 15, family = "normal")
+                  res <- vbsr(y, t(X), n_orderings = 15, family = "normal")
                   betas <- res$beta
                   betas[res$pval > FDR/(length(regulators) * length(targetgenes))] <- 0
                   driverMat[idx_gene, ] <- betas

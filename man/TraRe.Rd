@@ -60,7 +60,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Jesus de la Fuente Cedeño \email{jdelafuentec@unav.es} (\href{https://orcid.org/0000-0003-1856-2469}{ORCID}) [copyright holder]
+\strong{Maintainer}: Jesus de la Fuente CedeÃ±o \email{jdelafuentec@unav.es} (\href{https://orcid.org/0000-0003-1856-2469}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
@@ -71,7 +71,7 @@ Authors:
 Other contributors:
 \itemize{
   \item Zikun (\href{https://orcid.org/0000-0002-9933-9658}{ORCID}) [contributor]
-  \item Irene Marin Goñi \email{imarin.4@alumni.unav.es} (\href{https://orcid.org/0000-0002-5060-0712}{ORCID}) [contributor]
+  \item Irene Marin GoÃ±i \email{imarin.4@alumni.unav.es} (\href{https://orcid.org/0000-0002-5060-0712}{ORCID}) [contributor]
 }
 
 }

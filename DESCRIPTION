@@ -35,34 +35,33 @@ Description: TraRe (Transcriptional Rewiring) is an R package which contains the
              the generated GRN and statistical data about the performed tests. These tools have been developed considering sequenced data (RNA-Seq).
 Depends:
 	R (>= 4.0)
-Remotes:
-  url::https://cran.r-project.org/src/contrib/Archive/vbsr/vbsr_0.0.4.tar.gz
 Imports: 
-  hash,
-  ggplot2,
-  stats,
-  methods,
-  igraph,
-  utils,
-  glmnet,
-  grDevices,
-  gplots,
-  gtools,
-  pvclust,
-  R.utils,
-  dqrng,
-  SummarizedExperiment,
-  matrixStats,
-  BiocParallel,
-  scales,
-  vioplot,
-  viridis
+    hash,
+    ggplot2,
+    stats,
+    methods,
+    igraph,
+    utils,
+    glmnet,
+    grDevices,
+    gplots,
+    gtools,
+    pvclust,
+    R.utils,
+    dqrng,
+    SummarizedExperiment,
+    matrixStats,
+    BiocParallel,
+    scales,
+    vioplot,
+    viridis
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.2
 biocViews: GeneRegulation, RNASeq, GraphAndNetwork, Bayesian, GeneTarget, Classification
+NeedsCompilation: yes
 Suggests: 
     knitr,
     rmarkdown,

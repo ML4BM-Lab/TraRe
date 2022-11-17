@@ -599,7 +599,7 @@ LINKER_LearnRegulatoryPrograms <- function(Data, Clusters, RegulatorData, Lambda
 
         } else if (mode == "VBSR") {
 
-            res <- vbsr::vbsr(y, t(X), n_orderings = 15, family = "normal")
+            res <- vbsr(y, t(X), n_orderings = 15, family = "normal")
             betas <- res$beta
             max_beta <- max(abs(betas))
             betas[res$pval > FDR/(nrow(RegulatorData) * nrow(Data))] <- 0  #Bonferroni
