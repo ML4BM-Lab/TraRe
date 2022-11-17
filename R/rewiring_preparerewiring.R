@@ -107,8 +107,8 @@ preparerewiring <- function(name = "defaultname", linker_output_p, lognorm_est_c
 
 
         if (se) {
-            # check for SummarizedExperiment
 
+            # check for SummarizedExperiment
             seobject <- readRDS(SEObject_p[i])
             input_expr_mat <- SummarizedExperiment::assays(seobject)[[nassays[i]]]
 
