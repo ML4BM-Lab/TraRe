@@ -36,7 +36,7 @@ Description: TraRe (Transcriptional Rewiring) is an R package which contains the
 Depends:
 	R (>= 4.0)
 Remotes:
-  blogsdon/vbsr
+  github::blogsdon/vbsr
 Imports: 
   hash,
   ggplot2,
