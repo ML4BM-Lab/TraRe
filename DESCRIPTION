@@ -1,6 +1,6 @@
 Package: TraRe
 Title: Transcriptional Rewiring 
-Version: 0.99.13
+Version: 1.0.0
 URL: https://github.com/ubioinformat/TraRe/tree/master
 Authors@R: 
     c(person(given = "Jesus",
@@ -23,11 +23,11 @@ Authors@R:
            role = c("ctb"),
            email = "",
            comment = c(ORCID = "0000-0002-9933-9658")),
-	person(given="Irene",
-			family = "Marin Goñi",
-			role = c("ctb"),
-			email = "imarin.4@alumni.unav.es",
-			comment = c(ORCID = "0000-0002-5060-0712")))
+    person(given="Irene",
+	   family = "Marin Goñi",
+	   role = c("ctb"),
+	   email = "imarin.4@alumni.unav.es",
+	   comment = c(ORCID = "0000-0002-5060-0712")))
 Description: TraRe (Transcriptional Rewiring) is an R package which contains the necessary tools to carry out several functions. 
              Identification of module-based gene regulatory networks (GRN); score-based classification of these modules via 
              a rewiring test; visualization of rewired modules to analyze condition-based GRN deregulation and drop out genes 
@@ -43,7 +43,7 @@ Imports:
   igraph,
   utils,
   glmnet,
-  vbsr,
+  vbsr (<= 0.05),
   grDevices,
   gplots,
   gtools,
