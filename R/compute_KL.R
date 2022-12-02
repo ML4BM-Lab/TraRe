@@ -1,4 +1,4 @@
-# @export compute_KL
+#' @export
 compute_KL = function(Zmat,alpha,pval){
   #define function to sample from truncated normal distribution.
   rtnorm <- function(n,mu,sigma,a,b){

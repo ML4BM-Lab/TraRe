@@ -1,5 +1,5 @@
 #' @useDynLib TraRe, .registration = TRUE
-# @export vbsr
+#' @export
 vbsr = function(y,
 		X,
 		ordering_mat=NULL,
@@ -349,9 +349,6 @@ vbsr = function(y,
 	}
 
 	if (screen==1){
-
-
-
 
 		result_list = vector("list",17);
 		names(result_list)=c("beta_chi",
