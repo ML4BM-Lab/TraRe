@@ -50,14 +50,10 @@
 #'    regulator_filtered_idx <- seq_len(R)
 #'    target_filtered_idx <- R+c(seq_len(T))
 #'
-#'
-#'    ## We recommend to use the default values of the function.
-#'    ## For the sake of time, we will select faster (and worse) ones.
-#'
-#'    linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx=target_filtered_idx,
-#'                               regulator_filtered_idx=regulator_filtered_idx,
-#'                               link_mode='LASSOmin',graph_mode='LM',NrModules=5,Nr_bootstraps=1,
-#'                                NrCores=2,corrClustNrIter=10)
+#'    ## linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx=target_filtered_idx,
+#'    ##                           regulator_filtered_idx=regulator_filtered_idx,
+#'    ##                           link_mode='VBSR',graph_mode='VBSR',NrModules=100,Nr_bootstraps=10,
+#'    ##                            NrCores=1,corrClustNrIter=100)
 #'
 #'
 #'
