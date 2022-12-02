@@ -1,3 +1,4 @@
+# @export compute_KL
 compute_KL = function(Zmat,alpha,pval){
   #define function to sample from truncated normal distribution.
   rtnorm <- function(n,mu,sigma,a,b){
@@ -64,12 +65,14 @@ compute_KL = function(Zmat,alpha,pval){
 	}else {
 		a <- -stats::qnorm(alpha/2);
 		sig_ref <- (1-2*a*stats::dnorm(a))/(stats::pnorm(a)-stats::pnorm(-a));
+
 		for (i in 1:m){
 			wvec <- which(abs(Zmat[,i])<a);
 			mu <- mean(Zmat[wvec,i]);
 			sig <- stats::var(Zmat[wvec,i]);
 			kl_vec[i] <- mu^2/2 + 0.5*(sig/sig_ref-1-log(sig/sig_ref));
 		}
+
 		for (i in 1:1e3){
 			vec3 <- stats::rnorm(n);
 			wvec2 <- which(abs(vec3)<a);
