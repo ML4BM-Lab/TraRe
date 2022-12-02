@@ -1,5 +1,4 @@
 #' @useDynLib TraRe, .registration = TRUE
-#' @export
 vbsr = function(y,
 		X,
 		ordering_mat=NULL,
