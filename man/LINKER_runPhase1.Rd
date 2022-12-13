@@ -20,6 +20,7 @@ LINKER_runPhase1(
   Lambda = 5,
   alpha = 1 - 1e-06,
   pmax = 10,
+  train_size = 0.8,
   mode = "VBSR",
   used_method = "MEAN",
   NrCores = 1,
@@ -96,6 +97,8 @@ discovered may differ from this value). By default, 100 modules.}
 \item{alpha}{Alpha variable for Lasso models.}
 
 \item{pmax}{Maximum numbers of regulators that we want.}
+
+\item{train_size}{Fraction of samples selected for the train samples. Default: 0.8.}
 
 \item{mode}{Chosen method(s) to link module eigengenes to regulators. The available options are
 'VBSR', 'LASSOmin', 'LASSO1se', 'LASSOparam' and 'LM'. Default set to 'VBSR'}

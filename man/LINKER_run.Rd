@@ -5,11 +5,7 @@
 \title{GRN inference via selected model.}
 \usage{
 LINKER_run(
-  lognorm_est_counts,
-  target_filtered_idx,
-  regulator_filtered_idx,
-  nassay = 1,
-  regulator = "regulator",
+  LinkerObj,
   link_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
   graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
   module_rep = "MEAN",
@@ -19,26 +15,13 @@ LINKER_run(
   FDR = 0.05,
   Lambda = 5,
   NrCores = 1,
+  train_size = 0.8,
   onlymods = FALSE,
   only_train = FALSE
 )
 }
 \arguments{
-\item{lognorm_est_counts}{Matrix of log-normalized estimated counts of the gene expression
-data (Nr Genes x Nr samples) or SummarizedExperiment object.}
-
-\item{target_filtered_idx}{Index array of the target genes on the lognorm_est_counts matrix if
-SummarizedExperiment object is not provided.}
-
-\item{regulator_filtered_idx}{Index array of the regulatory genes on the lognorm_est_counts matrix if
-SummarizedExperiment object is not provided.}
-
-\item{nassay}{if SummarizedExperiment object is passed as input to lognorm_est_counts, name of the
-assay containing the desired matrix. Default: 1 (first item in assay's list).}
-
-\item{regulator}{if SummarizedExperiment object is passed as input to lognorm_est_counts, name of the
-rowData() variable to build target_filtered_idx and regulator_filtered_idx. This variable must be one
-for driver genes and zero for target genes. Default: 'regulator'}
+\item{LinkerObj}{TraReObj containing preprocessed input matrix, linker_preprocessing output.}
 
 \item{link_mode}{Chosen method(s) to link module eigengenes to regulators. The available options are
 'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. By default, all methods are chosen.}
@@ -62,6 +45,8 @@ discovered may differ from this value). By default, 100 modules.}
 \item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that the parallelization
 is NOT initialized in any of the functions. By default, 2.}
 
+\item{train_size}{Fraction of samples selected for the train samples. Default: 0.8.}
+
 \item{onlymods}{Whether to infer only modules or modules and graphs. Default: FALSE}
 
 \item{only_train}{whether to use only training samples within LINKER run. Default: FALSE}
@@ -84,17 +69,11 @@ Gene Regulatory Network inference via model selection. Consists of two phases,
 
    ## We create the index for drivers and targets in the log-normalized gene expression matrix.
 
-   R<-60
-   T<-200
+   ##LinkerObj <- linker_preprocessing(data_matrix = lognorm_est_counts,
+   ##                                  geneinfo = rownames(drivers), verbose = FALSE)
 
-   regulator_filtered_idx <- seq_len(R)
-   target_filtered_idx <- R+c(seq_len(T))
-
-   ## linkeroutput <- LINKER_run(lognorm_est_counts,target_filtered_idx=target_filtered_idx,
-   ##                           regulator_filtered_idx=regulator_filtered_idx,
-   ##                           link_mode='VBSR',graph_mode='VBSR',NrModules=100,Nr_bootstraps=10,
+   ## linkeroutput <- LINKER_run(LinkerObj = LinkerObj, link_mode='VBSR',
+   ##                            graph_mode='VBSR',NrModules=100,Nr_bootstraps=10,
    ##                            NrCores=1,corrClustNrIter=100)
-
-
 
 }

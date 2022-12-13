@@ -29,6 +29,7 @@
 #' @param Lambda Lambda variable for Lasso models.
 #' @param alpha Alpha variable for Lasso models.
 #' @param pmax Maximum numbers of regulators that we want.
+#' @param train_size Fraction of samples selected for the train samples. Default: 0.8.
 #' @param corrClustNrIter Number of iteration for the phase I part of the method.
 #' @param FDR The False Discovery Rate correction used for the modules and graphs GRN uncovering. By default, 0.05.
 #' @param only_train whether to use only training samples within LINKER run. Default: FALSE
@@ -62,7 +63,7 @@
 #' @export LINKER_runPhase1
 
 LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, nassay = 1, regulator = "regulator",
-    NrModules, Lambda = 5, alpha = 1 - 1e-06, pmax = 10, mode = "VBSR", used_method = "MEAN", NrCores = 1, corrClustNrIter = 100,
+    NrModules, Lambda = 5, alpha = 1 - 1e-06, pmax = 10, train_size = 0.8, mode = "VBSR", used_method = "MEAN", NrCores = 1, corrClustNrIter = 100,
     Nr_bootstraps = 1, FDR = 0.05,only_train=FALSE) {
 
     # Check for SummarizedExperiment Object
@@ -84,7 +85,7 @@ LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_
     # Creating the parameters structure
     Parameters <- list(Lambda = Lambda, pmax = pmax, alpha = alpha, mode = mode, used_method = used_method)
     sample_size <- dim(lognorm_est_counts)[2]
-    train_size <- round(0.8 * sample_size)
+    train_size_sampled <- round(train_size * sample_size)
     EvaluateTestSet <- list()
     bootstrap_modules <- list()
     bootstrap_results <- list()
@@ -92,7 +93,7 @@ LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_
 
     for (boost_idx in seq_len(Nr_bootstraps)) {
 
-        train_samples <- sample(seq_len(sample_size), train_size, replace = FALSE)
+        train_samples <- sample(seq_len(sample_size), train_size_sampled, replace = FALSE)
         validation_samples <- setdiff(seq_len(sample_size), train_samples)
 
         # Scale by driver genes
