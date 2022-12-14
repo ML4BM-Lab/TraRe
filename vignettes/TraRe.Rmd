@@ -216,7 +216,7 @@ even if a *SummarizedExperiment* object is provided to the `linker_processing` f
 This information can be added later on to the object for the differential network analysis step (*Rewiring*) if a *SummarizedExperiment* was not used.
 
 
-```{r, eval=TRUE, warning=FALSE, collapse=TRUE}
+```{r, eval=FALSE, warning=FALSE, collapse=TRUE}
 
 
 # We recommend VBSR as the model as it outperforms the other methods
@@ -269,7 +269,7 @@ There are also other parameters that will remain by default. Please take
 a look at the `preparerewiring()` function for more information. We now generate 
 the `preparerewiring()` output.
 
-```{r, eval=TRUE, warning=FALSE, collapse=TRUE}
+```{r, eval=FALSE, warning=FALSE, collapse=TRUE}
 
 ## Load the linker output
 linker_output <- readRDS(paste0(system.file('extdata',package='TraRe'),
@@ -390,7 +390,7 @@ Find below the necessary parameters and descriptions of `NET_run()`.
 
 In order to run the single GRN generation, there is a particular function that works very similar to the main *LINKER* one. Here is an example, which is also in the help section of `NET_run()`.
 
-```{r,eval=TRUE,warning=FALSE,collapse=TRUE}
+```{r,eval=FALSE,warning=FALSE,collapse=TRUE}
 
 # Assume we have run the rewiring method and we have discovered a robust rewired transcriptional module.
 # After we have selected the drivers and targets from all the modules contained in it, we can build
@@ -417,7 +417,7 @@ On one hand, `return_layout()` generates a regular layout in which there is no t
 On the other hand, `return_layout_phenotype()` performs a target gene level t.test which has as null hypothesis if samples separated by the selected condition are not deferentially expressed.
 From this analysis, the z-score is used to sort target genes and plot them describing a curve when using `plot_igraph()` function. 
 
-```{r,eval=TRUE,warning=FALSE,collapse=TRUE}
+```{r,eval=FALSE,warning=FALSE,collapse=TRUE}
 
 # Assume we have run the rewiring method and the `NET_run()` method to generate the
 # igraph object. We are going to generate and plot both layouts for the example.
