@@ -3,7 +3,7 @@
 #' Gene Regulatory Network inference via model selection. Consists of two phases,
 #' `LINKER_runPhase1()` and `LINKER_runPhase2()`. Help them for more information.
 #'
-#' @param LinkerObj TraReObj containing preprocessed input matrix, linker_preprocessing output.
+#' @param TraReObj TraReObj containing preprocessed input matrix, linker_preprocessing output.
 #' @param link_mode Chosen method(s) to link module eigengenes to regulators. The available options are
 #' 'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. By default, all methods are chosen.
 #' @param graph_mode Chosen method(s) to generate the edges in the bipartite graph. The available options
@@ -25,34 +25,36 @@
 #' @return List containing the GRN raw results, GRN modules and GRN graphs.
 #'
 #' @examples
-#'    ## For this example, we are going to join 60 drivers and
-#'    ## 200 targets genes from the example folder.
+#' 
+#'   ## For this example, we are going to load a example matrix
+#'   lognorm_est_counts_p <- paste0(system.file('extdata',package='TraRe'),
+#'                                  '/expression_rewiring_example.txt')
+#'   lognorm_est_counts <- read.delim(lognorm_est_counts_p, header=TRUE,row.names=1)
+#' 
+#'   ## Load gene info, its an array of regulators' names.
+#'   gene_info_p <- paste0(system.file('extdata',package='TraRe'),
+#'                          '/geneinfo_rewiring_example.txt')
+#'   gene_info <- read.delim(gene_info_p,header=TRUE)
+#'   geneinfo <- gene_info[gene_info[,'regulator'] == 1,'uniq_isos']
 #'
-#'    drivers <- readRDS(paste0(system.file('extdata',package='TraRe'),'/tfs_linker_example.rds'))
-#'    targets <- readRDS(paste0(system.file('extdata',package='TraRe'),'/targets_linker_example.rds'))
-#'
-#'    lognorm_est_counts <- as.matrix(rbind(drivers,targets))
-#'
-#'    ## We create the index for drivers and targets in the log-normalized gene expression matrix.
-#'
-#'    ##LinkerObj <- linker_preprocessing(data_matrix = lognorm_est_counts,
+#'    ##TraReObj <- trare_preprocessing(data_matrix = lognorm_est_counts,
 #'    ##                                  geneinfo = rownames(drivers), verbose = FALSE)
 #'
-#'    ## linkeroutput <- LINKER_run(LinkerObj = LinkerObj, link_mode='VBSR',
-#'    ##                            graph_mode='VBSR',NrModules=100,Nr_bootstraps=10,
-#'    ##                            NrCores=1,corrClustNrIter=100)
+#'    ## TraReObj <- LINKER_run(TraReObj = TraReObj, link_mode='VBSR',
+#'    ##                        graph_mode='VBSR',NrModules=100,Nr_bootstraps=10,
+#'    ##                        NrCores=1,corrClustNrIter=100)
 #'
 #' @export
-LINKER_run <- function(LinkerObj, link_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
+LINKER_run <- function(TraReObj, link_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
                        graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
                        module_rep = "MEAN", NrModules = 100, corrClustNrIter = 100,
                        Nr_bootstraps = 10, FDR = 0.05, Lambda = 5, NrCores = 1, train_size = 0.8,
                        onlymods = FALSE, only_train=FALSE) {
 
     # get lognorm_est_counts, target_filtered_idx, regulator_filtered_idx
-    lognorm_est_counts <- LinkerObj@lognorm_counts
-    target_filtered_idx <- LinkerObj@target_idx
-    regulator_filtered_idx <- LinkerObj@regulator_idx
+    lognorm_est_counts <- TraReObj@lognorm_counts
+    target_filtered_idx <- TraReObj@target_idx
+    regulator_filtered_idx <- TraReObj@regulator_idx
 
     # checks
 

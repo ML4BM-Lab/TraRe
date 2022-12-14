@@ -24,7 +24,7 @@ rawsummary(
   indexpageinfo,
   rawrunmoddata,
   rawsumm,
-  norm_expr_mat_keep,
+  lognorm_est_counts,
   outdir,
   foldername_p,
   modmeth,
@@ -55,7 +55,7 @@ from the rewiring test.}
 
 \item{rawsumm}{list containing generated graph related information and cut variable.}
 
-\item{norm_expr_mat_keep}{gene expression matrix from ObjectList.}
+\item{lognorm_est_counts}{gene expression matrix from ObjectList.}
 
 \item{foldername_p}{path to the current foldername.}
 
@@ -75,8 +75,8 @@ heatmap, and its sorted by a hierarchical clustering for better interpretation.
 ## Lets assume that we have already generated the ObjectList, we will load it from
 ## the folder containing the examples files. After this, it is all straight forward.
 
-objectlist <- readRDS(file=paste0(system.file('extdata',package='TraRe'),
-                      '/prepared_rewiring_example.rds'))
+##objectlist <- readRDS(file=paste0(system.file('extdata',package='TraRe'),
+##                     '/prepared_rewiring_example.rds'))
 
 
 ## We are going to create the folder containing
@@ -84,10 +84,10 @@ objectlist <- readRDS(file=paste0(system.file('extdata',package='TraRe'),
 ## If you want to keep it, do not run the last line.
 
 ## We are modifying output directory for this example.
-objectlist$outdir <- paste(getwd(),'examplefolder',sep='/')
+##objectlist$outdir <- paste(getwd(),'examplefolder',sep='/')
 
-runrewiring(ObjectList = objectlist)
-unlink(objectlist$outdir,recursive = TRUE)
+##runrewiring(ObjectList = objectlist)
+##unlink(objectlist$outdir,recursive = TRUE)
 
 
 }

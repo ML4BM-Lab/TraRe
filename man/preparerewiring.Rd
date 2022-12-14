@@ -6,17 +6,9 @@
 \usage{
 preparerewiring(
   name = "defaultname",
-  linker_output_p,
-  lognorm_est_counts_p = NULL,
-  SEObject_p = NULL,
-  gene_info_p = NULL,
-  phenotype_p = NULL,
-  nassays = 1,
+  linker_output = NULL,
+  TraReObj = NULL,
   final_signif_thresh = 0.001,
-  regulator_info_col_name = "regulator",
-  phenotype_col_name = "Class",
-  phenotype_class_vals_string = "NR,R",
-  phenotype_class_vals_string_label = "0,1",
   orig_test_perms = 100,
   retest_thresh = 0.08,
   retest_perms = 1000,
@@ -30,27 +22,11 @@ preparerewiring(
 \item{name}{Desired name of the folder which is generated. The chosen
 threshold will be \code{paste()} to the folder's name.}
 
-\item{linker_output_p}{Output file from linker function path. RDS format is required.}
+\item{linker_output}{linker output file.}
 
-\item{lognorm_est_counts_p}{Lognorm counts of the gene expression matrix path.}
-
-\item{SEObject_p}{SummarizedExperiment objects path.}
-
-\item{gene_info_p}{Path of a two-column file containing genes and 'regulator' boolean variable.}
-
-\item{phenotype_p}{Path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).}
-
-\item{nassays}{Name of assays in case SummarizedObject is provided.}
+\item{TraReObj}{TrareObj generated during preprocessing step.}
 
 \item{final_signif_thresh}{Significance threshold for the rewiring method. The lower the threshold, the restrictive the method.}
-
-\item{regulator_info_col_name}{Column name of the gene_info_p. By default, 'regulator'.}
-
-\item{phenotype_col_name}{Column name of the phenotype_p. By default, 'Class'.}
-
-\item{phenotype_class_vals_string}{Boolean terms of the phenotype_p at the 'Class' column. By default, (NR,R).}
-
-\item{phenotype_class_vals_string_label}{Boolean terms of the phenotype_p values at the 'Class' column. By default (0,1).}
 
 \item{orig_test_perms}{Initial permutations for first test (default: 100) .}
 
@@ -75,27 +51,26 @@ Prepare neccessary files for running \code{runrewiring()}
 }
 \examples{
 
-## We are going to prepare 4 files that we have in the example folder: the output from LINKER, the
-## gene expression matrix, the phenotype file and the gene info file. Note that the LINKER
-## output is generated from the gene expression matrix. Note: if rewiring across more than 1 dataset
-## is desired, paths will be given as arrays. (i.e. linker_output <- c(path1,path2))
+## Load the linker output
+linker_output <- readRDS(paste0(system.file('extdata',package='TraRe'),
+                                 '/linker_rewiring_example.rds'))
 
+## Load the phenotype file
+phenotype_p <- paste0(system.file('extdata',package='TraRe'),
+                     '/phenotype_rewiring_example.txt')
+phenotype <- read.delim(phenotype_p, row.names = 1)
+colnames(phenotype) <- 'phenotype'
 
-linker_output_p <- paste0(system.file('extdata',package='TraRe'),'/linker_rewiring_example.rds')
+## We will be using the same file we generated for the LINKER_run phase.
+TraReObj <- readRDS(paste0(system.file('extdata',package='TraRe'),'/TraReObj.rds'))
 
-lognorm_est_counts_p <- paste0(system.file('extdata',package='TraRe'),
-                        '/expression_rewiring_example.txt')
-
-gene_info_p <- paste0(system.file('extdata',package='TraRe'),'/geneinfo_rewiring_example.txt')
-
-phenotype_p <- paste0(system.file('extdata',package='TraRe'),'/phenotype_rewiring_example.txt')
+## Add the phenotype if it was not in the SummarizedExperiment when we did the preprocessing.
+#TraReObj <- rewiring_add_phenotype(TraReObj, phenotype)
 
 outdir <- system.file('extdata',package='TraRe')
-
-prepared <- preparerewiring(name='example',linker_output_p=linker_output_p,
-                            lognorm_est_counts_p=lognorm_est_counts_p,gene_info_p=gene_info_p,
-                            phenotype_p=phenotype_p,final_signif_thresh=0.05,
-                            nrcores=1,outdir=outdir)
-
+#prepared <- preparerewiring(name='example', linker_output= linker_output,
+#                            TraReObj = TraReObj, 
+#                            final_signif_thresh=0.05,
+#                            nrcores=1,outdir=outdir)
 
 }

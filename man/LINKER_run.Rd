@@ -5,7 +5,7 @@
 \title{GRN inference via selected model.}
 \usage{
 LINKER_run(
-  LinkerObj,
+  TraReObj,
   link_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
   graph_mode = c("VBSR", "LASSOmin", "LASSO1se", "LM"),
   module_rep = "MEAN",
@@ -21,7 +21,7 @@ LINKER_run(
 )
 }
 \arguments{
-\item{LinkerObj}{TraReObj containing preprocessed input matrix, linker_preprocessing output.}
+\item{TraReObj}{TraReObj containing preprocessed input matrix, linker_preprocessing output.}
 
 \item{link_mode}{Chosen method(s) to link module eigengenes to regulators. The available options are
 'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. By default, all methods are chosen.}
@@ -59,21 +59,23 @@ Gene Regulatory Network inference via model selection. Consists of two phases,
 \code{LINKER_runPhase1()} and \code{LINKER_runPhase2()}. Help them for more information.
 }
 \examples{
-   ## For this example, we are going to join 60 drivers and
-   ## 200 targets genes from the example folder.
 
-   drivers <- readRDS(paste0(system.file('extdata',package='TraRe'),'/tfs_linker_example.rds'))
-   targets <- readRDS(paste0(system.file('extdata',package='TraRe'),'/targets_linker_example.rds'))
+  ## For this example, we are going to load a example matrix
+  lognorm_est_counts_p <- paste0(system.file('extdata',package='TraRe'),
+                                 '/expression_rewiring_example.txt')
+  lognorm_est_counts <- read.delim(lognorm_est_counts_p, header=TRUE,row.names=1)
 
-   lognorm_est_counts <- as.matrix(rbind(drivers,targets))
+  ## Load gene info, its an array of regulators' names.
+  gene_info_p <- paste0(system.file('extdata',package='TraRe'),
+                         '/geneinfo_rewiring_example.txt')
+  gene_info <- read.delim(gene_info_p,header=TRUE)
+  geneinfo <- gene_info[gene_info[,'regulator'] == 1,'uniq_isos']
 
-   ## We create the index for drivers and targets in the log-normalized gene expression matrix.
-
-   ##LinkerObj <- linker_preprocessing(data_matrix = lognorm_est_counts,
+   ##TraReObj <- trare_preprocessing(data_matrix = lognorm_est_counts,
    ##                                  geneinfo = rownames(drivers), verbose = FALSE)
 
-   ## linkeroutput <- LINKER_run(LinkerObj = LinkerObj, link_mode='VBSR',
-   ##                            graph_mode='VBSR',NrModules=100,Nr_bootstraps=10,
-   ##                            NrCores=1,corrClustNrIter=100)
+   ## TraReObj <- LINKER_run(TraReObj = TraReObj, link_mode='VBSR',
+   ##                        graph_mode='VBSR',NrModules=100,Nr_bootstraps=10,
+   ##                        NrCores=1,corrClustNrIter=100)
 
 }

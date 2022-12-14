@@ -14,8 +14,8 @@
 #' ## Lets assume that we have already generated the ObjectList, we will load it from
 #' ## the folder containing the examples files. After this, it is all straight forward.
 #'
-#' objectlist <- readRDS(file=paste0(system.file('extdata',package='TraRe'),
-#'                       '/prepared_rewiring_example.rds'))
+#' ##objectlist <- readRDS(file=paste0(system.file('extdata',package='TraRe'),
+#' ##                     '/prepared_rewiring_example.rds'))
 #'
 #'
 #' ## We are going to create the folder containing
@@ -23,10 +23,10 @@
 #' ## If you want to keep it, do not run the last line.
 #'
 #' ## We are modifying output directory for this example.
-#' objectlist$outdir <- paste(getwd(),'examplefolder',sep='/')
+#' ##objectlist$outdir <- paste(getwd(),'examplefolder',sep='/')
 #'
-#' runrewiring(ObjectList = objectlist)
-#' unlink(objectlist$outdir,recursive = TRUE)
+#' ##runrewiring(ObjectList = objectlist)
+#' ##unlink(objectlist$outdir,recursive = TRUE)
 #'
 #'
 #' @export
@@ -36,9 +36,6 @@ runrewiring <- function(ObjectList) {
     codedir <- paste0(system.file("extdata", package = "TraRe"), "/RewiringReport/")
 
     # initialize common parameters
-    regulator_info_col_name <- ObjectList$regulator_info_col_name
-    phenotype_class_vals <- ObjectList$phenotype_class_vals
-    phenotype_class_vals_label <- ObjectList$phenotype_class_vals_label
     outdir <- paste0(ObjectList$outdir, "/supermod_rewiring")
     orig_test_perms <- ObjectList$orig_test_perms
     retest_thresh <- ObjectList$retest_thresh
@@ -92,16 +89,14 @@ runrewiring <- function(ObjectList) {
         message(modmeth, " ", i)
 
         rundata <- ObjectList$datasets[[i]]$rundata
-        norm_expr_mat_keep <- ObjectList$datasets[[i]]$norm_expr_mat_keep
-        keepsamps <- ObjectList$datasets[[i]]$keepsamps
-        keeplabels <- ObjectList$datasets[[i]]$keeplabels
-        class_counts <- ObjectList$datasets[[i]]$class_counts
+        lognorm_est_counts <- ObjectList$datasets[[i]]$lognorm_est_counts
         final_signif_thresh <- ObjectList$datasets[[i]]$final_signif_thresh
-        responder <- ObjectList$datasets[[i]]$responder
-        gene_info_df_keep <- ObjectList$datasets[[i]]$gene_info_df_keep
         name2idx <- ObjectList$datasets[[i]]$name2idx
-        allregs <- ObjectList$datasets[[i]]$allregs
-        alltargs <- ObjectList$datasets[[i]]$alltargs
+        regs <- ObjectList$datasets[[i]]$regs
+        targs <- ObjectList$datasets[[i]]$targs
+        class_counts <- ObjectList$datasets[[i]]$class_counts
+        pheno <- ObjectList$datasets[[i]]$pheno
+        phenosamples <- ObjectList$datasets[[i]]$phenosamples
 
         # This will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
 
@@ -116,16 +111,16 @@ runrewiring <- function(ObjectList) {
             regnames <- paste(collapse = ", ", modregs)
             targnames <- paste(collapse = ", ", modtargs)
             keepfeats <- unique(c(modregs, modtargs))
-            modmat <- t(norm_expr_mat_keep[keepfeats, keepsamps])
+            modmat <- t(lognorm_est_counts[keepfeats, phenosamples])
             modmeth_i_c <- paste(modmeth_i, collapse = " ")
 
-            orig_pval <- rewiring_test(modmat, keeplabels + 1, perm = orig_test_perms)
+            orig_pval <- rewiring_test(modmat, pheno + 1, perm = orig_test_perms)
             new_pval <- orig_pval
             stats <- c(modmeth_i_c, mymod, signif(orig_pval, 3), signif(new_pval, 3), length(modtargs), length(modregs), regnames,
                 targnames, dim(modmat), class_counts)
             if (orig_pval < retest_thresh | orig_pval == 1) {
                 # methods::show(paste(c('ModNum and NumGenes', mymod, length(keepfeats))))
-                result <- rewiring_test_pair_detail(modmat, keeplabels + 1, perm = retest_perms)
+                result <- rewiring_test_pair_detail(modmat, pheno + 1, perm = retest_perms)
                 new_pval <- result$pval
                 stats <- c(modmeth_i_c, mymod, signif(orig_pval, 3), signif(new_pval, 3), length(modtargs), length(modregs), regnames,
                   targnames, dim(modmat), class_counts)
@@ -197,7 +192,6 @@ runrewiring <- function(ObjectList) {
         }
 
         # select every cluster we have found except the last one.
-
         for (numclus in seq(length(clusters$clusters)-!last_cluster)) {
 
             message("Cluster number: ", numclus)
@@ -257,34 +251,25 @@ runrewiring <- function(ObjectList) {
             # write multitab table to index.html
             write(table2html(multitab), paste0(indexpageinfo$htmldir, "/", foldername_p, "/", indexpageinfo$indexpath), append = TRUE)
 
-            alllabels <- responder[keepsamps]
-            samps2pheno <- alllabels
-            samps2pheno[which(alllabels == phenotype_class_vals_label[2])] <- phenotype_class_vals[2]
-            samps2pheno[which(alllabels == phenotype_class_vals_label[1])] <- phenotype_class_vals[1]
-
-            nonrespond_idxs <- names(samps2pheno)[which(samps2pheno == phenotype_class_vals[1])]
-            responder_idxs <- names(samps2pheno)[which(samps2pheno == phenotype_class_vals[2])]
-
             rawrunmoddata <- list(regulators = names(reg_multiplicity), target_genes = names(targ_multiplicity))
 
             message("Generating raw graph")
-            rawsumm <- summarize_module(norm_expr_mat_keep, rawrunmoddata, name2idx, nonrespond_idxs, responder_idxs)
+            rawsumm <- summarize_module(lognorm_est_counts, rawrunmoddata, name2idx, phenosamples[!pheno], phenosamples[pheno])
 
             # If we have failed generating the raw full graph,
             # we cant generate refined graphs so we generate the summaries without the graphs
             # and we finish.
 
             if (rawsumm$cut){
-                rawsummary(indexpageinfo,rawrunmoddata,rawsumm, norm_expr_mat_keep, outdir,foldername_p,modmeth,cut=TRUE)
+                rawsummary(indexpageinfo,rawrunmoddata,rawsumm, lognorm_est_counts, outdir,foldername_p,modmeth,cut=TRUE)
                 next
             }
 
-            rawsummary(indexpageinfo,rawrunmoddata,rawsumm, norm_expr_mat_keep, outdir,foldername_p,modmeth)
+            rawsummary(indexpageinfo,rawrunmoddata,rawsumm, lognorm_est_counts, outdir,foldername_p,modmeth)
             refinedmod <- unique(names(igraph::V(rawsumm$full_graph)))
-            refinedrunmoddata <- list(regulators = refinedmod[(gene_info_df_keep[refinedmod, regulator_info_col_name] == "1")], target_genes = refinedmod[(gene_info_df_keep[refinedmod,
-                regulator_info_col_name] == "0")])
+            refinedrunmoddata <- list(regulators = intersect(refinedmod, regs), target_genes = intersect(refinedmod, targs))
             message("Generating refined graph")
-            refinedsumm <- summarize_module(norm_expr_mat_keep, refinedrunmoddata, name2idx, nonrespond_idxs, responder_idxs)
+            refinedsumm <- summarize_module(lognorm_est_counts, refinedrunmoddata, name2idx, phenosamples[!pheno], phenosamples[pheno])
 
             # summary of refined
             write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Refined Modules Summary", "</h1></td></tr></table><br>\n"),
@@ -296,12 +281,12 @@ runrewiring <- function(ObjectList) {
             graphics::par(mfrow = c(1, 3))
 
             mylayout <- return_layout_phenotype(refinedrunmoddata$regulators, refinedrunmoddata$target_genes, refinedsumm$nodesumm,
-                rownames(norm_expr_mat_keep))
+                rownames(lognorm_est_counts))
 
 
-            try(plot_igraph(refinedsumm$full_graph, paste0(ncol(norm_expr_mat_keep), " Samples"), "black", mylayout))
-            try(plot_igraph(refinedsumm$nonresp_graph, paste0(length(nonrespond_idxs), " Phenotype1"), "darkviolet", mylayout))
-            try(plot_igraph(refinedsumm$respond_graph, paste0(length(responder_idxs), " Phenotype2"), "darkgoldenrod", mylayout,TRUE))
+            try(plot_igraph(refinedsumm$full_graph, paste0(ncol(lognorm_est_counts), " Samples"), "black", mylayout))
+            try(plot_igraph(refinedsumm$nonresp_graph, paste0(length(phenosamples[!pheno]), " Phenotype1"), "darkviolet", mylayout))
+            try(plot_igraph(refinedsumm$respond_graph, paste0(length(phenosamples[pheno]), " Phenotype2"), "darkgoldenrod", mylayout,TRUE))
             grDevices::dev.off()
 
             # write plot to index page
@@ -310,7 +295,7 @@ runrewiring <- function(ObjectList) {
 
             # Write tables for refinedsumm
             sortidxs <- sort(as.numeric(refinedsumm$nodesumm[, "t-pval"]), decreasing = FALSE, index.return = TRUE)$ix
-            write_tables_all(refinedsumm$nodesumm[sortidxs, ], tabletype = paste0(modmeth, "_refined_nodesumm"), filestr = "data",
+            write_tables_all(refinedsumm$nTraReObjodesumm[sortidxs, ], tabletype = paste0(modmeth, "_refined_nodesumm"), filestr = "data",
                 html_idxs = seq_len(nrow(refinedsumm$nodesumm)), htmlinfo = indexpageinfo, extradir = paste0(foldername_p, "/"))
 
             sortidxs <- sort(as.numeric(refinedsumm$fulledgesumm[, "all.weights"]), decreasing = FALSE, index.return = TRUE)$ix
@@ -324,7 +309,7 @@ runrewiring <- function(ObjectList) {
 
                 # Generate the htmls for every supermodule from the refinedsumm.rds
                 html_from_graph(gpath = paste0(outdir, "/", foldername_p, "/refinedsumm.rds"), wpath = paste0(outdir, "/", foldername_p),
-                  user_mode = FALSE, dataset = norm_expr_mat_keep[allregs, ])
+                  user_mode = FALSE, dataset = lognorm_est_counts[regs, ])
 
             }, error = function(x) {
                 message("HTML summary could not be generated for this supermodule")
@@ -397,9 +382,9 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
 
     if (cmp) {
         # If compare mode enable, select the max of dataset's genes as universe_size
-        universe_size <- max(vapply(ObjectList$datasets, function(x) nrow(x$norm_expr_mat_keep), FUN.VALUE = 1))
+        universe_size <- max(vapply(ObjectList$datasets, function(x) nrow(x$lognorm_est_counts), FUN.VALUE = 1))
     } else {
-        universe_size <- nrow(ObjectList$datasets[[i]]$norm_expr_mat_keep)
+        universe_size <- nrow(ObjectList$datasets[[i]]$lognorm_est_counts)
     }
 
     all_modules <- names(module_membership_list)
@@ -577,9 +562,9 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
 #' @param rawrunmoddata list containing regulators and target genes from multiplicity table.
 #' @param rawsumm list containing generated graph related information and cut variable.
 #' @param foldername_p path to the current foldername.
-#' @param norm_expr_mat_keep gene expression matrix from ObjectList.
+#' @param lognorm_est_counts gene expression matrix from ObjectList.
 #' @param cut boolean to avoid errors from previous generated graphs.
-rawsummary <- function(indexpageinfo, rawrunmoddata,rawsumm, norm_expr_mat_keep, outdir,foldername_p,modmeth,cut = FALSE) {
+rawsummary <- function(indexpageinfo, rawrunmoddata,rawsumm, lognorm_est_counts, outdir,foldername_p,modmeth,cut = FALSE) {
 
     if (!cut) {
         # Variable to check if previously graphs were generated, to avoid errors.
@@ -591,9 +576,9 @@ rawsummary <- function(indexpageinfo, rawrunmoddata,rawsumm, norm_expr_mat_keep,
         pname <- paste(sep = ".", "igraphs.raw.full_graph")
         #grDevices::png(paste0(outdir, "/", foldername_p, "/imgs/", pname, ".png"), 1500, 750)
         grDevices::pdf(paste0(outdir, "/", foldername_p, "/imgs/", pname, ".pdf"), 15.625, 7.8125)
-        mylayout <- return_layout_phenotype(rawrunmoddata$regulators, rawrunmoddata$target_genes, rawsumm$nodesumm, rownames(norm_expr_mat_keep))
+        mylayout <- return_layout_phenotype(rawrunmoddata$regulators, rawrunmoddata$target_genes, rawsumm$nodesumm, rownames(lognorm_est_counts))
 
-        try(plot_igraph(rawsumm$full_graph, paste0(ncol(norm_expr_mat_keep), " Samples"), "black", mylayout,TRUE))
+        try(plot_igraph(rawsumm$full_graph, paste0(ncol(lognorm_est_counts), " Samples"), "black", mylayout,TRUE))
         grDevices::dev.off()
 
         # write plot to index page
