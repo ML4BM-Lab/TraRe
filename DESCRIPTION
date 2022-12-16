@@ -4,7 +4,7 @@ Version: 1.6.5
 URL: https://github.com/ubioinformat/TraRe/tree/master
 Authors@R: 
     c(person(given = "Jesus",
-           family = "de la Fuente Cedeño",
+           family = "de la Fuente Cedeno",
            role = c("aut", "cre","cph"),
            email = "jdelafuentec@unav.es",
            comment = c(ORCID = "0000-0003-1856-2469")),
@@ -24,8 +24,8 @@ Authors@R:
            email = "",
            comment = c(ORCID = "0000-0002-9933-9658")),
     person(given="Irene",
-	   family = "Marin Goñi",
-	   role = c("ctb"),
+	   family = "Marin Goni",
+	   role = c("aut"),
 	   email = "imarin.4@alumni.unav.es",
 	   comment = c(ORCID = "0000-0002-5060-0712")))
 Description: TraRe (Transcriptional Rewiring) is an R package which contains the necessary tools to carry out several functions. 

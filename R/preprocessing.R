@@ -71,6 +71,9 @@ trare_preprocessing <- function(data_matrix, geneinfo = NULL, nassay = 1, low_va
         phenotype_df <- SummarizedExperiment::colData(data_matrix)
         if ('phenotype'%in%colnames(phenotype_df)){
             message('Also including phenotype for rewiring future uses')
+          if (inherits(phenotype_df[,'phenotype'], "factor")){
+            phenotype <- as.numeric(phenotype_df[colnames(lognorm_est_counts), 'phenotype'],labels = c(0,1))) - 1
+          }else{
             phenotype <- as.numeric(factor(phenotype_df[colnames(lognorm_est_counts), 'phenotype'], labels = c(0,1))) - 1
         }
     }
