@@ -60,7 +60,7 @@ TraRe mainly requires three types of files or a SummarizedExperiment (SE) object
 
 * **Gene description data**: an array with the gene IDs of the TFs or genes to be considered as *regulators* in the gene expression matrix. The rest of the genes will be considered as target genes. In a SE object this information should be in the `SummarizedExperiment::rowData()` as a boolean variable called *gene_info*.
 
-* **Phenotype dataframe**: an dataframe with the Sample IDs in the `rownames()` and a column named *phenotype* that codifies a **binary phenotype**. This variable will be converted to a factor with two levels and labels c(0,1), thus, unless specified the order of the factor levels will be set automatically. If this data is incorporated in a SummarizedExperiment object from the begining of the pipeline and not all samples have the phenotype information (NAs), NA's will be ommited at the rewiring test. 
+* **Phenotype dataframe**: an dataframe with the Sample IDs in the `rownames()` and a column named *phenotype* that codifies a **binary phenotype**. This variable will be converted to a factor with two levels and labels c(0,1),thus the order of the factor levels will be set automatically by alfabethical order. Note that if this information is incorporated in a SummarizedExperiment object from the begining of the pipeline **and** not all samples have the phenotype information (NAs), NA's will be ommited at the rewiring test. 
 
 # Quick start 
 ## Installation
