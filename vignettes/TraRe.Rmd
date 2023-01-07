@@ -18,7 +18,7 @@ vignette: >
 
 ```{r LoadFunctions, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
 library(knitr)
-opts_chunk$set(error = FALSE, warning=FALSE)
+opts_chunk$set(error = FALSE, warning=FALSE, eval=FALSE)
 library(TraRe)
 ```
 
@@ -60,13 +60,13 @@ TraRe mainly requires three types of files or a SummarizedExperiment (SE) object
 
 * **Gene description data**: an array with the gene IDs of the TFs or genes to be considered as *regulators* in the gene expression matrix. The rest of the genes will be considered as target genes. In a SE object this information should be in the `SummarizedExperiment::rowData()` as a boolean variable called *gene_info*.
 
-* **Phenotype dataframe**: an dataframe with the Sample IDs in the `rownames()` and a column named *phenotype* that codifies a **binary phenotype**. This variable will be converted to a factor with two levels and labels c(0,1),thus the order of the factor levels will be set automatically by alfabethical order. Note that if this information is incorporated in a SummarizedExperiment object from the begining of the pipeline **and** not all samples have the phenotype information (NAs), NA's will be ommited at the rewiring test. 
+* **Phenotype dataframe**: an dataframe with the Sample IDs in the `rownames()` and a column named *phenotype* that codifies a **binary phenotype**. This variable will be converted to a factor with two levels and labels `c(0,1)`,thus the order of the factor levels will be set automatically by alphabetical order. Note that if this information is incorporated in a SummarizedExperiment object from the beginning of the pipeline **and** not all samples have the phenotype information (NAs), NA's will be omitted at the rewiring test. 
 
 # Quick start 
 ## Installation
 TraRe can be currently installed from Bioconductor:
 
-```{r, eval=FALSE}
+```{r}
 
  if (!requireNamespace("BiocManager"))
  install.packages("BiocManager")
@@ -77,7 +77,7 @@ TraRe can be currently installed from Bioconductor:
 
 We will use a *SummarizedExperiment* object with the gene expression matrix in the SummarizedExperiment::assay() and the gene info stored in the SummarizedExperiment::rowData().
 If you plan to do the differential network analysis (i.e. full workflow with rewiring test), then phenotype info should be stored in the SummarizedExperiment::colData().
-```{r, eval=FALSE}
+```{r}
 #  Expression matrix path
 lognorm_est_counts_p <- paste0(system.file("extdata",package="TraRe"),
                '/VignetteFiles/expression_rewiring_vignette.txt')
@@ -121,7 +121,7 @@ geneinfo <- geneinfo[rownames(lognorm_est_counts),,drop=FALSE]
 colnames(geneinfo) <- "gene_info"
 
 # We load phenotype
-phenotype <- utils::read.delim(phenotype_p,row.names = 1)
+phenotype <- utils::read.delim(phenotype_p,row.names = 1, sep=",")
 # The variable name must be "phenotype"
 colnames(phenotype) <- "phenotype"
 
@@ -131,18 +131,21 @@ SeObject <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = lo
                                                        colData = phenotype)
 
 # We preprocess the original matrix for low variance in genes and samples
-# TraReObj <- TraRe::trare_preprocessing(data_matrix = SeObject)
+TraReObj <- TraRe::trare_preprocessing(data_matrix = SeObject)
  
 # We run the GRN inference method 
 linkeroutput <- TraRe::LINKER_run(TraReObj, link_mode = "VBSR", module_rep = "LINKER",
                            graph_mode = "VBSR", NrModules = 100, Nr_bootstraps = 10,
-                           corrClustNrIter = 100)                        
+                           corrClustNrIter = 100) 
+kk_lo <- LINKER_run_a(TraReObj, link_mode = "VBSR", module_rep = "LINKER",
+                           graph_mode = "VBSR", NrModules = 100, Nr_bootstraps = 10,
+                           corrClustNrIter = 100) 
 # We save the output
 # saveRDS(object = linkeroutput, 
           # file = paste0(system.file('extdata', package='TraRe'),'/linkeroutput_vignette_quickexample.rds'))
 
 # Prepare data for rewiring
-prew_output <- preparerewiring_mod(name="Vignette", TraReObj = TraReObj,
+prew_output <- TraRe::preparerewiring(name="Vignette_prueba", TraReObj = TraReObj,
                                 linker_output= linkeroutput,
                                 final_signif_thresh = 0.05, nrcores = 1,
                                 outdir=outdir)
@@ -184,7 +187,7 @@ A **SummarizedExperiment** object can be used or otherwise:
 - **low_var_samples_th**: threschold to drop out low variance samples across genes. Default: 1
 
 The return object is a **TraReObj** containing preprocessed input matrix and associated info to pass to the funciton `LINKER_run`
-```{r, eval=FALSE}
+```{r}
 ## For this example, we are going to load a example matrix
 lognorm_est_counts_p <- paste0(system.file('extdata',package='TraRe'),
                                   '/expression_rewiring_example.txt')
@@ -230,7 +233,7 @@ even if a *SummarizedExperiment* object is provided to the `linker_processing` f
 This information can be added later on to the object for the differential network analysis step (*Rewiring*) if a *SummarizedExperiment* was not used.
 
 
-```{r, eval=FALSE, warning=FALSE, collapse=TRUE}
+```{r, collapse=TRUE}
 
 
 # We recommend VBSR as the model as it outperforms the other methods
@@ -288,7 +291,7 @@ The information needed by `preparerewiring()` is:
 There are also other parameters that will remain by default. Please take a look at the `preparerewiring()` function for more information. We now generate 
 the `preparerewiring()` output.
 
-```{r, eval=FALSE, warning=FALSE, collapse=TRUE}
+```{r, collapse=TRUE}
 
 ## Load the linker output
 linkeroutput <- readRDS(paste0(system.file('extdata',package='TraRe'),
@@ -336,61 +339,54 @@ function `rewiring_gene_level`. We propose to use it using the liker_output gene
 the *Rewiring test* onthe modules found by `LINKER_run` and then, for each TF, it computes the Fisher's test to discriminate whether this TF is more likely be found in rewired modules or not.
 
 Below are the main parameters of the function:
-\*Note in the future change to accommodate to new objects and files in `LINKER_run` and `preparereriwring` functions
 
-- **fpath** Desired path for the rewiring file to be generated.
-- **linker_output_p** Output file from linker function path. RDS format is required.
-- **lognorm_est_counts_p** Lognorm counts of the gene expression matrix path.
-- **gene_info_p** Path of a two-column file containing genes and 'regulator' boolean variable.
-- **phenotype_p** Path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).
-- **final_sig_th** Significance threshold for the rewiring method. The lower the threshold, the restrictive the method. Default set to 0.05.
+- **fpath** Desired path for the rewiring file to be generated (or oath to existing file).
+- **linker_output**: Output from `LINKER_run` function (recommended with 50 bootstraps).
+- **TraReObj**: the *TrareObj* generated during preprocessing step before GRN inference.
+- **final_signif_thresh** Significance threshold for the rewiring method ($\tau$). The lower the threshold, the more restrictive the method. Default set to 0.05.
 - **ImpTH** Threshold for the refinement of the returned list. Default set to 0.05.
 - **nrcores** Number of cores to run the parallelization within the rewiring test (default: 3).
-
 
 The output of this function are two .txt files: 
 1. The list of the rewired modules of the linker_output object
 2. The list of rewired TF together with the p-value obtained in for the Fisher's test and the OR.
 
-```{r, eval = FALSE}
-
+```{r}
+  fpath <- paste0(system.file('extdata',package='TraRe'),'/rewired_modules_50boots.txt')
 # At the gene level (50 bootstraps)
-#   impgenes <-  rewiring_gene_level(linker_output_p = 'path_to_linker_output_50bootstraps.rds',
-#                                    lognorm_est_counts_p = exp_p,
-#                                    gene_info_p = gene_info_p,
-#                                    phenotype_p = clinic_p,
-#                                    fpath = "path_50_bootstraps_rewired_modules.txt",
-#                                    final_sig_th = 0.05,
-#                                    ImpTH = 0.05,
-#                                    nrcores = 4)
+  impgenes <-  rewiring_gene_level(linker_output = linkeroutput_50b,
+                                   TraReObj = TraReObj,
+                                   fpath = fpath,
+                                   final_signif_thresh = 0.05,
+                                   ImpTH = 0.05,
+                                   include_cliques=TRUE,
+                                   cliquesTH=0.8,
+                                   nrcores = 1)
 # # Save
-  # write.table(impgenes,file= './output/tables/table_rewired_tfs.tsv', row.names = TRUE, sep = "\t")
+  write.table(impgenes, file=paste0(outdir,'/table_rewired_tfs.tsv'), 
+              row.names = TRUE, sep = "\t")
 ```
 # Rewiring at the regulon level
 
 TraRe also provides a function to extract from rewired modules the curated *rewired regulon* for each TF. Again, we recomend to run it using a **50-bootstraps** linker output for robustness.
 
 Below are the main parameters for the `rewiring_regulon_level` function:
-\*Note in the future change to accommodate to new objects and files in `LINKER_run` and `preparereriwring`
 
-- **linker_output_p**: Path of output file from linker function. RDS format is required.
-- **lognorm_est_counts_p**: Path of lognorm counts of the gene expression matrix.
-- **gene_info_p**: Path of a two-column file containing genes and 'regulator' boolean variable.
-- **phenotype_p**: Path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).
-- **final_signif_thresh**: Significance threshold for the rewiring method. The lower the threshold, the restrictive the method. Default set to 0.05.
+- **linker_output**: Output from `LINKER_run` function (recommended with 50 bootstraps).
+- **TraReObj**: the *TrareObj* generated during preprocessing step before GRN inference.
+- **final_signif_thresh**: Significance threshold for the rewiring method. The lower the threshold, the more restrictive the method. Default set to 0.05.
 - **sigmodules_p** Path of the output file from rewired_gene_level function with the list of rewired modules.
 
 The output is a list of regulons, this is: for each TF with significant results a dataframe describing the regulon information (target, p-value for this edge and multiplicity value, i.e. the number of times this edge has been found)
-```{r, eval = FALSE}
-  # sigmodules_p <- 'path_50_bootstraps_rewired_modules.txt'
-  
-  # regulons <- rewiring_regulon_level(linker_output_p,
-  #                                    lognorm_est_counts_p,
-  #                                    gene_info_p,
-  #                                    phenotype_p,
-  #                                    sigmodules_p,
-  #                                    final_signif_thresh = 0.05)
-                                   
+```{r}
+
+  regulons <- rewiring_regulon_level(linker_output = linkeroutput_50b,
+                                     TraReObj = TraReObj,
+                                     sigmodules_p = fpath,
+                                     final_signif_thresh = 0.05)
+  saveRDS(regulons,paste0(system.file('extdata',package='TraRe'),
+  '/regulons_example.txt'))
+
 
 ```
 # Visualization of the GRNs
@@ -408,7 +404,7 @@ Find below the necessary parameters and descriptions of `NET_run()`.
 
 \*Note in the future change to accommodate to new objects and files like in `LINKER_run`.
 
-```{r,eval=FALSE,warning=FALSE,collapse=TRUE}
+```{r,collapse=TRUE}
 
 # Assume we have run the rewiring method and we have discovered a robust rewired transcriptional module.
 # After we have selected the drivers and targets from all the modules contained in it, we can build

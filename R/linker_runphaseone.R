@@ -24,8 +24,6 @@
 #' 'VBSR', 'LASSOmin', 'LASSO1se', 'LASSOparam' and 'LM'. Default set to 'VBSR'
 #' @param used_method Method selected for use. Default set to MEAN.
 #' @param Nr_bootstraps Number of bootstrap of Phase I. By default, 1.
-#' @param NrCores Nr of computer cores for the parallel parts of the method. Note that the parallelization
-#' is NOT initialized in any of the functions. By default, 2.
 #' @param Lambda Lambda variable for Lasso models.
 #' @param alpha Alpha variable for Lasso models.
 #' @param pmax Maximum numbers of regulators that we want.
@@ -58,12 +56,12 @@
 #'
 #'    linkeroutput <- LINKER_runPhase1(lognorm_est_counts,target_filtered_idx=target_filtered_idx,
 #'                                     regulator_filtered_idx=regulator_filtered_idx, NrModules=2,
-#'                                     mode='LASSOmin',NrCores=2, corrClustNrIter=10,Nr_bootstraps=1)
+#'                                     mode='LASSOmin', corrClustNrIter=10,Nr_bootstraps=1)
 #'
 #' @export LINKER_runPhase1
 
 LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_filtered_idx, nassay = 1, regulator = "regulator",
-    NrModules, Lambda = 5, alpha = 1 - 1e-06, pmax = 10, train_size = 0.8, mode = "VBSR", used_method = "MEAN", NrCores = 1, corrClustNrIter = 100,
+    NrModules, Lambda = 5, alpha = 1 - 1e-06, pmax = 10, train_size = 0.8, mode = "VBSR", used_method = "MEAN", corrClustNrIter = 100,
     Nr_bootstraps = 1, FDR = 0.05,only_train=FALSE) {
 
     # Check for SummarizedExperiment Object
@@ -105,7 +103,7 @@ LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_
         MA_matrix_Var_validation <- t(scale(t(lognorm_est_counts[target_filtered_idx, validation_samples])))
 
         LINKERinit <- LINKER_init(MA_matrix_Var = MA_matrix_Var_train, RegulatorData = Regulator_data_train, NrModules = NrModules,
-            NrCores = NrCores, corrClustNrIter = corrClustNrIter, Parameters = Parameters, FDR = FDR)
+                      corrClustNrIter = corrClustNrIter, Parameters = Parameters, FDR = FDR)
 
         tmp <- LINKER_corrClust(LINKERinit)
         bootstrap_results[[boost_idx]] <- tmp
@@ -135,7 +133,7 @@ LINKER_runPhase1 <- function(lognorm_est_counts, target_filtered_idx, regulator_
 #' @param Parameters List of parameters containig lambda, pmax, alpha, mode and used method.
 #' @param NrModules Number of modules that are a priori to be found (note that the final number of modules
 #' discovered may differ from this value). By default, 100 modules.
-LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, NrCores = 3, corrClustNrIter = 21, Parameters, FDR) {
+LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, corrClustNrIter = 21, Parameters, FDR) {
 
     if (nrow(MA_matrix_Var) > NrModules) {
 
@@ -218,7 +216,7 @@ LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, NrCores = 3, co
     names(ModuleMembership) <- rownames(MA_matrix_Var)
 
     return(list(MA_matrix_Var = MA_matrix_Var, RegulatorData = RegulatorData, ModuleMembership = ModuleMembership, Parameters = Parameters,
-        NrCores = NrCores, corrClustNrIter = corrClustNrIter, FDR = FDR))
+        corrClustNrIter = corrClustNrIter, FDR = FDR))
 
 }
 #' @export
@@ -227,7 +225,7 @@ LINKER_init <- function(MA_matrix_Var, RegulatorData, NrModules, NrCores = 3, co
 #' only the train samples.
 #' @param Beta Coefficient on which the decision of reassigning genes is based.
 #' @param Clusters Number of modules that are a priori to be found (note that the final number of modules discovered may differ from this value).
-LINKER_ReassignGenesToClusters <- function(Data, RegulatorData, Beta, Clusters, NrCores = 1) {
+LINKER_ReassignGenesToClusters <- function(Data, RegulatorData, Beta, Clusters) {
 
     MIN_NUM_GENES_PER_MODULE <- 2
 
@@ -298,7 +296,7 @@ LINKER_corrClust <- function(LINKERinit) {
     Clusters <- LINKERinit$ModuleMembership
     RegulatorData <- LINKERinit$RegulatorData
     Parameters <- LINKERinit$Parameters
-    NrCores <- LINKERinit$NrCores
+    
 
     RegulatorData_rownames <- rownames(RegulatorData)
     Data_rownames <- rownames(Data)
@@ -307,13 +305,13 @@ LINKER_corrClust <- function(LINKERinit) {
 
     # STEP 1: learning the regulatory program for each cluster
     regulatoryPrograms <- LINKER_LearnRegulatoryPrograms(Data, Clusters, RegulatorData, Lambda = Parameters$Lambda, alpha = Parameters$alpha,
-        pmax = Parameters$pmax, mode = Parameters$mode, used_method = Parameters$used_method, NrCores = NrCores, FDR = LINKERinit$FDR)
+        pmax = Parameters$pmax, mode = Parameters$mode, used_method = Parameters$used_method, FDR = LINKERinit$FDR)
 
     jj <- 1
     while (jj < NrIterations) {
 
         # STEP 2: reassigning genes based on closed match to new regulatory programs
-        ReassignGenesToClusters <- LINKER_ReassignGenesToClusters(Data, RegulatorData, regulatoryPrograms$Beta, Clusters, NrCores = NrCores)
+        ReassignGenesToClusters <- LINKER_ReassignGenesToClusters(Data, RegulatorData, regulatoryPrograms$Beta, Clusters)
         jj <- jj + 1
 
         NrReassignGenes <- ReassignGenesToClusters$NrReassignGenes
@@ -326,7 +324,7 @@ LINKER_corrClust <- function(LINKERinit) {
 
         # STEP 1: learning the regulatory program for each cluster
         regulatoryPrograms <- LINKER_LearnRegulatoryPrograms(Data, Clusters, RegulatorData, Lambda = Parameters$Lambda, alpha = Parameters$alpha,
-            pmax = Parameters$pmax, mode = Parameters$mode, used_method = Parameters$used_method, NrCores = NrCores, FDR = LINKERinit$FDR)
+            pmax = Parameters$pmax, mode = Parameters$mode, used_method = Parameters$used_method, FDR = LINKERinit$FDR)
 
     }
 
@@ -491,7 +489,7 @@ LINKER_EvaluateTestSet <- function(LINKERresults, MA_Data_TestSet, RegulatorData
 #' @param Data Matrix of log-normalized estimated counts of the gene expression data, centered and scaled, containing
 #' only the train samples.
 #' @param Clusters Clusters generated from the linkerinit function.
-LINKER_LearnRegulatoryPrograms <- function(Data, Clusters, RegulatorData, Lambda, alpha, pmax, mode, used_method = "MEAN", NrCores = 1, FDR) {
+LINKER_LearnRegulatoryPrograms <- function(Data, Clusters, RegulatorData, Lambda, alpha, pmax, mode, used_method = "MEAN", FDR) {
 
     RegulatorData_rownames <- rownames(RegulatorData)
     Data_rownames <- rownames(Data)

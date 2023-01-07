@@ -1,12 +1,9 @@
 #' Perform the rewiring at the regulon level
 #'
 #' Perform the rewiring test to regulons using a hypergeometric test.
-#'
-#' @param linker_output_p Path of output file from linker function. RDS format is required.
-#' @param lognorm_est_counts_p Path of lognorm counts of the gene expression matrix.
-#' @param gene_info_p Path of a two-column file containing genes and 'regulator' boolean variable.
-#' @param phenotype_p Path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).
-#' @param final_signif_thresh Significance threshold for the rewiring method. The lower the threshold, the restrictive the method. Default set to 0.05.
+#' @param linker_output Output from LINKER_run function (recommended with 50 bootstraps).
+#' @param TraReObj the TrareObj generated during preprocessing step before GRN inference.
+#' @param final_signif_thresh Significance threshold for the rewiring method. The lower the threshold, the more restrictive the method. Default set to 0.05.
 #' @param rewired Bool indicating whether the analysis is to be done regulons from rewired modules (default= TRUE)
 #' @param sigmodules_p Path of the output file from rewired_gene_level function with rewired modules list.
 #'
@@ -15,29 +12,26 @@
 #'
 #' @export
 
-rewiring_regulon_level <- function(linker_output_p,
-                                   lognorm_est_counts_p,
-                                   gene_info_p,
-                                   phenotype_p,
+rewiring_regulon_level <- function(linker_output,
+                                   TraReObj,
                                    sigmodules_p,
                                    rewired = TRUE,
                                    final_signif_thresh = 0.05){
 
   ### Let's work
-  prepareobj <- TraRe::preparerewiring(linker_output_p = linker_output_p,
-                                       lognorm_est_counts_p = lognorm_est_counts_p,
-                                       gene_info_p = gene_info_p,
-                                       phenotype_p = phenotype_p,
-                                       final_signif_thresh = final_signif_thresh,
-                                       use_graphs = T)
+  #Prepare rewiring creating object
+  preparedrewiring <- TraRe::preparerewiring(TraReObj = TraReObj,
+                                             linker_output= linker_output,
+                                             final_signif_thresh = 0.05, nrcores = nrcores,
+                                             outdir=outdir)
 
   ## Get regulons
-  regulons_all_modules <- get_regulons(prepareobj,
+  regulons_all_modules <- get_regulons(preparedrewiring,
                                        sigmodules_p = sigmodules_p,
                                        rewired = TRUE)
 
   ## Rewire regulons
-  finals_adj <- rewiring_regulon(regulons_all_modules, prepareobj)
+  finals_adj <- rewiring_regulon(regulons_all_modules, preparedrewiring)
 
   ## Merge regulons
   regulons_uniq <- merge_regulons(finals_adj)
@@ -106,21 +100,21 @@ rewiring_single_module <- function(ObjectList,module,mymod=1){
   orig_test_perms<-ObjectList$orig_test_perms
   retest_thresh<-ObjectList$retest_thresh
   retest_perms<-ObjectList$retest_perms
-  norm_expr_mat_keep<-ObjectList$'datasets'[[i]]$norm_expr_mat_keep
-  keepsamps<-ObjectList$'datasets'[[i]]$keepsamps
-  keeplabels<-ObjectList$'datasets'[[i]]$keeplabels
+  lognorm_est_counts <- ObjectList$datasets[[i]]$lognorm_est_counts
+  pheno <- ObjectList$datasets[[i]]$pheno
+  phenosamples <- ObjectList$datasets[[i]]$phenosamples
 
   #Now rewiring test!
 
   modregs <- intersect(ObjectList$datasets[[i]]$allregs,genes)
   modtargs <- intersect(ObjectList$datasets[[i]]$alltargs,genes)
   keepfeats <- unique(c(modregs, modtargs))
-  modmat <- t(norm_expr_mat_keep[keepfeats, keepsamps])
-  orig_pval <- TraRe::rewiring_test(modmat, keeplabels + 1, perm = orig_test_perms)
+  modmat <- t(norm_expr_mat_keep[keepfeats, phenosamples])
+  orig_pval <- TraRe::rewiring_test(modmat, pheno + 1, perm = orig_test_perms)
   new_pval <- orig_pval
 
   if (orig_pval < retest_thresh | orig_pval == 1 | mymod %% 300 == 0) {
-    result <- TraRe::rewiring_test_pair_detail(modmat, keeplabels + 1,perm = retest_perms)
+    result <- TraRe::rewiring_test_pair_detail(modmat, pheno + 1,perm = retest_perms)
     new_pval <- result$pval}
   return(new_pval)
 
@@ -134,7 +128,7 @@ rewiring_single_module <- function(ObjectList,module,mymod=1){
 
 ### THIS CAN BE PARALLELIZED
 rewiring_regulon <- function(regulons_all_modules,
-                             prepareobj=prepareobj,
+                             prepareobj,
                              final_signif_thresh=final_signif_thresh){
 
   #Unlist the regulons
@@ -259,13 +253,18 @@ filter_regulons <- function(regulons_uniq){
   message('Filtering results')
   # Check which regulons have no sig edges and get a bool
   bool_pval <- sapply(regulons_uniq, function(x) x$p_value<=0.05)
-
   bool_reg <- sapply(bool_pval,sum)!=0
-
+  pval_th <- 0.05
+  if (length(bool_pval)==length(regulons_uniq)){
+    message("No regulon was found to be significantly rewired")
+    pval_th=1
+    bool_reg <- seq(regulons_uniq)
+  }
+  
   # Filter edges whose pval<0.05 and output ordered by multiplicity data frame
   dfs <- lapply(regulons_uniq[bool_reg], function(x){
     y <- as.data.frame(x)
-    y <- y[y$p_value<=0.05,]
+    y <- y[y$p_value<=pval_th,]
     y <- y[order(y$multiplicity,decreasing = TRUE),]
     rownames( y ) <- seq_len( nrow( y ) )
     return(y)

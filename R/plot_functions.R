@@ -97,23 +97,24 @@ plot_igraph <- function(mygraph = NULL, mytitle = "", titlecol = "black", mylayo
   regdegrees[which(is.na(regdegrees))] <- ""
   finalnames <- apply(cbind(nodenames, regdegrees), 1, paste, collapse = " - ")
 
-  plot(mygraph, vertex.color = nodecol[as.numeric(igraph::V(mygraph)$type) + 1], vertex.shape = shape[as.numeric(igraph::V(mygraph)$type) + 1],
-       vertex.label = finalnames, vertex.label.cex = 1.5,
-       vertex.frame.color = framecol[as.numeric(igraph::V(mygraph)$type) +1],
-       vertex.size = as.numeric(igraph::V(mygraph)$type) * 5 + 5,
-       layout = cbind(mylayout$genesx[igraph::V(mygraph)$name], mylayout$genesy[igraph::V(mygraph)$name]))
+  plot(mygraph, vertex.color = nodecol[as.numeric(igraph::V(mygraph)$type) + 1],
+                vertex.shape = shape[as.numeric(igraph::V(mygraph)$type) + 1],
+                vertex.label = finalnames, vertex.label.cex = 1.5,
+                vertex.frame.color = framecol[as.numeric(igraph::V(mygraph)$type) +1],
+                vertex.size = as.numeric(igraph::V(mygraph)$type) * 5 + 5,
+                layout = cbind(mylayout$genesx[igraph::V(mygraph)$name], mylayout$genesy[igraph::V(mygraph)$name]))
   if (includelegend){
     graphics::legend(x=1.25,y=0.4,
                      col=c("darkblue","darkorange"),
                      legend=c("Targets","Drivers"),
                      pch=c(20,15),pt.cex=2,
-                     y.intersp = 0.5,
+                     y.intersp = 1,
                      border='white',
                      bty="n")
     graphics::text(x=1.615,y=0.135,labels="Edge's weight")
     colors <- apply(edge_cscale(sort(tweight)), 1, function(x) grDevices::rgb(x[1]/255, x[2]/255, x[3]/255, 0.8))
     legend_image <- grDevices::as.raster(matrix(colors, nrow=1))
-    graphics::rasterImage(legend_image, xleft=1.3, xright=1.4, ybottom=0.1, ytop=0.17,angle=0)
+    graphics::rasterImage(legend_image, xleft=1.25, xright=1.35, ybottom=0.1, ytop=0.17,angle=0)
   }
   graphics::title(paste0(mytitle, " ", sum(igraph::V(mygraph)$type == 1), "&", sum(igraph::V(mygraph)$type == 0)), cex.main = 2,
                   col.main = titlecol)

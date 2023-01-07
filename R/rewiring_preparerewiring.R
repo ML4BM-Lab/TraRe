@@ -91,8 +91,8 @@ preparerewiring <- function(name = "defaultname", linker_output = NULL, TraReObj
         regs <- geneinfo
         targs <- rownames(lognorm_est_counts)[TraReObj@target_idx]
         phenosamples <- colnames(lognorm_est_counts)[!is.na(TraReObj@pheno)]
-	phenotype <- TraReObj@pheno[!is.na(TraReObj@pheno)]
-
+	      phenotype <- as.logical(TraReObj@pheno[!is.na(TraReObj@pheno)])
+        
         #generate list with name index
         name2idx <- seq_len(nrow(lognorm_est_counts))
         names(name2idx) <- rownames(lognorm_est_counts)

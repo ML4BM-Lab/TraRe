@@ -3,11 +3,9 @@
 #' Perform the rewiring test to check if regulators are enriched in rewiring modules using a hypergeometric test.
 #'
 #' @param fpath Desired path for the rewiring file to be generated.
-#' @param linker_output_p Output file from linker function path. RDS format is required.
-#' @param lognorm_est_counts_p Lognorm counts of the gene expression matrix path.
-#' @param gene_info_p Path of a two-column file containing genes and 'regulator' boolean variable.
-#' @param phenotype_p Path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).
-#' @param final_sig_th Significance threshold for the rewiring method. The lower the threshold, the restrictive the method. Default set to 0.05.
+#' @param linker_output Output from LINKER_run function (recommended with 50 bootstraps).
+#' @param TraReObj the TrareObj generated during preprocessing step before GRN inference.
+#' @param final_signif_thresh Significance threshold for the rewiring method. The lower the threshold, the restrictive the method. Default set to 0.05.
 #' @param include_cliques Boolean specifying to include cliques in the returned score matrix. Default set to FALSE.
 #' @param ImpTH Threshold for the refinement of the returned list. Default set to 0.05.
 #' @param cliquesTH Correlation threshold if include_cliques is set to TRUE. Default set to 0.8.
@@ -18,18 +16,15 @@
 #' from the hypergeometric test within three categories.
 #'
 #' @export
-rewiring_gene_level <- function(linker_output_p,
-                               lognorm_est_counts_p,
-                               gene_info_p,
-                               phenotype_p,
-                               fpath='',
-                               final_sig_th=0.05,
-                               include_cliques=FALSE,
-                               ImpTH=0.05,
-                               cliquesTH=0.8,
-                               nrcores=3){
-
-  #Do fast rewiring
+rewiring_gene_level <- function(linker_output,
+                                TraReObj,
+                                fpath='',
+                                final_signif_thresh=0.05,
+                                include_cliques=FALSE,
+                                ImpTH=0.05,
+                                cliquesTH=0.8,
+                                nrcores=3){
+  # #Do fast rewiring
   fast_rew <- function(ObjectList){
 
     #initialize common parameters
@@ -78,16 +73,20 @@ rewiring_gene_level <- function(linker_output_p,
       #Output to the user which dupla we are working with
       message(modmeth,' ',i)
 
-      rundata<-ObjectList$'datasets'[[i]]$rundata
-      norm_expr_mat_keep<-ObjectList$'datasets'[[i]]$norm_expr_mat_keep
-      keepsamps<-ObjectList$'datasets'[[i]]$keepsamps
-      keeplabels<-ObjectList$'datasets'[[i]]$keeplabels
-      class_counts<-ObjectList$'datasets'[[i]]$class_counts
-      final_signif_thresh<-ObjectList$'datasets'[[i]]$final_signif_thresh
-      responder<-ObjectList$'datasets'[[i]]$responder
-      gene_info_df_keep<-ObjectList$'datasets'[[i]]$gene_info_df_keep
-      name2idx<-ObjectList$'datasets'[[i]]$name2idx
+      
+      # keepsamps<-ObjectList$'datasets'[[i]]$keepsamps
+      # keeplabels<-ObjectList$'datasets'[[i]]$keeplabels
+      # gene_info_df_keep<-ObjectList$'datasets'[[i]]$gene_info_df_keep
 
+      rundata <- ObjectList$datasets[[i]]$rundata
+      lognorm_est_counts <- ObjectList$datasets[[i]]$lognorm_est_counts
+      final_signif_thresh <- ObjectList$datasets[[i]]$final_signif_thresh
+      name2idx <- ObjectList$datasets[[i]]$name2idx
+      regs <- ObjectList$datasets[[i]]$regs
+      targs <- ObjectList$datasets[[i]]$targs
+      class_counts <- ObjectList$datasets[[i]]$class_counts
+      pheno <- ObjectList$datasets[[i]]$pheno
+      phenosamples <- ObjectList$datasets[[i]]$phenosamples
 
       # This will register nr of cores/threads, keep this here
       # so the user can decide how many cores based on
@@ -104,17 +103,17 @@ rewiring_gene_level <- function(linker_output_p,
         regnames <- paste(collapse = ", ", modregs)
         targnames <- paste(collapse = ", ", modtargs)
         keepfeats <- unique(c(modregs, modtargs))
-        modmat <- t(norm_expr_mat_keep[keepfeats, keepsamps])
+        modmat <- t(lognorm_est_counts[keepfeats, phenosamples])
         modmeth_i_c <- paste(modmeth_i,collapse=' ')
 
-        orig_pval <- TraRe::rewiring_test(modmat, keeplabels + 1, perm = orig_test_perms)
+        orig_pval <- TraRe::rewiring_test(modmat, pheno + 1, perm = orig_test_perms)
         new_pval <- orig_pval
         stats <- c(modmeth_i_c, mymod, signif(orig_pval, 3), signif(new_pval, 3),
                    length(modtargs), length(modregs), regnames,targnames, dim(modmat),
                    class_counts)
         if (orig_pval < retest_thresh | orig_pval == 1 | mymod %% 300 == 0) {
           #methods::show(paste(c("ModNum and NumGenes", mymod, length(keepfeats))))
-          result <- TraRe::rewiring_test_pair_detail(modmat, keeplabels + 1,perm = retest_perms)
+          result <- TraRe::rewiring_test_pair_detail(modmat, pheno + 1,perm = retest_perms)
           new_pval <- result$pval
           stats <- c(modmeth_i_c, mymod, signif(orig_pval, 3),
                      signif(new_pval, 3), length(modtargs),
@@ -159,6 +158,7 @@ rewiring_gene_level <- function(linker_output_p,
   #generate dataframe with driver scores
   score_driv <- function(driver,linker_output,rew_list_names,showmess=FALSE){
 
+    # bootdist <- sapply(linker_output,function(x) x$bootstrap_idx)
     bootdist <- sapply(linker_output,function(x) x$bootstrap_idx)
     nbootstraps <- max(bootdist)
 
@@ -343,18 +343,17 @@ rewiring_gene_level <- function(linker_output_p,
   message('Preparing rewiring object')
 
   #Prepare rewiring creating object
-  preparedrewiring <- TraRe::preparerewiring(linker_output_p = linker_output_p,
-                                             lognorm_est_counts_p = lognorm_est_counts_p,
-                                             gene_info_p = gene_info_p,
-                                             phenotype_p = phenotype_p,
-                                           final_signif_thresh = final_sig_th,
-                                           nrcores=nrcores)
+  preparedrewiring <- TraRe::preparerewiring(TraReObj = TraReObj,
+                                        linker_output= linker_output,
+                                        final_signif_thresh = 0.05, nrcores = nrcores,
+                                        outdir=outdir)
+
   if (!file.exists(fpath)){
 
     #define fpath (check default value)
     if (fpath==''){
 
-      fpath <- paste0(getwd(),'/rewiring_gene_level','_fs_',final_sig_th,'.txt')
+      fpath <- paste0(getwd(),'/rewiring_gene_level','_fs_',final_signif_thresh,'.txt')
 
     }else{
 
@@ -362,9 +361,9 @@ rewiring_gene_level <- function(linker_output_p,
 
       #(check extension to add final sig th)
       if (substr(fpath,nchar(fpath)-3,nchar(fpath)-3)=='.'){
-        fpath <- paste0(substr(fpath,1,nchar(fpath)-4),'_fs_',final_sig_th,'.txt')
+        fpath <- paste0(substr(fpath,1,nchar(fpath)-4),'_fs_',final_signif_thresh,'.txt')
       }else{
-        fpath <-paste0(fpath,'_fs_',final_sig_th,'.txt')
+        fpath <-paste0(fpath,'_fs_',final_signif_thresh,'.txt')
       }
 
     }
@@ -384,10 +383,8 @@ rewiring_gene_level <- function(linker_output_p,
   #read file
   rew_list_names <- utils::read.delim(fpath,header=FALSE)[,1]
 
-  #Intersect genes to obtain TFs
-  gene_info_tfs <- utils::read.delim(gene_info_p)[,c('uniq_isos','regulator')]
-  drivers_from_geneinfo <- gene_info_tfs[gene_info_tfs$regulator==1,'uniq_isos']
-  regs_mrm <- intersect(rownames(utils::read.delim(lognorm_est_counts_p)),drivers_from_geneinfo)
+  #Obtain TFs
+  regs_mrm <- rownames(TraReObj@lognorm_counts)[TraReObj@regulator_idx]
 
   #confirm regulator genes
   #rew_driv <- unique(unlist(sapply(rew_list_names,function(x) preparedrewiring$datasets[[1]]$rundata$modules$VBSR[[x]]$regulators)))

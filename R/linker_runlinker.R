@@ -15,8 +15,6 @@
 #' @param Nr_bootstraps Number of bootstrap of Phase I. By default, 10.
 #' @param FDR The False Discovery Rate correction used for the modules and graphs GRN uncovering. By default, 0.05.
 #' @param Lambda Lambda variable for Lasso models.
-#' @param NrCores Nr of computer cores for the parallel parts of the method. Note that the parallelization
-#' is NOT initialized in any of the functions. By default, 2.
 #' @param train_size Fraction of samples selected for the train samples. Default: 0.8.
 #' @param onlymods Whether to infer only modules or modules and graphs. Default: FALSE
 #' @param only_train whether to use only training samples within LINKER run. Default: FALSE
@@ -96,7 +94,7 @@ LINKER_run <- function(TraReObj, link_mode = c("VBSR", "LASSOmin", "LASSO1se", "
 
     res <- lapply(seq_along(link_mode), function(x) {
         LINKER_runPhase1(lognorm_est_counts = lognorm_est_counts, target_filtered_idx = target_filtered_idx, regulator_filtered_idx = regulator_filtered_idx,
-            NrModules = NrModules, NrCores = NrCores, train_size = train_size, mode = link_mode[x], used_method = module_rep, corrClustNrIter = corrClustNrIter,
+            NrModules = NrModules, train_size = train_size, mode = link_mode[x], used_method = module_rep, corrClustNrIter = corrClustNrIter,
             Nr_bootstraps = Nr_bootstraps, FDR = FDR, Lambda = Lambda, only_train=only_train)
     })
 
@@ -116,7 +114,7 @@ LINKER_run <- function(TraReObj, link_mode = c("VBSR", "LASSOmin", "LASSO1se", "
 
             lapply(graph_mode, function(y) {
 
-                LINKER_runPhase2(modules[[x]], lognorm_est_counts, mode = y, NrCores = NrCores, FDR = FDR)
+                LINKER_runPhase2(modules[[x]], lognorm_est_counts, mode = y, FDR = FDR)
 
             })
         })

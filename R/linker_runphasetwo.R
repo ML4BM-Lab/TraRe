@@ -8,8 +8,6 @@
 #' data (Nr Genes x Nr samples)
 #' @param mode Chosen method(s) to link module eigengenes to regulators. The available options are
 #' 'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. By default, all methods are chosen.
-#' @param NrCores Nr of computer cores for the parallel parts of the method. Note that the parallelization
-#' is NOT initialized in any of the functions. By default, 2.
 #' @param modules Modules obtained from the phase I linker output.
 #' @param alpha alpha parameter if a LASSO model is chosen.
 #' @param FDR The False Discovery Rate correction used for the modules and graphs GRN uncovering. By default, 0.05.
@@ -42,23 +40,24 @@
 #'
 #'
 #'    graph <- LINKER_runPhase2(modules=modules_phaseone,Data=lognorm_est_counts,
-#'                              NrCores=1,mode='LM')
+#'                              ,mode='LM')
 #'
 #'
 #' @return igraph object containing the related drivers and targets in the form of a bipartitive graph.
 #' @export
 
-LINKER_runPhase2 <- function(modules, Data, NrCores, mode = "VBSR", alpha = 1 - 1e-06, FDR = 0.05) {
+LINKER_runPhase2 <- function(modules, Data, mode = "VBSR", alpha = 1 - 1e-06, FDR = 0.05) {
 
-    bp_g <- list()
-    i <- 1
+    # bp_g <- list()
+    # i <- 1
 
     # this will register nr of cores/threads, keep this here so the user can decide how many cores based on their hardware.
 
-    parallClass <- BiocParallel::bpparam()
-    parallClass$workers <- NrCores
+    # parallClass <- BiocParallel::bpparam()
+    # parallClass$workers <- NrCores
 
-    runPhase2Bettas <- function(mod_idx) {
+    bp_g <- lapply(seq_along(modules), function(mod_idx){
+    # runPhase2Bettas <- function(mod_idx) {
 
         targetgenes <- unlist(modules[[mod_idx]]$target_genes)
         regulators <- unlist(modules[[mod_idx]]$regulators)
@@ -140,9 +139,10 @@ LINKER_runPhase2 <- function(modules, Data, NrCores, mode = "VBSR", alpha = 1 - 
 
         igraph::graph_from_incidence_matrix(driverMat)
 
-    }
+    })
 
-    bp_g <- BiocParallel::bplapply(seq_along(modules), runPhase2Bettas, BPPARAM = parallClass)
+    # bp_g <- BiocParallel::bplapply(seq_along(modules), runPhase2Bettas, BPPARAM = parallClass)
 
     return(bp_g)
 }
+
