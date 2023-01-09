@@ -71,42 +71,37 @@ TraRe can be currently installed from Bioconductor:
  if (!requireNamespace("BiocManager"))
  install.packages("BiocManager")
  BiocManager::install("TraRe")
+ 
+ ## Latest version in GitHub:
+ # devtools::install_github('ubioinformat/TraRe',build_vignettes = TRUE)
 
 ```
 ## Full workflow with a SummarizedExperiment object
 
 We will use a *SummarizedExperiment* object with the gene expression matrix in the SummarizedExperiment::assay() and the gene info stored in the SummarizedExperiment::rowData().
 If you plan to do the differential network analysis (i.e. full workflow with rewiring test), then phenotype info should be stored in the SummarizedExperiment::colData().
-```{r}
+```{r, eval =TRUE}
 #  Expression matrix path
 lognorm_est_counts_p <- paste0(system.file("extdata",package="TraRe"),
-               '/VignetteFiles/expression_rewiring_vignette.txt')
-
-# lognorm_est_counts_p <- paste0(system.file("extdata",package="TraRe"),
-#                '/expression_rewiring_example.txt') # 35 samples
+               '/VignetteFiles/expression_quickexample_vignette.txt')
 
 # Gene info dataframe path
 gene_info_p <- paste0(system.file("extdata",package="TraRe"),
-               '/geneinfo_rewiring_example.txt')
+               '/VignetteFiles/geneinfo_example_vignette.txt')
 
 # # Sample phenotype dataframe path
 phenotype_p <- paste0(system.file("extdata",package="TraRe"),
-               '/phenotype_rewiring_example_updated.txt')
+               '/VignetteFiles/phenotype_rewiring_quickexample_vignette.txt')
 
+# lognorm_est_counts_p <- paste0(system.file("extdata",package="TraRe"),
+#                '/expression_rewiring_example.txt') # 35 samples
 # phenotype_p <- paste0(system.file("extdata",package="TraRe"),
 #                '/phenotype_rewiring_example.txt')# 35 samples
-
-# LINKER_run output path              
-# linker_output_p <-  paste0(system.file("extdata",package="TraRe"),
-#                '/linker_rewiring_example.rds') # LASSOminLM
-# 
-# linker_output_p <-  paste0(system.file("extdata",package="TraRe"),
-#                '/VignetteFiles/linker_output_vignette.rds') # just modules
-# 
+ 
 # linker_output <- readRDS(linker_output_p) 
 
 # # REWIRING output path
-outdir <- system.file('extdata',package='TraRe')
+outdir <- system.file('extdata', package='TraRe')
 
 # We load gene expression matrix
 lognorm_est_counts <- utils::read.delim(lognorm_est_counts_p)
@@ -114,7 +109,6 @@ lognorm_est_counts <- as.matrix(lognorm_est_counts)
 
 # We load gene info dataframe
 geneinfo <- utils::read.delim(gene_info_p, row.names = 1)
-
 # We have to make sure geneinfo and lognorm_est_counts have same rows (same genes).
 geneinfo <- geneinfo[rownames(lognorm_est_counts),,drop=FALSE]
 # The variable name must be "gene_info"
@@ -122,6 +116,8 @@ colnames(geneinfo) <- "gene_info"
 
 # We load phenotype
 phenotype <- utils::read.delim(phenotype_p,row.names = 1, sep=",")
+# We have to make sure phenotype rows and lognorm_est_counts columns are the same.
+phenotype <- phenotype[colnames(lognorm_est_counts),,drop=FALSE]
 # The variable name must be "phenotype"
 colnames(phenotype) <- "phenotype"
 
@@ -129,27 +125,39 @@ colnames(phenotype) <- "phenotype"
 SeObject <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = lognorm_est_counts),
                                                        rowData = geneinfo,
                                                        colData = phenotype)
+# saveRDS(object = SeObject, file = paste0(system.file("extdata",package = "TraRe"),
+               # '/VignetteFiles/SeObject_quickexample_vignette.rds'))
 
 # We preprocess the original matrix for low variance in genes and samples
 TraReObj <- TraRe::trare_preprocessing(data_matrix = SeObject)
- 
+# saveRDS(object = TraReObj, file = paste0(system.file("extdata",package = "TraRe"),
+               # '/VignetteFiles/TraReObj_quickexample_vignette.rds'))
+
+```
+Now we run the inference method
+```{r}
 # We run the GRN inference method 
 linkeroutput <- TraRe::LINKER_run(TraReObj, link_mode = "VBSR", module_rep = "LINKER",
                            graph_mode = "VBSR", NrModules = 100, Nr_bootstraps = 10,
                            corrClustNrIter = 100) 
-kk_lo <- LINKER_run_a(TraReObj, link_mode = "VBSR", module_rep = "LINKER",
-                           graph_mode = "VBSR", NrModules = 100, Nr_bootstraps = 10,
-                           corrClustNrIter = 100) 
 # We save the output
-# saveRDS(object = linkeroutput, 
-          # file = paste0(system.file('extdata', package='TraRe'),'/linkeroutput_vignette_quickexample.rds'))
+# saveRDS(object = linkeroutput, file = paste0(system.file('extdata', package = 'TraRe'),
+              # '/VignetteFiles/linkeroutput_quickexample_vignette.rds'))
 
+```
+```{r,eval=TRUE,warning=FALSE,echo=FALSE}
+linkeroutput <- readRDS(file = paste0(system.file('extdata', package = 'TraRe'),
+              '/VignetteFiles/linkeroutput_quickexample_vignette.rds'))
+```
+Now we run the Rewiring test
+```{r, eval=TRUE}
 # Prepare data for rewiring
-prew_output <- TraRe::preparerewiring(name="Vignette_prueba", TraReObj = TraReObj,
+prew_output <- TraRe::preparerewiring(name="Vignette_rewiring", TraReObj = TraReObj1,
                                 linker_output= linkeroutput,
                                 final_signif_thresh = 0.05, nrcores = 1,
                                 outdir=outdir)
-
+# saveRDS(object = prew_output, file = paste0(system.file('extdata',package='TraRe'),
+    #   '/VignetteFiles/preprew_quickexample_vignette.rds')
 # Run rewiring
 TraRe::runrewiring(prew_output)                             
 ```
@@ -187,25 +195,31 @@ A **SummarizedExperiment** object can be used or otherwise:
 - **low_var_samples_th**: threschold to drop out low variance samples across genes. Default: 1
 
 The return object is a **TraReObj** containing preprocessed input matrix and associated info to pass to the funciton `LINKER_run`
-```{r}
+```{r, eval = TRUE}
 ## For this example, we are going to load a example matrix
 lognorm_est_counts_p <- paste0(system.file('extdata',package='TraRe'),
-                                  '/expression_rewiring_example.txt')
-lognorm_est_counts <- as.matrix(read.delim(lognorm_est_counts_p, header=TRUE,row.names=1))
- 
-## Load gene info, its an array of regulators' names.
-gene_info_p <- paste0(system.file('extdata',package='TraRe'),
-                          '/geneinfo_rewiring_example.txt')
-gene_info <- read.delim(gene_info_p,header=TRUE)
-geneinfo <- gene_info[gene_info[,'regulator'] == 1,'uniq_isos']
-
-# TraReObj <- TraRe::trare_preprocessing(data_matrix = lognorm_est_counts,
-#                                 geneinfo = geneinfo, verbose = FALSE)
-
-TraReObj <- readRDS(paste0(system.file('extdata',package='TraRe'),
-                          '/TrareObj.rds'))
+                                  '/VignetteFiles/expression_rewiring_example.txt')
+lognorm_est_counts <- utils::read.delim(lognorm_est_counts_p)
+lognorm_est_counts <- as.matrix(lognorm_est_counts)
 
 
+# Gene info dataframe path
+gene_info_p <- paste0(system.file("extdata",package="TraRe"),
+               '/VignetteFiles/geneinfo_example_vignette.txt')
+
+# We load gene info dataframe
+geneinfo <- utils::read.delim(gene_info_p, row.names = 1)
+# We have to make sure geneinfo and lognorm_est_counts have same rows (same genes).
+geneinfo <- geneinfo[rownames(lognorm_est_counts),,drop=FALSE]
+
+# We keep the TFs names in the vector
+geneinfo = rownames(geneinfo)[which(geneinfo$regulator==1)]
+
+TraReObj <- TraRe::trare_preprocessing(data_matrix = lognorm_est_counts,
+                                geneinfo = geneinfo, verbose = FALSE)
+
+# saveRDS(object = TraReObj, file = paste0(system.file('extdata',package='TraRe'),
+                          # '/VignetteFiles/TraReObj_rewiring_example.rds'))
 ```
 
 `LINKER_run` generates, from an processed RNA-Seq dataset where TFs and targets genes are provided, GRN modules in three different forms: as raw results, from the Phase I output modules; as modules from the Phase II output modules and in the form of bipartite graphs, where drivers and targets relationships are defined. Here we include all the parameters and their description. For more information, please refer to the help section of `LINKER_run()`.
@@ -233,9 +247,7 @@ even if a *SummarizedExperiment* object is provided to the `linker_processing` f
 This information can be added later on to the object for the differential network analysis step (*Rewiring*) if a *SummarizedExperiment* was not used.
 
 
-```{r, collapse=TRUE}
-
-
+```{r}
 # We recommend VBSR as the model as it outperforms the other methods
 # For this vignette example and to save computing time the matrix we are using is a subset
 # of the original and we will be running only 1 bootstrap, but the results below
@@ -246,8 +258,8 @@ linkeroutput <- TraRe::LINKER_run(TraReObj = TraReObj, link_mode='VBSR',
                        corrClustNrIter = 100, train_size = 0.8)
 
 # We save it for later
-# saveRDS(object = linkeroutput, 
-#         file = paste0(system.file('extdata',package='TraRe'),'/linkeroutput_vignette_example.rds'))
+# saveRDS(object = linkeroutput, file = paste0(system.file('extdata',package='TraRe'),
+# 'VignetteFiles/linkeroutput_rewiring_example.rds'))
 
 ```
 # Rewiring of the GRN modules
@@ -290,12 +302,11 @@ The information needed by `preparerewiring()` is:
 
 There are also other parameters that will remain by default. Please take a look at the `preparerewiring()` function for more information. We now generate 
 the `preparerewiring()` output.
-
-```{r, collapse=TRUE}
+```{r, eval= TRUE,  echo='hide'}
 
 ## Load the linker output
 linkeroutput <- readRDS(paste0(system.file('extdata',package='TraRe'),
-                                  '/linkeroutput_vignette_example.rds'))
+                          'VignetteFiles/linkeroutput_rewiring_example.rds'))
 
 ## Load the phenotype file
 phenotype_p <- paste0(system.file('extdata',package='TraRe'),
@@ -304,18 +315,43 @@ phenotype_p <- paste0(system.file('extdata',package='TraRe'),
 phenotype <- read.delim(phenotype_p, row.names = 1)
 colnames(phenotype) <- 'phenotype'
 
-# ## We will be using the same file we generated for the LINKER_run phase.
-# TraReObj <- readRDS(paste0(system.file('extdata',package='TraRe'),'/TraReObj.rds'))
-
 ## Add the phenotype if it was not in the SummarizedExperiment when we did the preprocessing 
 ## using hte helper function `rewiring_add_phenotype`
-TraReObj <- TraRe::rewiring_add_phenotype(TraReObj, phenotype)
+TraReObj <- TraRe::rewiring_add_phenotype(TraReObj, phenotype_35)
 
 outdir <- system.file('extdata',package='TraRe')
-prepared <- TraRe::preparerewiring(name = 'Vignette_test', linker_output = linkeroutput,
+prew_output <- TraRe::preparerewiring(name = 'Vignette_test', linker_output = linkeroutput,
                             TraReObj = TraReObj, 
                             final_signif_thresh = 0.05,
                             nrcores = 1, outdir = outdir)
+
+# saveRDS(object = prew_output, file = paste0(system.file('extdata',package='TraRe'),
+                           #   '/VignetteFiles/preprew_rewiring_example.rds')
+# Run rewiring
+TraRe::runrewiring(prew_output)     
+
+```
+```{r}
+
+## Load the phenotype file
+phenotype_p <- paste0(system.file('extdata',package='TraRe'),
+                      '/phenotype_rewiring_example.txt')
+
+phenotype <- read.delim(phenotype_p, row.names = 1)
+colnames(phenotype) <- 'phenotype'
+
+## Add the phenotype if it was not in the SummarizedExperiment when we did the preprocessing 
+## using hte helper function `rewiring_add_phenotype`
+TraReObj <- TraRe::rewiring_add_phenotype(TraReObj, phenotype_35)
+
+outdir <- system.file('extdata',package='TraRe')
+prew_output <- TraRe::preparerewiring(name = 'Vignette_test', linker_output = linkeroutput,
+                            TraReObj = TraReObj, 
+                            final_signif_thresh = 0.05,
+                            nrcores = 1, outdir = outdir)
+
+# Run rewiring
+TraRe::runrewiring(prew_output)     
 
 ```
 In order to run `runrewiring()`, we just call `runrewiring(prepared)`. 
@@ -351,10 +387,15 @@ The output of this function are two .txt files:
 1. The list of the rewired modules of the linker_output object
 2. The list of rewired TF together with the p-value obtained in for the Fisher's test and the OR.
 
-```{r}
-  fpath <- paste0(system.file('extdata',package='TraRe'),'/rewired_modules_50boots.txt')
+```{r, eval = TRUE,  echo = TRUE}
+  fpath <- paste0(system.file('extdata',package='TraRe'),
+                                '/VignetteFiles/rewired_modules_50boots.txt')
+  linkeroutput_50b <- readRDS(paste0(system.file('extdata',package='TraRe'),
+                                '/VignetteFile/linkeroutput_50boots_example.rds'))
+  TraReObj <- readRDS(paste0(system.file('extdata',package='TraRe'), 
+                              '/VignetteFiles/TraReObj_rewiring_example.rds')
 # At the gene level (50 bootstraps)
-  impgenes <-  rewiring_gene_level(linker_output = linkeroutput_50b,
+  impgenes <-  TraRe::rewiring_gene_level(linker_output = linkeroutput,
                                    TraReObj = TraReObj,
                                    fpath = fpath,
                                    final_signif_thresh = 0.05,
@@ -362,9 +403,10 @@ The output of this function are two .txt files:
                                    include_cliques=TRUE,
                                    cliquesTH=0.8,
                                    nrcores = 1)
+  print(impgenes)
 # # Save
-  write.table(impgenes, file=paste0(outdir,'/table_rewired_tfs.tsv'), 
-              row.names = TRUE, sep = "\t")
+  # write.table(impgenes, file=paste0(outdir,'/table_rewired_tfs.tsv'), 
+  #             row.names = TRUE, sep = "\t")
 ```
 # Rewiring at the regulon level
 
@@ -378,14 +420,16 @@ Below are the main parameters for the `rewiring_regulon_level` function:
 - **sigmodules_p** Path of the output file from rewired_gene_level function with the list of rewired modules.
 
 The output is a list of regulons, this is: for each TF with significant results a dataframe describing the regulon information (target, p-value for this edge and multiplicity value, i.e. the number of times this edge has been found)
-```{r}
-
-  regulons <- rewiring_regulon_level(linker_output = linkeroutput_50b,
+```{r, eval = TRUE}
+  fpath <- paste0(system.file('extdata', package='TraRe'),
+                  '/VignetteFiles/rewired_modules_50boots_fs_0.05.txt')
+  
+  regulons <- rewiring_regulon_level(linker_output = linkeroutput,
                                      TraReObj = TraReObj,
                                      sigmodules_p = fpath,
                                      final_signif_thresh = 0.05)
-  saveRDS(regulons,paste0(system.file('extdata',package='TraRe'),
-  '/regulons_example.txt'))
+# saveRDS(regulons,paste0(system.file('extdata',package='TraRe'),
+#   '/regulons_results_example.txt'))
 
 
 ```
@@ -444,14 +488,14 @@ From this analysis, the z-score is used to sort target genes and plot them descr
 # Note: the igraph object is inside the list `NET_run()` generates.
 
 graph <- readRDS(paste0(system.file("extdata",package="TraRe"),
-               '/VignetteFiles/graph_netrun_vignette.rds'))
+               '/graph_netrun_vignette.rds'))
 graph <- graph$graphs$VBSR
 
 # We first generate the normal layout for the plot.
 # We need the drivers and target names. 
 
 lognorm_est_counts <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
-                                        '/VignetteFiles/expression_rewiring_vignette.txt'))
+                                        '/expression_rewiring_vignette.txt'))
 
 drivers <- lognorm_est_counts[seq(70),]
 targets <- lognorm_est_counts[70+seq(1079),]
@@ -481,7 +525,7 @@ gnames <- c(drivers_n,targets_n)
 expmat <-rbind(drivers,targets)
 
 clinic <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
-                            '/phenotype_rewiring_example.txt'))
+                            '/VignetteFiles/phenotype_rewiring_example.txt'))
 
 expmat_R <- expmat[,clinic$Sample.ID[clinic$Class=='R']]
 expmat_NR <- expmat[,clinic$Sample.ID[clinic$Class=='NR']]
@@ -561,6 +605,6 @@ may be appreciated, we can extract more specific driver to target information.
 ![Html Generation](Html.png){width=650 height=200px}
 
 # Session Information
-```{r}
+```{r, eval = TRUE}
 sessionInfo()
 ```
