@@ -14,7 +14,6 @@ LINKER_run(
   Nr_bootstraps = 10,
   FDR = 0.05,
   Lambda = 5,
-  NrCores = 1,
   train_size = 0.8,
   onlymods = FALSE,
   only_train = FALSE
@@ -42,9 +41,6 @@ discovered may differ from this value). By default, 100 modules.}
 
 \item{Lambda}{Lambda variable for Lasso models.}
 
-\item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that the parallelization
-is NOT initialized in any of the functions. By default, 2.}
-
 \item{train_size}{Fraction of samples selected for the train samples. Default: 0.8.}
 
 \item{onlymods}{Whether to infer only modules or modules and graphs. Default: FALSE}
@@ -63,7 +59,7 @@ Gene Regulatory Network inference via model selection. Consists of two phases,
   ## For this example, we are going to load a example matrix
   lognorm_est_counts_p <- paste0(system.file('extdata',package='TraRe'),
                                  '/expression_rewiring_example.txt')
-  lognorm_est_counts <- read.delim(lognorm_est_counts_p, header=TRUE,row.names=1)
+  lognorm_est_counts <- as.matrix(read.delim(lognorm_est_counts_p, header=TRUE,row.names=1))
 
   ## Load gene info, its an array of regulators' names.
   gene_info_p <- paste0(system.file('extdata',package='TraRe'),
@@ -72,10 +68,10 @@ Gene Regulatory Network inference via model selection. Consists of two phases,
   geneinfo <- gene_info[gene_info[,'regulator'] == 1,'uniq_isos']
 
    ##TraReObj <- trare_preprocessing(data_matrix = lognorm_est_counts,
-   ##                                  geneinfo = rownames(drivers), verbose = FALSE)
+   ##                                  geneinfo = geneinfo, verbose = FALSE)
 
-   ## TraReObj <- LINKER_run(TraReObj = TraReObj, link_mode='VBSR',
+   ## linker_output <- LINKER_run(TraReObj = TraReObj, link_mode='VBSR',
    ##                        graph_mode='VBSR',NrModules=100,Nr_bootstraps=10,
-   ##                        NrCores=1,corrClustNrIter=100)
+   ##                        corrClustNrIter=100)
 
 }

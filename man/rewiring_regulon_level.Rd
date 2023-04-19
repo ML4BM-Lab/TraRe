@@ -5,29 +5,24 @@
 \title{Perform the rewiring at the regulon level}
 \usage{
 rewiring_regulon_level(
-  linker_output_p,
-  lognorm_est_counts_p,
-  gene_info_p,
-  phenotype_p,
+  linker_output,
+  TraReObj,
   sigmodules_p,
   rewired = TRUE,
-  final_signif_thresh = 0.05
+  final_signif_thresh = 0.05,
+  outdir = tempdir()
 )
 }
 \arguments{
-\item{linker_output_p}{Path of output file from linker function. RDS format is required.}
+\item{linker_output}{Output from LINKER_run function (recommended with 50 bootstraps).}
 
-\item{lognorm_est_counts_p}{Path of lognorm counts of the gene expression matrix.}
-
-\item{gene_info_p}{Path of a two-column file containing genes and 'regulator' boolean variable.}
-
-\item{phenotype_p}{Path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).}
+\item{TraReObj}{the TrareObj generated during preprocessing step before GRN inference.}
 
 \item{sigmodules_p}{Path of the output file from rewired_gene_level function with rewired modules list.}
 
 \item{rewired}{Bool indicating whether the analysis is to be done regulons from rewired modules (default= TRUE)}
 
-\item{final_signif_thresh}{Significance threshold for the rewiring method. The lower the threshold, the restrictive the method. Default set to 0.05.}
+\item{final_signif_thresh}{Significance threshold for the rewiring method. The lower the threshold, the more restrictive the method. Default set to 0.05.}
 }
 \value{
 Return an object with a data.frame for each regulon with filtered targets by pvalue, multiplicity and the igraph object.

@@ -62,15 +62,15 @@ phenotype <- read.delim(phenotype_p, row.names = 1)
 colnames(phenotype) <- 'phenotype'
 
 ## We will be using the same file we generated for the LINKER_run phase.
-TraReObj <- readRDS(paste0(system.file('extdata',package='TraRe'),'/TraReObj.rds'))
+## TraReObj <- readRDS(paste0(system.file('extdata',package='TraRe'),'/TraReObj.rds'))
 
 ## Add the phenotype if it was not in the SummarizedExperiment when we did the preprocessing.
-#TraReObj <- rewiring_add_phenotype(TraReObj, phenotype)
+## TraReObj <- rewiring_add_phenotype(TraReObj, phenotype)
 
-outdir <- system.file('extdata',package='TraRe')
-#prepared <- preparerewiring(name='example', linker_output= linker_output,
-#                            TraReObj = TraReObj, 
-#                            final_signif_thresh=0.05,
-#                            nrcores=1,outdir=outdir)
+## outdir <- system.file('extdata',package='TraRe')
+## prepared <- preparerewiring(name='example', linker_output= linker_output,
+##                            TraReObj = TraReObj, 
+##                            final_signif_thresh=0.05,
+##                            nrcores=1,outdir=outdir)
 
 }

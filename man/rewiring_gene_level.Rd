@@ -5,30 +5,25 @@
 \title{Perform the rewiring at the gene level}
 \usage{
 rewiring_gene_level(
-  linker_output_p,
-  lognorm_est_counts_p,
-  gene_info_p,
-  phenotype_p,
+  linker_output,
+  TraReObj,
   fpath = "",
-  final_sig_th = 0.05,
+  final_signif_thresh = 0.05,
   include_cliques = FALSE,
   ImpTH = 0.05,
   cliquesTH = 0.8,
-  nrcores = 3
+  nrcores = 3,
+  outdir = tempdir()
 )
 }
 \arguments{
-\item{linker_output_p}{Output file from linker function path. RDS format is required.}
+\item{linker_output}{Output from LINKER_run function (recommended with 50 bootstraps).}
 
-\item{lognorm_est_counts_p}{Lognorm counts of the gene expression matrix path.}
-
-\item{gene_info_p}{Path of a two-column file containing genes and 'regulator' boolean variable.}
-
-\item{phenotype_p}{Path of a two-column file containing used samples and Responder or No Responder 'Class' (NR,R).}
+\item{TraReObj}{the TrareObj generated during preprocessing step before GRN inference.}
 
 \item{fpath}{Desired path for the rewiring file to be generated.}
 
-\item{final_sig_th}{Significance threshold for the rewiring method. The lower the threshold, the restrictive the method. Default set to 0.05.}
+\item{final_signif_thresh}{Significance threshold for the rewiring method. The lower the threshold, the restrictive the method. Default set to 0.05.}
 
 \item{include_cliques}{Boolean specifying to include cliques in the returned score matrix. Default set to FALSE.}
 

@@ -6,7 +6,7 @@
 #' @param final_signif_thresh Significance threshold for the rewiring method. The lower the threshold, the more restrictive the method. Default set to 0.05.
 #' @param rewired Bool indicating whether the analysis is to be done regulons from rewired modules (default= TRUE)
 #' @param sigmodules_p Path of the output file from rewired_gene_level function with rewired modules list.
-#'
+#' @param outdir Directory for the output folder to be located (default: tempdir())
 #'
 #' @return Return an object with a data.frame for each regulon with filtered targets by pvalue, multiplicity and the igraph object.
 #'
@@ -16,7 +16,8 @@ rewiring_regulon_level <- function(linker_output,
                                    TraReObj,
                                    sigmodules_p,
                                    rewired = TRUE,
-                                   final_signif_thresh = 0.05){
+                                   final_signif_thresh = 0.05,
+                                   outdir=tempdir()){
 
   ### Let's work
   #Prepare rewiring creating object

@@ -137,8 +137,8 @@ runrewiring <- function(ObjectList) {
 
         }
 
-        foreach_allstats <- BiocParallel::bplapply(seq_along(rundata$modules[[modmeth]]), GenerateStats, BPPARAM = parallClass)
-
+        # foreach_allstats <- BiocParallel::bplapply(seq_along(rundata$modules[[modmeth]]), GenerateStats, BPPARAM = parallClass)
+        foreach_allstats <- lapply(seq_along(rundata$modules[[modmeth]]),GenerateStats)
         for (elements in foreach_allstats) {
 
             # now we recover first allstats matrix
@@ -260,8 +260,8 @@ runrewiring <- function(ObjectList) {
             # we cant generate refined graphs so we generate the summaries without the graphs
             # and we finish.
 
-            if (rawsumm$cut){
-                rawsummary(indexpageinfo,rawrunmoddata,rawsumm, lognorm_est_counts, outdir,foldername_p,modmeth,cut=TRUE)
+            if (rawsumm$exception){
+                rawsummary(indexpageinfo,rawrunmoddata,rawsumm, lognorm_est_counts, outdir,foldername_p,modmeth,exception=TRUE)
                 next
             }
 
@@ -560,13 +560,13 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
 #' @export
 #' @rdname runrewiring
 #' @param rawrunmoddata list containing regulators and target genes from multiplicity table.
-#' @param rawsumm list containing generated graph related information and cut variable.
+#' @param rawsumm list containing generated graph related information and exception variable.
 #' @param foldername_p path to the current foldername.
 #' @param lognorm_est_counts gene expression matrix from ObjectList.
-#' @param cut boolean to avoid errors from previous generated graphs.
-rawsummary <- function(indexpageinfo, rawrunmoddata,rawsumm, lognorm_est_counts, outdir,foldername_p,modmeth,cut = FALSE) {
+#' @param exception boolean to avoid errors from previous generated graphs.
+rawsummary <- function(indexpageinfo, rawrunmoddata,rawsumm, lognorm_est_counts, outdir,foldername_p,modmeth,exception = FALSE) {
 
-    if (!cut) {
+    if (!exception) {
         # Variable to check if previously graphs were generated, to avoid errors.
 
         # summary of raw tittle
@@ -597,7 +597,7 @@ rawsummary <- function(indexpageinfo, rawrunmoddata,rawsumm, lognorm_est_counts,
                      glossarypath = "../glossary.html")
 
     # Write raw and refined r object nodesumm, fulledgesumm, full_graph, respond_graph, nonresp_graph
-    if (!cut)
+    if (!exception)
         saveRDS(rawsumm, file = paste0(outdir, "/", foldername_p, "/rawsumm.rds"))
 
 }

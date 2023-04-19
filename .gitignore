@@ -5,4 +5,5 @@ TraRe.Rproj
 .RData
 .Ruserdata
 .Rbuildignore
+curated_vis2_SEObject.rds
 inst/doc

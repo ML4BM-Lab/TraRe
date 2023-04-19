@@ -28,7 +28,7 @@ rawsummary(
   outdir,
   foldername_p,
   modmeth,
-  cut = FALSE
+  exception = FALSE
 )
 }
 \arguments{
@@ -53,13 +53,13 @@ from the rewiring test.}
 
 \item{rawrunmoddata}{list containing regulators and target genes from multiplicity table.}
 
-\item{rawsumm}{list containing generated graph related information and cut variable.}
+\item{rawsumm}{list containing generated graph related information and exception variable.}
 
 \item{lognorm_est_counts}{gene expression matrix from ObjectList.}
 
 \item{foldername_p}{path to the current foldername.}
 
-\item{cut}{boolean to avoid errors from previous generated graphs.}
+\item{exception}{boolean to avoid errors from previous generated graphs.}
 }
 \value{
 It creates a folder (in tempdir() by default) containing the files explained above.

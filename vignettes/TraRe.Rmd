@@ -145,14 +145,14 @@ linkeroutput <- TraRe::LINKER_run(TraReObj, link_mode = "VBSR", module_rep = "LI
               # '/VignetteFiles/linkeroutput_quickexample_vignette.rds'))
 
 ```
-```{r,eval=TRUE,warning=FALSE,echo=FALSE}
+```{r,eval=F,warning=FALSE,echo=FALSE}
 linkeroutput <- readRDS(file = paste0(system.file('extdata', package = 'TraRe'),
               '/VignetteFiles/linkeroutput_quickexample_vignette.rds'))
 ```
 Now we run the Rewiring test
-```{r, eval=TRUE}
+```{r, eval=F}
 # Prepare data for rewiring
-prew_output <- TraRe::preparerewiring(name="Vignette_rewiring", TraReObj = TraReObj1,
+prew_output <- TraRe::preparerewiring(name="Vignette_rewiring", TraReObj = TraReObj,
                                 linker_output= linkeroutput,
                                 final_signif_thresh = 0.05, nrcores = 1,
                                 outdir=outdir)
@@ -302,7 +302,7 @@ The information needed by `preparerewiring()` is:
 
 There are also other parameters that will remain by default. Please take a look at the `preparerewiring()` function for more information. We now generate 
 the `preparerewiring()` output.
-```{r, eval= TRUE,  echo='hide'}
+```{r, eval= F,  echo='hide'}
 
 ## Load the linker output
 linkeroutput <- readRDS(paste0(system.file('extdata',package='TraRe'),
@@ -387,13 +387,13 @@ The output of this function are two .txt files:
 1. The list of the rewired modules of the linker_output object
 2. The list of rewired TF together with the p-value obtained in for the Fisher's test and the OR.
 
-```{r, eval = TRUE,  echo = TRUE}
+```{r, eval = F,  echo = TRUE}
   fpath <- paste0(system.file('extdata',package='TraRe'),
                                 '/VignetteFiles/rewired_modules_50boots.txt')
   linkeroutput_50b <- readRDS(paste0(system.file('extdata',package='TraRe'),
                                 '/VignetteFile/linkeroutput_50boots_example.rds'))
   TraReObj <- readRDS(paste0(system.file('extdata',package='TraRe'), 
-                              '/VignetteFiles/TraReObj_rewiring_example.rds')
+                              '/VignetteFiles/TraReObj_rewiring_example.rds'))
 # At the gene level (50 bootstraps)
   impgenes <-  TraRe::rewiring_gene_level(linker_output = linkeroutput,
                                    TraReObj = TraReObj,
@@ -420,7 +420,7 @@ Below are the main parameters for the `rewiring_regulon_level` function:
 - **sigmodules_p** Path of the output file from rewired_gene_level function with the list of rewired modules.
 
 The output is a list of regulons, this is: for each TF with significant results a dataframe describing the regulon information (target, p-value for this edge and multiplicity value, i.e. the number of times this edge has been found)
-```{r, eval = TRUE}
+```{r, eval = F}
   fpath <- paste0(system.file('extdata', package='TraRe'),
                   '/VignetteFiles/rewired_modules_50boots_fs_0.05.txt')
   

@@ -109,7 +109,7 @@ summarize_module <- function(norm_expr_mat_keep, runmoddata, name2idx, nonrespon
 
     # compute graphs and extract VBSR edge weights
 
-    cut <- FALSE  #define variable to generate grah plots after trycatch graph generations.
+    exception <- FALSE  #define variable to generate grah plots after trycatch graph generations.
 
     full_graph <- tryCatch({
 
@@ -124,7 +124,7 @@ summarize_module <- function(norm_expr_mat_keep, runmoddata, name2idx, nonrespon
     }, error = function(x) {
         #methods::show(x)
         message("Cant generate full graph for this supermodule")
-        cut <- TRUE
+        # cut <- TRUE
         return(NULL)
     })
 
@@ -159,10 +159,11 @@ summarize_module <- function(norm_expr_mat_keep, runmoddata, name2idx, nonrespon
 
     })
 
-
+    if (is.null(full_graph)) exception <- TRUE
+    
     fulledgesumm <- utils::type.convert(as.data.frame(cbind(edgesumm, appendmat), stringsAsFactors = FALSE))
     colnames(fulledgesumm) <- make.names(colnames(fulledgesumm))
 
     return(list(nodesumm = nodesumm, fulledgesumm = fulledgesumm, full_graph = full_graph, respond_graph = respond_graph, nonresp_graph = nonresp_graph, 
-        appendmat = appendmat, runmoddata = runmoddata, cut = cut))
+        appendmat = appendmat, runmoddata = runmoddata, exception = exception))
 }

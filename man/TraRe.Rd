@@ -60,18 +60,18 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Jesus de la Fuente CedeÃ±o \email{jdelafuentec@unav.es} (\href{https://orcid.org/0000-0003-1856-2469}{ORCID}) [copyright holder]
+\strong{Maintainer}: Jesus de la Fuente Cedeno \email{jdelafuentec@unav.es} (\href{https://orcid.org/0000-0003-1856-2469}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
   \item Mikel Hernaez \email{mhernaez@unav.es} (\href{https://orcid.org/0000-0003-0443-2305}{ORCID}) [copyright holder, thesis advisor]
   \item Charles Blatti \email{blatti@illinois.edu} (\href{https://orcid.org/0000-0002-4683-6271}{ORCID}) [copyright holder]
+  \item Irene Marin Goni \email{imarin.4@alumni.unav.es} (\href{https://orcid.org/0000-0002-5060-0712}{ORCID})
 }
 
 Other contributors:
 \itemize{
   \item Zikun (\href{https://orcid.org/0000-0002-9933-9658}{ORCID}) [contributor]
-  \item Irene Marin GoÃ±i \email{imarin.4@alumni.unav.es} (\href{https://orcid.org/0000-0002-5060-0712}{ORCID}) [contributor]
 }
 
 }

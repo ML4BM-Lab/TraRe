@@ -77,8 +77,8 @@ trare_preprocessing <- function(data_matrix, geneinfo = NULL, nassay = 1, low_va
   }
 
   ##Create TraReObj and save lognorm, target and regulator
-  methods::setClass("TraReClass", slots=list(lognorm_counts="matrix", target_idx="numeric", 
-                                              regulator_idx="numeric", pheno = "numeric"))
+  # TraReClass <- methods::setClass("TraReClass", slots=list(lognorm_counts="matrix", target_idx="numeric", 
+  #                                             regulator_idx="numeric", pheno = "numeric"))
 
   TraReObj <- methods::new("TraReClass", lognorm_counts = lognorm_est_counts,
                                            target_idx = target_filtered_idx,
@@ -87,6 +87,15 @@ trare_preprocessing <- function(data_matrix, geneinfo = NULL, nassay = 1, low_va
 
   return(TraReObj)
 }
+
+#' @export TraReClass
+##Create TraReObj and save lognorm, target and regulator
+TraReClass <- methods::setClass("TraReClass", 
+                                slots=list(lognorm_counts="matrix", 
+                                           target_idx="numeric", 
+                                           regulator_idx="numeric", 
+                                           pheno = "numeric"))
+
 
 #' @export
 #' @rdname trare_preprocessing

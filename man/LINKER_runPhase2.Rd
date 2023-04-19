@@ -4,23 +4,13 @@
 \alias{LINKER_runPhase2}
 \title{Phase II : bipartitive graphs generation}
 \usage{
-LINKER_runPhase2(
-  modules,
-  Data,
-  NrCores,
-  mode = "VBSR",
-  alpha = 1 - 1e-06,
-  FDR = 0.05
-)
+LINKER_runPhase2(modules, Data, mode = "VBSR", alpha = 1 - 1e-06, FDR = 0.05)
 }
 \arguments{
 \item{modules}{Modules obtained from the phase I linker output.}
 
 \item{Data}{Matrix of log-normalized estimated counts of the gene expression
 data (Nr Genes x Nr samples)}
-
-\item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that the parallelization
-is NOT initialized in any of the functions. By default, 2.}
 
 \item{mode}{Chosen method(s) to link module eigengenes to regulators. The available options are
 'VBSR', 'LASSOmin', 'LASSO1se' and 'LM'. By default, all methods are chosen.}
@@ -64,7 +54,7 @@ two graph nodes within the same set are adjacent.
 
 
    graph <- LINKER_runPhase2(modules=modules_phaseone,Data=lognorm_est_counts,
-                             NrCores=1,mode='LM')
+                             ,mode='LM')
 
 
 }

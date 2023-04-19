@@ -10,7 +10,7 @@
 #' @param ImpTH Threshold for the refinement of the returned list. Default set to 0.05.
 #' @param cliquesTH Correlation threshold if include_cliques is set to TRUE. Default set to 0.8.
 #' @param nrcores Number of cores to run the parallelization within the rewiring test (default: 3).
-#'
+#' @param outdir Directory for the output folder to be located (default: tempdir())
 #'
 #' @return Return a matrix containing, for each gene (or genes if include_cliques is set to TRUE) the pvalue and odds ratio
 #' from the hypergeometric test within three categories.
@@ -23,7 +23,8 @@ rewiring_gene_level <- function(linker_output,
                                 include_cliques=FALSE,
                                 ImpTH=0.05,
                                 cliquesTH=0.8,
-                                nrcores=3){
+                                nrcores=3,
+                                outdir= tempdir()){
   # #Do fast rewiring
   fast_rew <- function(ObjectList){
 

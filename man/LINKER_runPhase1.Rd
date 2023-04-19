@@ -23,7 +23,6 @@ LINKER_runPhase1(
   train_size = 0.8,
   mode = "VBSR",
   used_method = "MEAN",
-  NrCores = 1,
   corrClustNrIter = 100,
   Nr_bootstraps = 1,
   FDR = 0.05,
@@ -34,19 +33,12 @@ LINKER_init(
   MA_matrix_Var,
   RegulatorData,
   NrModules,
-  NrCores = 3,
   corrClustNrIter = 21,
   Parameters,
   FDR
 )
 
-LINKER_ReassignGenesToClusters(
-  Data,
-  RegulatorData,
-  Beta,
-  Clusters,
-  NrCores = 1
-)
+LINKER_ReassignGenesToClusters(Data, RegulatorData, Beta, Clusters)
 
 LINKER_corrClust(LINKERinit)
 
@@ -68,7 +60,6 @@ LINKER_LearnRegulatoryPrograms(
   pmax,
   mode,
   used_method = "MEAN",
-  NrCores = 1,
   FDR
 )
 }
@@ -104,9 +95,6 @@ discovered may differ from this value). By default, 100 modules.}
 'VBSR', 'LASSOmin', 'LASSO1se', 'LASSOparam' and 'LM'. Default set to 'VBSR'}
 
 \item{used_method}{Method selected for use. Default set to MEAN.}
-
-\item{NrCores}{Nr of computer cores for the parallel parts of the method. Note that the parallelization
-is NOT initialized in any of the functions. By default, 2.}
 
 \item{corrClustNrIter}{Number of iteration for the phase I part of the method.}
 
@@ -176,6 +164,6 @@ fits the selected model with the test data. \code{LINKER_LearnRegulatoryPrograms
 
    linkeroutput <- LINKER_runPhase1(lognorm_est_counts,target_filtered_idx=target_filtered_idx,
                                     regulator_filtered_idx=regulator_filtered_idx, NrModules=2,
-                                    mode='LASSOmin',NrCores=2, corrClustNrIter=10,Nr_bootstraps=1)
+                                    mode='LASSOmin', corrClustNrIter=10,Nr_bootstraps=1)
 
 }
