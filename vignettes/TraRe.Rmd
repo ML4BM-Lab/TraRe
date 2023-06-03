@@ -2,15 +2,17 @@
 title: "TraRe: Identification of transcriptional network disruptions via Bayesian machine learning"
 author: "Jesús de la Fuente Cedeño, Irene Marín Goñi, Mikel Hernaez and Charles Blatti"
 contributor: "Zikun Chen"
+package: "TraRe"
 date: "`r BiocStyle::doc_date()`"
 output: 
   BiocStyle::html_document:
     toc: true
+    toc_depth: 2
     fig_caption: true
 abstract: >
-  ***TraRe*** (**Tra**nscriptional **Re**wiring) is an R package with the necessary tools to carry out: Identification of module-based gene regulatory networks (GRNs)through bayesian machine learning models; score-based phenotype disruption classification of these modules via a rewiring test; Three-tier analysis of results (gene, regulon ans transcriptional module levels); visualization of results and an html report containing useful information about the generated GRNs and statistical data about the performed tests. These tools have been developed considering transcriptomic sequencing data (RNA-Seq).
+  ***TraRe*** (**Tra**nscriptional **Re**wiring) is an R package with the necessary tools to carry out: Identification of module-based gene regulatory networks (GRNs) through bayesian machine learning models; score-based phenotype disruption classification of these modules via a rewiring test; three-tier analysis of results (gene, regulon ans transcriptional module levels); visualization of results and an html report containing useful information about the generated GRNs and statistical data on the performed tests. These tools have been developed considering transcriptomic sequencing data (RNA-Seq).
 vignette: >
-  %\VignetteIndexEntry{TraRe: Identification of conditions dependant Gene Regulatory Networks}
+  %\VignetteIndexEntry{TraRe: Identification of transcriptional network disruptions via Bayesian machine learning}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
   %\VignettePackage{TraRe}
@@ -31,10 +33,10 @@ library(TraRe)
 To fully understand how TraRe works, we will go through each tool it contains: 
 
 * *Bayesian machine learning model for gene regulatory network inference*: a module-based approach to infer gene regulatory networks (GRN) from RNAseq data.
-* *Phenotype-associated Rewiring test*: to select disrupted modules subject to a phenotype condition.
+* *Phenotype-associated Rewiring test*: to identify disrupted modules subject to a phenotype condition.
 * *Three-tier analysis of results*: to uncover robust disruptions at the transcription factor (TF) level, at the regulon level and at the transcriptional module level.
-* Visualization, to graphically display the generated transcriptional rewired modules or GRNs.
-* Results, directory with pdf, html and data files (txt and excel) with useful information about the TFs-target relationships inferred.
+* *Visualization*, to graphically display the generated transcriptional rewired modules or GRNs.
+* *Results report*, directory containting pdf, html and data files (txt and excel) with useful information about the TFs-target relationships inferred.
 
 We consider important to use a real dataset for a proper understanding of TraRe's results, therefore, along with every step description and explanation, we will be working with a subset of the Stand Up To Cancer (SU2C) clinical trial dataset containing 1.2k genes ($\approx$ 200 TFs or *driver* genes) and 121 samples from metasatic castration resistant prostate cancer (mCRPC) patients. 
 A subset of these patients (n = 35) were treated with either Abiraterone or Enzalutamide, two androgen receptor signalling inhibitors (ARSI) and present a clinical *binary* phenotype (**Responder** or **Non-responder**). Thus, for the phenotype dependent *rewiring test*, we will be focusing on only ARSI patients. 
@@ -66,7 +68,7 @@ TraRe mainly requires three types of files or a SummarizedExperiment (SE) object
 ## Installation
 TraRe can be currently installed from Bioconductor:
 
-```{r}
+```{r, eval=FALSE}
 
  if (!requireNamespace("BiocManager"))
  install.packages("BiocManager")
@@ -103,64 +105,83 @@ phenotype_p <- paste0(system.file("extdata",package="TraRe"),
 # # REWIRING output path
 outdir <- system.file('extdata', package='TraRe')
 
-# We load gene expression matrix
-lognorm_est_counts <- utils::read.delim(lognorm_est_counts_p)
-lognorm_est_counts <- as.matrix(lognorm_est_counts)
+# We load gene expression matrix and convert it to matrix class
+lognorm_est_counts <- as.matrix(utils::read.delim(lognorm_est_counts_p))
+
 
 # We load gene info dataframe
 geneinfo <- utils::read.delim(gene_info_p, row.names = 1)
-# We have to make sure geneinfo and lognorm_est_counts have same rows (same genes).
+# We have to make sure geneinfo and lognorm_est_counts have 
+# same rows (same genes).
 geneinfo <- geneinfo[rownames(lognorm_est_counts),,drop=FALSE]
-# The variable name must be "gene_info"
+# The variable in the gene_info object must be "gene_info"
 colnames(geneinfo) <- "gene_info"
 
 # We load phenotype
 phenotype <- utils::read.delim(phenotype_p,row.names = 1, sep=",")
-# We have to make sure phenotype rows and lognorm_est_counts columns are the same.
+# We have to make sure phenotype rows and lognorm_est_counts columns
+# are the same.
 phenotype <- phenotype[colnames(lognorm_est_counts),,drop=FALSE]
 # The variable name must be "phenotype"
 colnames(phenotype) <- "phenotype"
 
 # Now we can generate the SE object
-SeObject <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = lognorm_est_counts),
-                                                       rowData = geneinfo,
-                                                       colData = phenotype)
+SeObject <- SummarizedExperiment::SummarizedExperiment(
+                                    assays = list(counts = lognorm_est_counts),
+                                    rowData = geneinfo,
+                                    colData = phenotype)
+
 # saveRDS(object = SeObject, file = paste0(system.file("extdata",package = "TraRe"),
                # '/VignetteFiles/SeObject_quickexample_vignette.rds'))
 
 # We preprocess the original matrix for low variance in genes and samples
-TraReObj <- TraRe::trare_preprocessing(data_matrix = SeObject)
+TraReObj <- TraRe::trare_preprocessing(data_matrix = SeObject, verbose =TRUE)
 # saveRDS(object = TraReObj, file = paste0(system.file("extdata",package = "TraRe"),
                # '/VignetteFiles/TraReObj_quickexample_vignette.rds'))
 
 ```
-Now we run the inference method
-```{r}
-# We run the GRN inference method 
-linkeroutput <- TraRe::LINKER_run(TraReObj, link_mode = "VBSR", module_rep = "LINKER",
-                           graph_mode = "VBSR", NrModules = 100, Nr_bootstraps = 10,
-                           corrClustNrIter = 100) 
-# We save the output
-# saveRDS(object = linkeroutput, file = paste0(system.file('extdata', package = 'TraRe'),
-              # '/VignetteFiles/linkeroutput_quickexample_vignette.rds'))
-
+```{r,eval=TRUE,warning=FALSE,echo=FALSE}
+TraReObj <- readRDS(file = paste0(system.file('extdata', package = 'TraRe'),
+              '/VignetteFiles/TraReObj_quickexample_vignette.rds'))
 ```
-```{r,eval=F,warning=FALSE,echo=FALSE}
+Now we run the inference method. This step may take some time depending on the size of the data. For the vignette purposes we set the parameter `Nr_bootstraps` to 5 but we recommend use at least 10 bootstraps (as the default setting).
+```{r, warning=FALSE}
+set.seed(123)
+# We run the GRN inference method 
+linkeroutput <- TraRe::LINKER_run(TraReObj,
+                                  link_mode = "VBSR",
+                                  module_rep = "LINKER",
+                                  graph_mode = "VBSR",
+                                  NrModules = 50,
+                                  Nr_bootstraps = 10,
+                                  corrClustNrIter = 100) 
+
+# We can save the output and import it later on using the following code:
+saveRDS(object = linkeroutput,paste0(vignette_data_path,"/last_linkeroutput_50m10b.rds"))
+# saveRDS(object = linkeroutput,
+#         file = paste0(system.file('extdata', package = 'TraRe'),
+#                      '/VignetteFiles/linkeroutput_quickexample_vignette2.rds'))
+```
+```{r,eval=TRUE,warning=FALSE,echo=FALSE}
 linkeroutput <- readRDS(file = paste0(system.file('extdata', package = 'TraRe'),
-              '/VignetteFiles/linkeroutput_quickexample_vignette.rds'))
+                    '/VignetteFiles/linkeroutput_quickexample_vignette.rds'))
 ```
 Now we run the Rewiring test
-```{r, eval=F}
+```{r, eval=T}
 # Prepare data for rewiring
-prew_output <- TraRe::preparerewiring(name="Vignette_rewiring", TraReObj = TraReObj,
-                                linker_output= linkeroutput,
-                                final_signif_thresh = 0.05, nrcores = 1,
-                                outdir=outdir)
-# saveRDS(object = prew_output, file = paste0(system.file('extdata',package='TraRe'),
-    #   '/VignetteFiles/preprew_quickexample_vignette.rds')
+prew_output <- TraRe::preparerewiring(name="Vignette_rewiring", 
+                                      TraReObj = TraReObj,
+                                      linker_output= linkeroutput,
+                                      final_signif_thresh = 0.05, 
+                                      nrcores = 1,
+                                      outdir=outdir)
+```
+```{r, eval = TRUE, warning = FALSE}
 # Run rewiring
 TraRe::runrewiring(prew_output)                             
 ```
+In the `output` directory we will find the results from the rewiring with the plots, statistics and html report.
+
 
 # Generating the GRN modules
 ## Overview of the GRN inference method
@@ -168,40 +189,39 @@ The aim of the proposed method is to find relatively small networks
 that link few regulatory or "driver" genes, usually TFs, with a similarly regulated
 set of genes, also known as the target genes. 
 In order to build such networks, the method is proceeds in two
-phases. During Phase I it generates K modules of similarly
+phases. During *Phase I* it generates $K$ modules of similarly
 expressed genes and then associates each module to a few regulators using *Variational Bayes Spike Regression (VBSR)*\*.
 
 Due to the non-convex nature of the problem, we perform
-B runs (*bootstraps*) of this step using a different set of samples (by default 80% sub-sampling
+$B$ runs (*bootstraps*) of this step using a different set of samples (by default 80% sub-sampling
 without replacement) with a different random initialization in order
 to explore more broadly the set of potentially valid modules. Thus, at 
 the end of this step the method has generated
-K * B modules of similarly regulated genes, each of them with their
-associated regulators.  During Phase II the proposed method generates, for each module, a bipartite graph that links the individual target 
-genes to their associated regulators. Using again the a VBSR model, if no combination of regulators represents
-accurately the expression profile of a given target gene, that gene is
+$K \times B$ modules of similarly regulated genes, each of them with their
+associated regulators.  During *Phase II* the proposed method generates, for each module, 
+a bipartite graph that links the individual target genes to their associated regulators. 
+Using again the a VBSR model, if no combination of regulators represents accurately the expression profile of a given target gene, that gene is
 removed from the graph. This scenario arises when this target gene is an outlier in the module.
 
-\*Note: two other regression methods are currently implemented (See Section "XXX")
+\*Note: two other regression methods are also available in the package (See Section "XXX")
 
-## How to run trare_processing and LINKER_run in TraRe
+## How to run `trare_preprocessing` and `LINKER_run` in TraRe
 
-`trare_processing` is a helper function to preprocess the data (filter genes and samples with low variance) prior to the GRN inference process.
+`trare_preprocessing` is a helper function to preprocess the data (filter genes and samples with low variance) prior to the GRN inference process.
 A **SummarizedExperiment** object can be used or otherwise:
 
-- **data_matrix**: a matrix of log-normalized estimated counts of the gene expression data (Nr Genes x Nr samples).
-- **geneinfo**: character array with gene IDs to be considererd as regulators (e.g. TFs).
-- **low_var_genes_th**:  threschold to drop out low variance genes across samples. Default: 0.25
-- **low_var_samples_th**: threschold to drop out low variance samples across genes. Default: 1
+- **data_matrix**: a matrix of log-normalized estimated counts of the gene expression data ($Nr Genes \times Nr samples$).
+- **geneinfo**: character array with gene IDs to be considered as regulators (e.g. TFs).
+- **low_var_genes_th**:  threshold to drop out low variance genes across samples. Default: 0.25
+- **low_var_samples_th**: threshold to drop out low variance samples across genes. Default: 1
 
-The return object is a **TraReObj** containing preprocessed input matrix and associated info to pass to the funciton `LINKER_run`
+The returned object is a **TraReObj** containing preprocessed input matrix and associated info to pass to the function `LINKER_run`
 ```{r, eval = TRUE}
-## For this example, we are going to load a example matrix
+# We load gene expression matrix and convert it to matrix class
 lognorm_est_counts_p <- paste0(system.file('extdata',package='TraRe'),
-                                  '/VignetteFiles/expression_rewiring_example.txt')
-lognorm_est_counts <- utils::read.delim(lognorm_est_counts_p)
-lognorm_est_counts <- as.matrix(lognorm_est_counts)
+                              '/VignetteFiles/expression_rewiring_example.txt')
 
+lognorm_est_counts <- as.matrix(utils::read.delim(lognorm_est_counts_p))
 
 # Gene info dataframe path
 gene_info_p <- paste0(system.file("extdata",package="TraRe"),
@@ -209,20 +229,27 @@ gene_info_p <- paste0(system.file("extdata",package="TraRe"),
 
 # We load gene info dataframe
 geneinfo <- utils::read.delim(gene_info_p, row.names = 1)
-# We have to make sure geneinfo and lognorm_est_counts have same rows (same genes).
+
+# We have to make sure geneinfo and lognorm_est_counts have
+# same rows (same genes).
 geneinfo <- geneinfo[rownames(lognorm_est_counts),,drop=FALSE]
 
 # We keep the TFs names in the vector
 geneinfo = rownames(geneinfo)[which(geneinfo$regulator==1)]
 
-TraReObj <- TraRe::trare_preprocessing(data_matrix = lognorm_est_counts,
-                                geneinfo = geneinfo, verbose = FALSE)
+# TraReObj <- TraRe::trare_preprocessing(data_matrix = lognorm_est_counts,
+#                                        geneinfo = geneinfo,
+#                                        verbose = TRUE)
 
 # saveRDS(object = TraReObj, file = paste0(system.file('extdata',package='TraRe'),
                           # '/VignetteFiles/TraReObj_rewiring_example.rds'))
 ```
+```{r,eval=TRUE,warning=FALSE,echo=FALSE}
+TraReObj <- readRDS(file = paste0(system.file('extdata', package = 'TraRe'),
+              '/VignetteFiles/TraReObj_rewiring_example.rds'))
+```
 
-`LINKER_run` generates, from an processed RNA-Seq dataset where TFs and targets genes are provided, GRN modules in three different forms: as raw results, from the Phase I output modules; as modules from the Phase II output modules and in the form of bipartite graphs, where drivers and targets relationships are defined. Here we include all the parameters and their description. For more information, please refer to the help section of `LINKER_run()`.
+`LINKER_run` generates, from an processed RNA-Seq dataset where TFs and target genes are provided, GRN modules in three different forms: as raw results, from the *Phase I* output; as modules from the *Phase II* output and in the form of bipartite graphs, where drivers and targets relationships are defined. Here we include all the parameters and their description. For more information, please refer to the help section of `LINKER_run()`.
 
 - **TraReObj**: containing preprocessed input matrix (linker_preprocessing output).
 - **link_mode**: Chosen method(s) to link module eigengenes to regulators. The available options are
@@ -242,19 +269,19 @@ TraReObj <- TraRe::trare_preprocessing(data_matrix = lognorm_est_counts,
 
 We now run `LINKER_run` method below to generate all possible GRNs. 
 
-\*Note that this function has no information regarding the phenotype of the samples,
-even if a *SummarizedExperiment* object is provided to the `linker_processing` function, `LINKER_run` will not make use of this data.
+\*\*Note that this function has no information regarding the phenotype of the samples,
+even if a *SummarizedExperiment* object is provided to the `trare_preprocessing` function, `LINKER_run` will not make use of the phenotype data.
 This information can be added later on to the object for the differential network analysis step (*Rewiring*) if a *SummarizedExperiment* was not used.
 
 
-```{r}
+```{r, warning = FALSE}
 # We recommend VBSR as the model as it outperforms the other methods
-# For this vignette example and to save computing time the matrix we are using is a subset
+# For this vignette example and to save computing time the matrix we are using a subset
 # of the original and we will be running only 1 bootstrap, but the results below
 # will show a 10 bootstraps LINKER_run.
-linkeroutput <- TraRe::LINKER_run(TraReObj = TraReObj, link_mode='VBSR',
+linkeroutput2 <- TraRe::LINKER_run(TraReObj = TraReObj, link_mode='VBSR',
                        graph_mode ='VBSR', module_rep= 'LINKER',
-                       NrModules = 100, Nr_bootstraps = 10,
+                       NrModules = 50, Nr_bootstraps = 10,
                        corrClustNrIter = 100, train_size = 0.8)
 
 # We save it for later
@@ -266,35 +293,35 @@ linkeroutput <- TraRe::LINKER_run(TraReObj = TraReObj, link_mode='VBSR',
 
 ## Overview of Rewiring method
 
-* *Rewiring* step performs a permutation test over a certain condition to infer if that condition is producing any deregulation
-on our GRNs. Thus, for each GRN generated in the previous step the difference of the gene-gene covariance matrix 
+* *Rewiring* step performs a permutation test over a certain condition to infer if that condition is producing any deregulation on our GRNs. Thus, for each GRN generated in the previous step the difference of the gene-gene covariance matrix 
 associated with each binary-labeled phenotype is computed separately, namely $\Sigma^0$ and $\Sigma^1$. Then, the 
-distance between the two covariance matrices is computed as the Frobenius norm of the difference between both of them. T
-his distance $s$, which we term the rewiring score, is used as a statistic to measure the dissimilarity 
-between the  covariance  matrices, and thus, the **differential transcriptional mechanisms** of the modules across phenotypes. 
+distance between the two covariance matrices is computed as the Frobenius norm of the difference between both of them.
+$$s = \sum_{i}\sum_{j} (\Sigma^0_{ij} - \Sigma^1_{ij})^{2}$$
+This distance $s$, which we term the rewiring score, is used as a statistic to measure the dissimilarity 
+between the  covariance  matrices, and thus, the **differential transcriptional rewirings** of the modules across phenotypes. 
 A module is said to be rewired if its rewiring score $s$ satisfies $P_{H_0}(s) < \tau$ where $\tau$ is a user-defined 
-threshold (*final_signif_thresh*). A significant dissimilarity over the covariance matrices may indicate fundamental underlying disruptions in gene co-expression between phenotypes.
+threshold (**final_signif_thresh** parameter). A significant dissimilarity over the covariance matrices may indicate fundamental underlying disruptions in gene co-expression between phenotypes.
 
 Bootstrapping plays an important role, as the non-convex nature of these biological events makes necessary
 to ensure that a certain behavior is repeated across bootstraps, and to confirm this event does not come from a particular realization.
-As bootstrapping has been performed in `LINKER_run`, this step will take advantage of it and will try to group, with hierarchical clustering, highly scored modules with similar behavior across bootstraps, named as *trancriptional modules*. 
+As bootstrapping has been performed in `LINKER_run`, the rewiring step will take advantage of it and will try to group, with hierarchical clustering, highly scored modules with similar behavior across bootstraps, named as *trancriptional modules*. 
 
-It will output a folder containing :
+Therefore after this step the package will output a folder containing :
 
-* A correlation matrix in the form of a heatmap (sorted by hierarchical clustering to ease interpretation), containing similar highly scored modules.
-* A dendogram containing the relationships between modules, which have been used to sort the heatmap.
-* A 3-graph plot, containing the identified transcriptional module within all samples and separated by sample's phenotype, to visualized the network diruption.
+* A correlation matrix of the rewired modules in the form of a heatmap (sorted by hierarchical clustering to ease interpretation), containing similar highly scored modules.
+* A dendogram containing the relationships between these modules, which have been used to sort the heatmap.
+* A 3-graph plot, containing the identified transcriptioal module within all samples and separated by sample's phenotype, to visualized the network disruption.
 * A report containing statistical information about the transcriptional module: driver genes, target genes, pvalues, etc.
 
 
 ## How to run the rewiring on TraRe
 
-In order to run do the differential network analysis, TraRe provides two functions: `preparerewiring()`  and `runrewiring()`. 
-The first one gathers all the data in an object to be used by the second. 
+In order to do the differential network analysis, TraRe provides two functions: `preparerewiring()`  and `runrewiring()`. 
+The first one gathers all the data in an object list to be used by the second. 
 The information needed by `preparerewiring()` is:
 
 - **name**: Desired name of the folder which is generated. The chosen threshold will be `paste()` to the name folder.
-- **TraReObj**: the *TrareObj* generated during preprocessing step before GRN inference.
+- **TraReObj**: the *TrareObj* generated during preprocessing step before GRN inference with the phenotype data included.
 - **linker_output**: Output from `LINKER_run` function.
 - **final_signif_thresh**: Significance threshold for the rewiring method ($\tau$). The lower the threshold, the more  restrictive the method.
 - **outdir**: Directory for the output folder to be located (default: tempdir())
@@ -302,33 +329,33 @@ The information needed by `preparerewiring()` is:
 
 There are also other parameters that will remain by default. Please take a look at the `preparerewiring()` function for more information. We now generate 
 the `preparerewiring()` output.
-```{r, eval= F,  echo='hide'}
+```{r, eval= TRUE, warning=FALSE }
 
 ## Load the linker output
-linkeroutput <- readRDS(paste0(system.file('extdata',package='TraRe'),
-                          'VignetteFiles/linkeroutput_rewiring_example.rds'))
-
-## Load the phenotype file
-phenotype_p <- paste0(system.file('extdata',package='TraRe'),
-                      '/phenotype_rewiring_example.txt')
-
-phenotype <- read.delim(phenotype_p, row.names = 1)
-colnames(phenotype) <- 'phenotype'
-
-## Add the phenotype if it was not in the SummarizedExperiment when we did the preprocessing 
-## using hte helper function `rewiring_add_phenotype`
-TraReObj <- TraRe::rewiring_add_phenotype(TraReObj, phenotype_35)
-
-outdir <- system.file('extdata',package='TraRe')
-prew_output <- TraRe::preparerewiring(name = 'Vignette_test', linker_output = linkeroutput,
-                            TraReObj = TraReObj, 
-                            final_signif_thresh = 0.05,
-                            nrcores = 1, outdir = outdir)
+# linkeroutput <- readRDS(paste0(system.file('extdata',package='TraRe'),
+#                           'VignetteFiles/linkeroutput_rewiring_example.rds'))
+# 
+# ## Load the phenotype file
+# phenotype_p <- paste0(system.file('extdata',package='TraRe'),
+#                       '/VignetteFiles/phenotype_rewiring_example.txt')
+# 
+# phenotype <- read.delim(phenotype_p, row.names = 1)
+# colnames(phenotype) <- 'phenotype'
+# 
+# ## Add the phenotype if it was not in the SummarizedExperiment when we did the preprocessing 
+# ## using the helper function `rewiring_add_phenotype`
+# TraReObj <- TraRe::rewiring_add_phenotype(TraReObj, phenotype)
+# 
+# # outdir <- system.file('extdata',package='TraRe')
+# prew_output <- TraRe::preparerewiring(name = 'Vignette_test_2nd', 
+#                                       linker_output =linkeroutput,
+#                                       TraReObj = TraReObj, 
+#                                       final_signif_thresh = 0.05,
+#                                       nrcores = 1, outdir = outdir)
 
 # saveRDS(object = prew_output, file = paste0(system.file('extdata',package='TraRe'),
                            #   '/VignetteFiles/preprew_rewiring_example.rds')
-# Run rewiring
-TraRe::runrewiring(prew_output)     
+   
 
 ```
 ```{r}
@@ -342,50 +369,56 @@ colnames(phenotype) <- 'phenotype'
 
 ## Add the phenotype if it was not in the SummarizedExperiment when we did the preprocessing 
 ## using hte helper function `rewiring_add_phenotype`
-TraReObj <- TraRe::rewiring_add_phenotype(TraReObj, phenotype_35)
-
-outdir <- system.file('extdata',package='TraRe')
-prew_output <- TraRe::preparerewiring(name = 'Vignette_test', linker_output = linkeroutput,
-                            TraReObj = TraReObj, 
-                            final_signif_thresh = 0.05,
-                            nrcores = 1, outdir = outdir)
-
-# Run rewiring
-TraRe::runrewiring(prew_output)     
+# TraReObj <- TraRe::rewiring_add_phenotype(TraReObj, phenotype_35)
+# 
+# outdir <- system.file('extdata',package='TraRe')
+# prew_output <- TraRe::preparerewiring(name = 'Vignette_test_2nd', 
+#                                       linker_output =linkeroutput2,
+#                                        TraReObj = TraReObj, 
+#                                        final_signif_thresh = 0.05,
+#                                        nrcores = 1, outdir = outdir)
+# 
+# # Run rewiring
+# TraRe::runrewiring(prew_output)     
 
 ```
-In order to run `runrewiring()`, we just call `runrewiring(prepared)`. 
-It will create a folder on the specified output path with an html report and statistical information about the performed test.
+In order to run `runrewiring(prew_output)`, we just call the function with the output of `preparerewiring()`. 
+It will create a directory on the specified output path with an html report and statistical information about the performed test as described above.
+```{r warning=FALSE}
+# Run rewiring
+# TraRe::runrewiring(prew_output)  
+```
+
 
 ![Rewiring Dendogram](mod_sim.VBSR.1.heatm.png){width=2400px,height=2400px}
-As shown in the heatmap, there a is a clear rewired and robust **Transcriptional Module**. For a trancriptional module to be identified firstly, the modules contained in it should present genes whose expression can be separated very well using the desired phenotype (*rewired* modules), and secondly, they have to show similar behavior across bootstraps, with a high score given by an hypergeometrical test. Therefore, in this example there is one transcriptional module formed by the modules number `c(298,945,698,619,795,156,63,214,563)`.
+As shown in the heatmap, there a is a clear rewired and robust **Transcriptional Module**. For a transcriptional module to be identified firstly, the modules contained in it should present genes whose expression can be separated very well using the desired phenotype (*rewired* modules), and secondly, they have to show similar behavior across bootstraps, with a high score given by an hypergeometrical test. Therefore, in this example there is one transcriptional module formed by the modules number `c(298,945,698,619,795,156,63,214,563)`.
 
 ![Rewiring Hierarchical Clustering](mod_sim.VBSR.1.dendro.png){width=2400px,height=1200px}
 
 In the figure above is the Hierarchical Clustering representation of the transcriptional module. The current implementation of the *Rewiring*
-method by default calculates all transcriptional modules that the hierarchical clustering finds except for the last one (which is composed by the rest of the modules that have little in common between each other) and generates all the graph objects and figures we show in the next section.
+method by default calculates all transcriptional modules that the hierarchical clustering finds except for the last one (which is composed by the rest of the modules that have little in common between each other) and generates all the graph objects and figures seen below and in the next sections.
 
-
-### Add here the graph plots
-and some explanation.
+![Rewiring Raw graph](igraphs.raw.graph.png){width=1500px,height=750px}
+This is the raw graph for the transcriptional module identified. Targets are sorted based on a Z-score derived from a t-test with null hypothesis if samples separated by the selected condition are not deferentially expressed.
+The color of the edge between the target and the TF is defined by weight of the regression coefficient. 
 
 # Rewiring at the gene level
 To investigate which TF are driving significant differences in the transcriptional modules between the phenotype condition TraRe provides the 
 function `rewiring_gene_level`. We propose to use it using the liker_output generated with **50 bootstraps** to increase the power of the test. The function first performs
-the *Rewiring test* onthe modules found by `LINKER_run` and then, for each TF, it computes the Fisher's test to discriminate whether this TF is more likely be found in rewired modules or not.
+the *Rewiring test* on all the modules found by `LINKER_run` and then, for each TF, it performs a Fisher's test to discriminate whether this TF is more likely be found in rewired modules or not.
 
 Below are the main parameters of the function:
 
-- **fpath** Desired path for the rewiring file to be generated (or oath to existing file).
+- **fpath** Desired path for the rewiring file to be generated (or path to existing file).
 - **linker_output**: Output from `LINKER_run` function (recommended with 50 bootstraps).
-- **TraReObj**: the *TrareObj* generated during preprocessing step before GRN inference.
+- **TraReObj**: the *TrareObj* generated during preprocessing step before GRN inference with the phenotype information.
 - **final_signif_thresh** Significance threshold for the rewiring method ($\tau$). The lower the threshold, the more restrictive the method. Default set to 0.05.
 - **ImpTH** Threshold for the refinement of the returned list. Default set to 0.05.
 - **nrcores** Number of cores to run the parallelization within the rewiring test (default: 3).
 
 The output of this function are two .txt files: 
 1. The list of the rewired modules of the linker_output object
-2. The list of rewired TF together with the p-value obtained in for the Fisher's test and the OR.
+2. The list of rewired TFs together with the p-value obtained in the Fisher's test and the Odds Ratio (OR).
 
 ```{r, eval = F,  echo = TRUE}
   fpath <- paste0(system.file('extdata',package='TraRe'),
@@ -395,7 +428,7 @@ The output of this function are two .txt files:
   TraReObj <- readRDS(paste0(system.file('extdata',package='TraRe'), 
                               '/VignetteFiles/TraReObj_rewiring_example.rds'))
 # At the gene level (50 bootstraps)
-  impgenes <-  TraRe::rewiring_gene_level(linker_output = linkeroutput,
+  impgenes <-  TraRe::rewiring_gene_level(linker_output = linkeroutput2,
                                    TraReObj = TraReObj,
                                    fpath = fpath,
                                    final_signif_thresh = 0.05,
@@ -424,7 +457,7 @@ The output is a list of regulons, this is: for each TF with significant results 
   fpath <- paste0(system.file('extdata', package='TraRe'),
                   '/VignetteFiles/rewired_modules_50boots_fs_0.05.txt')
   
-  regulons <- rewiring_regulon_level(linker_output = linkeroutput,
+  regulons <- rewiring_regulon_level(linker_output = linkeroutput2,
                                      TraReObj = TraReObj,
                                      sigmodules_p = fpath,
                                      final_signif_thresh = 0.05)
@@ -435,7 +468,7 @@ The output is a list of regulons, this is: for each TF with significant results 
 ```
 # Visualization of the GRNs
 ## Overview
-TraRe also provides a way of manually generate a single GRN from specified list of driver and target genes with the function `NET_run`, that works similarly to the main `LINKER_run` function in phase 2 (graph generation). Normally we would use it the cluster of modules which behave similarly across bootstraps detected in the *Rewiring* step. This tool eases the task of analyzing relationships between drivers and targets by constraining all the provided genes to a single GRN.
+TraRe also provides a way of manually generate a single GRN from specified list of driver and target genes with the function `NET_run`, that works similarly to the main `LINKER_run` function in phase 2 (graph generation). Normally we would use in the cluster of modules which behave similarly across bootstraps detected in the *Rewiring* step. This tool eases the task of analyzing relationships between drivers and targets by constraining all the provided genes to a single GRN.
 
 Find below the necessary parameters and descriptions of `NET_run()`.
 
@@ -446,31 +479,30 @@ Find below the necessary parameters and descriptions of `NET_run()`.
 - **FDR** The False Discovery Rate correction used for the enrichment analysis. By default, 0.05.
 - **NrCores** Number of computer cores for the parallel parts of the method. Note that the parallelization is NOT initialized in any of the functions. By default, 3.
 
-\*Note in the future change to accommodate to new objects and files like in `LINKER_run`.
+\*Note in the future this function will change to accommodate to new objects and files like in `LINKER_run`.
 
-```{r,collapse=TRUE}
+```{r,eval = TRUE, warning= FALSE}
 
 # Assume we have run the rewiring method and we have discovered a robust rewired transcriptional module.
 # After we have selected the drivers and targets from all the modules contained in it, we can build
 # a single GRN to study it separately.
 
-### NEEDS TO BE CHANGED
 #Regular expression matrix
-#graph <- NET_run(lognorm_est_counts = lognorm_est_counts,
+# graph <- NET_run(lognorm_est_counts = lognorm_est_counts,
 #                 target_filtered_idx = target_filtered_idx,
 #                 regulator_filtered_idx = regulator_filtered_idx,
 #                 graph_mode="VBSR")
-
-#SummarizedExperiment
-# graph <- NET_run(lognorm_est_counts = SeObject,graph_mode="VBSR")
-
+# 
+# #SummarizedExperiment
+# graph <- NET_run(lognorm_est_counts = SeObject, graph_mode="VBSR")
+# 
 
 ```
 
-\*Note that this step is included and done automatically for each of the TM detected in the *Rewiring* method. 
+\*\*Note that this step is included and done automatically for each of the transcriptional modules detected in the *Rewiring* method. 
 
 ## Plot GRN in TraRe
-Additionally TraRe provides a graphical way of detecting condition-dependent GRN deregulation of the selected genes to intput to the `NET_run` function. 
+Additionally TraRe provides a graphical way of detecting condition-dependent GRN deregulation of the selected genes to input to the `NET_run` function. 
 We provide two ways of building the layout for the plot, depending on the choice of a t.test to be evaluated over the generated GRN, to sort target genes prior to plot the established relationship between these and drivers. 
 On one hand, `return_layout()` generates a regular layout in which there is no t.test, and target genes are sorted randomly in a line. 
 On the other hand, `return_layout_phenotype()` performs a target gene level t.test which has as null hypothesis if samples separated by the selected condition are not deferentially expressed.
@@ -487,63 +519,63 @@ From this analysis, the z-score is used to sort target genes and plot them descr
 # We load the igraph object that we generated from the `NET_run()` example.
 # Note: the igraph object is inside the list `NET_run()` generates.
 
-graph <- readRDS(paste0(system.file("extdata",package="TraRe"),
-               '/graph_netrun_vignette.rds'))
-graph <- graph$graphs$VBSR
-
-# We first generate the normal layout for the plot.
-# We need the drivers and target names. 
-
-lognorm_est_counts <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
-                                        '/expression_rewiring_vignette.txt'))
-
-drivers <- lognorm_est_counts[seq(70),]
-targets <- lognorm_est_counts[70+seq(1079),]
-
-# Note that the generated graph may not have the same drivers and targets we used
-# for generating it, so we will extract those genes and check in the gene_info file
-# if they are drivers or targets.
-
-geneinfo <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
-                                    '/geneinfo_rewiring_example.txt'))
-
-R<-intersect(geneinfo[geneinfo$regulator==1,1],names(igraph::V(graph)))
-P<-intersect(geneinfo[geneinfo$regulator==0,1],names(igraph::V(graph)))
-
-drivers_n <- rownames(drivers[R,])
-targets_n <- rownames(targets[P,])
-
-# As for this example we are working at gene level (we do not have transcripts inside genes),
-# we wont need namehash parameter (see param `namehash`)
-
-normal_layout <- return_layout(drivers_n,targets_n)
-
-# We need to separate our expression matrix by a binary phenotype. 
-# This is what the clinical file is used for.
-
-gnames <- c(drivers_n,targets_n)
-expmat <-rbind(drivers,targets)
-
-clinic <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
-                            '/VignetteFiles/phenotype_rewiring_example.txt'))
-
-expmat_R <- expmat[,clinic$Sample.ID[clinic$Class=='R']]
-expmat_NR <- expmat[,clinic$Sample.ID[clinic$Class=='NR']]
-
-# We now generate the phenotype layout and the `varfile` we need for this layout.
-# (I leave here a way to generate)
-
-varfile <- t(as.matrix(sapply(gnames,
-           function(x) c(stats::t.test(expmat_R[x,],expmat_NR[x,])$statistic,
-           if(x%in%drivers_n) 1 else 0))))
-
-colnames(varfile)<-c("t-stat","is-regulator")
-
-phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,varfile)
-
-plot_igraph(graph,mytitle="Normal Layout",titlecol="black",mylayout=normal_layout)
-plot_igraph(graph,mytitle="Phenotype Layout",titlecol="black",mylayout=phenotype_layout)
-    
+# graph <- readRDS(paste0(system.file("extdata",package="TraRe"),
+#                '/graph_netrun_vignette.rds'))
+# graph <- graph$graphs$VBSR
+# 
+# # We first generate the normal layout for the plot.
+# # We need the drivers and target names. 
+# 
+# lognorm_est_counts <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
+#                                         '/expression_rewiring_vignette.txt'))
+# 
+# drivers <- lognorm_est_counts[seq(70),]
+# targets <- lognorm_est_counts[70+seq(1079),]
+# 
+# # Note that the generated graph may not have the same drivers and targets we used
+# # for generating it, so we will extract those genes and check in the gene_info file
+# # if they are drivers or targets.
+# 
+# geneinfo <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
+#                                     '/geneinfo_rewiring_example.txt'))
+# 
+# R<-intersect(geneinfo[geneinfo$regulator==1,1],names(igraph::V(graph)))
+# P<-intersect(geneinfo[geneinfo$regulator==0,1],names(igraph::V(graph)))
+# 
+# drivers_n <- rownames(drivers[which(rownames(drivers)%in%R),])
+# targets_n <- rownames(targets[which(rownames(targets)%in%P),])
+# 
+# # As for this example we are working at gene level (we do not have transcripts inside genes),
+# # we wont need namehash parameter (see param `namehash`)
+# 
+# normal_layout <- return_layout(drivers_n,targets_n)
+# 
+# # We need to separate our expression matrix by a binary phenotype. 
+# # This is what the clinical file is used for.
+# 
+# gnames <- c(drivers_n,targets_n)
+# expmat <-rbind(drivers,targets)
+# 
+# clinic <- utils::read.delim(paste0(system.file("extdata",package="TraRe"),
+#                             '/VignetteFiles/phenotype_rewiring_example.txt'))
+# 
+# expmat_R <- expmat[,clinic$Sample.ID[clinic$Class=='R']]
+# expmat_NR <- expmat[,clinic$Sample.ID[clinic$Class=='NR']]
+# 
+# # We now generate the phenotype layout and the `varfile` we need for this layout.
+# # (I leave here a way to generate)
+# 
+# varfile <- t(as.matrix(sapply(gnames,
+#            function(x) c(stats::t.test(expmat_R[x,],expmat_NR[x,])$statistic,
+#            if(x%in%drivers_n) 1 else 0))))
+# 
+# colnames(varfile)<-c("t-stat","is-regulator")
+# 
+# phenotype_layout <- return_layout_phenotype(drivers_n,targets_n,varfile)
+# 
+# # plot_igraph(graph,mytitle="Normal Layout",titlecol="black",mylayout=normal_layout)
+# # plot_igraph(graph,mytitle="Phenotype Layout",titlecol="black",mylayout=phenotype_layout)
+#     
 
 ```
 
@@ -583,18 +615,18 @@ mandatory, the rest of them have default values.
 ## (see vignette of TraRe for more information), which is at the external data folder
 ## of this package.
 
-gpath <- paste0(system.file("extdata",package="TraRe"),
-                       '/refinedsumm.rds')
-
-## We are going to use 1k driver genes from the TraRe's installation folder.
-## For more information about generatecliques() please check the corresponding help page.
-
-dataset<- readRDS(paste0(system.file("extdata",package="TraRe"),
-                       '/tfs_linker_example_eg.rds'))
-
-# As we have mentioned, by default it will write a 'grnsumm.xlsx' file to the temporary directory.
-
-html_from_graph(gpath=gpath,dataset=dataset) 
+# gpath <- paste0(system.file("extdata",package="TraRe"),
+#                        '/refinedsumm.rds')
+# 
+# ## We are going to use 1k driver genes from the TraRe's installation folder.
+# ## For more information about generatecliques() please check the corresponding help page.
+# 
+# dataset<- readRDS(paste0(system.file("extdata",package="TraRe"),
+#                        '/tfs_linker_example_eg.rds'))
+# 
+# # As we have mentioned, by default it will write a 'grnsumm.xlsx' file to the temporary directory.
+# 
+# html_from_graph(gpath=gpath,dataset=dataset) 
 
 ```
 

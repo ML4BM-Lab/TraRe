@@ -57,21 +57,24 @@ Gene Regulatory Network inference via model selection. Consists of two phases,
 \examples{
 
   ## For this example, we are going to load a example matrix
-  lognorm_est_counts_p <- paste0(system.file('extdata',package='TraRe'),
+  lognorm_est_counts_p <- paste0(system.file('extdata', package='TraRe'),
                                  '/expression_rewiring_example.txt')
-  lognorm_est_counts <- as.matrix(read.delim(lognorm_est_counts_p, header=TRUE,row.names=1))
+  lognorm_est_counts <- as.matrix(read.delim(lognorm_est_counts_p,
+                                         header=TRUE,row.names=1))
+  # dim(lognorm_est_counts) # 1149   35                                      
 
   ## Load gene info, its an array of regulators' names.
   gene_info_p <- paste0(system.file('extdata',package='TraRe'),
-                         '/geneinfo_rewiring_example.txt')
+                                '/geneinfo_rewiring_example.txt')
   gene_info <- read.delim(gene_info_p,header=TRUE)
-  geneinfo <- gene_info[gene_info[,'regulator'] == 1,'uniq_isos']
+  regulators <- gene_info[gene_info[,'regulator'] == 1,'uniq_isos']
 
-   ##TraReObj <- trare_preprocessing(data_matrix = lognorm_est_counts,
-   ##                                  geneinfo = geneinfo, verbose = FALSE)
+  TraReObj <- trare_preprocessing(data_matrix = lognorm_est_counts,
+                                     geneinfo = regulators, verbose = FALSE)
 
-   ## linker_output <- LINKER_run(TraReObj = TraReObj, link_mode='VBSR',
-   ##                        graph_mode='VBSR',NrModules=100,Nr_bootstraps=10,
-   ##                        corrClustNrIter=100)
+  linker_output <- LINKER_run(TraReObj = TraReObj, module_rep = "LINKER",
+                           link_mode='VBSR', graph_mode='VBSR',
+                           NrModules=10, Nr_bootstraps=1,
+                           corrClustNrIter=100)
 
 }

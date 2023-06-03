@@ -1,6 +1,6 @@
-#' Phase II : bipartitive graphs generation
+#' Phase II : bipartite graphs generation
 #'
-#' Run second phase of the linker method where a bipartitive graph is generated from the phase I output.
+#' Run second phase of the linker method where a bipartite graph is generated from the phase I output.
 #' A bipartite graph is a set of graph nodes decomposed into two disjoint sets such that no
 #' two graph nodes within the same set are adjacent.
 #'
@@ -15,32 +15,27 @@
 #'
 #' @examples
 #'
-#'    ## We are going to proceed in the same manner as in the `liner_runphaseone()` example
+#'    ## We are going to proceed in the same manner as in the `linker_runphaseone()` example
 #'    ## but we start at the end of it, loading the output from the example folder.
 #'
-#'    phaseone <- readRDS(paste0(system.file('extdata',package='TraRe'),
+#'    linkerphase1 <- readRDS(paste0(system.file('extdata',package='TraRe'),
 #'                               '/linker_phaseone_example.rds'))
 #'
-#'    ## We are loading drivers and targets to generate lognorm_est_counts, as we need it
-#'    ## for the phase 2.
-#'
-#'    drivers <- readRDS(paste0(system.file('extdata',package='TraRe'),
-#'                                          '/tfs_linker_example.rds'))
-#'    targets <- readRDS(paste0(system.file('extdata',package='TraRe'),
-#'                                          '/targets_linker_example.rds'))
-#'
-#'    lognorm_est_counts <- as.matrix(rbind(drivers,targets))
+#'    ## Again, we are going to load the expression matrix dataset
+#'    lognorm_est_counts_p <- paste0(system.file('extdata', package='TraRe'),
+#'                                  '/expression_rewiring_example.txt')
+#'    lognorm_est_counts <- as.matrix(read.delim(lognorm_est_counts_p,
+#'                                          header=TRUE,row.names=1))
 #'
 #'    ## Now we proceed to call `LINKER_runPhase2()`.
 #'    ## We first, we need to extract modules from the `LINKER_runPhase1()` output.
 #'
-#'    modules_phaseone<-LINKER_extract_modules(phaseone)
+#'    modules_phaseone <- TraRe::LINKER_extract_modules(linkerphase1)
 #'
-#'    ## Now we generate the bipartitive graph from the extracted modules
+#'    ## Now we generate the bipartite graph from the extracted modules
 #'
-#'
-#'    graph <- LINKER_runPhase2(modules=modules_phaseone,Data=lognorm_est_counts,
-#'                              ,mode='LM')
+#'   # graph <- TraRe::LINKER_runPhase2(modules = linkerphase1, Data = lognorm_est_counts,
+#'   #                           mode='LM')
 #'
 #'
 #' @return igraph object containing the related drivers and targets in the form of a bipartitive graph.

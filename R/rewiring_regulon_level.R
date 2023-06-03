@@ -3,18 +3,40 @@
 #' Perform the rewiring test to regulons using a hypergeometric test.
 #' @param linker_output Output from LINKER_run function (recommended with 50 bootstraps).
 #' @param TraReObj the TrareObj generated during preprocessing step before GRN inference.
-#' @param final_signif_thresh Significance threshold for the rewiring method. The lower the threshold, the more restrictive the method. Default set to 0.05.
+#' @param fpath Desired path for the rewiring file to be generated. If fpath not provided, it will create a rewiring module list file in the current directory with the name "rewiring_gene_level_fs_<final_signif_thresh>.txt". If file already exists it will skip the fast rewiring step.
 #' @param rewired Bool indicating whether the analysis is to be done regulons from rewired modules (default= TRUE)
-#' @param sigmodules_p Path of the output file from rewired_gene_level function with rewired modules list.
-#' @param outdir Directory for the output folder to be located (default: tempdir())
+#' @param final_signif_thresh Significance threshold for the rewiring method. The lower the threshold, the more restrictive the method. Default set to 0.05.
+#' @param fpath Path of the output file from rewired_gene_level function with rewired modules list.
+#' @param outdir Directory for the output folder to be located (default: tempdir()).
 #'
-#' @return Return an object with a data.frame for each regulon with filtered targets by pvalue, multiplicity and the igraph object.
+#' @return Return an object list with a data.frame for each regulon with filtered targets by pvalue, multiplicity and the igraph object.
+#' 
+#' @examples 
+#' ## We will be using an output file we generated with LINKER_run and the 
+#' ## same expression datainput  object.
+#' 
+#' ## linker_output <- readRDS(paste0(system.file('extdata',package='TraRe'),
+#' ##                                     'linkeroutput_rewiring_example.rds'))
 #'
+#' ## TraReObj <- readRDS(paste0(system.file('extdata',package='TraRe'),
+#' ##                                                        '/TraReObj.rds'))
+#' 
+#' ## Add the phenotype to TraReObj if it was not before.
+#' ## TraReObj <- rewiring_add_phenotype(TraReObj, phenotype)
+#' 
+#' ## Select directory for output file
+#' ## outdir <- system.file('extdata',package='TraRe')
+#
+#' ## regulons <- rewiring_regulon_level(linker_output = linker_output, 
+#' ##                                    TraReObj = TraReObj,
+#' ##                                    rewired = TRUE,
+#' ##                                    final_signif_thresh = 0.05,
+#' ##                                    outdir = outdir)
 #' @export
 
 rewiring_regulon_level <- function(linker_output,
                                    TraReObj,
-                                   sigmodules_p,
+                                   fpath='',
                                    rewired = TRUE,
                                    final_signif_thresh = 0.05,
                                    outdir=tempdir()){
@@ -23,16 +45,18 @@ rewiring_regulon_level <- function(linker_output,
   #Prepare rewiring creating object
   preparedrewiring <- TraRe::preparerewiring(TraReObj = TraReObj,
                                              linker_output= linker_output,
-                                             final_signif_thresh = 0.05, nrcores = nrcores,
+                                             final_signif_thresh = final_signif_thresh,
                                              outdir=outdir)
-
+  
   ## Get regulons
   regulons_all_modules <- get_regulons(preparedrewiring,
-                                       sigmodules_p = sigmodules_p,
+                                       fpath = fpath,
                                        rewired = TRUE)
 
   ## Rewire regulons
-  finals_adj <- rewiring_regulon(regulons_all_modules, preparedrewiring)
+  finals_adj <- rewiring_regulon(regulons_all_modules,
+                                 preparedrewiring,
+                                 final_signif_thresh)
 
   ## Merge regulons
   regulons_uniq <- merge_regulons(finals_adj)
@@ -43,18 +67,51 @@ rewiring_regulon_level <- function(linker_output,
   return(order_filtr_regulons)
 }
 
+### Helper functions
 ## function get_regulons:
 # Takes as input prepareobj object, the number of rewired modules' path (if wanted to get the regulons from only those modules).
 # Retrieves an object with the regulon subgraphs of the modules of linkeroutput and the boostrap idx
 get_regulons <- function(prepareobj,
-                         sigmodules_p = NULL,
+                         fpath = '',
                          rewired = rewired){
 
   if (rewired){
-    message('Extracting regulons from rewired modules')
+    
+    if (!file.exists(fpath)){
+      
+      #define fpath (check default value)
+      if (fpath==''){
+        final_signif_thresh <- prepareobj$datasets[[1]]$final_signif_thresh
+        fpath <- paste0(getwd(),'/rewiring_gene_level','_fs_',final_signif_thresh,'.txt')
+        
+      }else{
+        
+        message('Adding significant threshold to output file name')
+        
+        #(check extension to add final sig th)
+        if (substr(fpath,nchar(fpath)-3,nchar(fpath)-3)=='.'){
+          fpath <- paste0(substr(fpath,1,nchar(fpath)-4),'_fs_',final_signif_thresh,'.txt')
+        }else{
+          fpath <-paste0(fpath,'_fs_',final_signif_thresh,'.txt')
+        }
+        
+      }
+      
+      message('Performing fast rewiring')
+      #Do the fast rewiring
+      rew_list_names <- fast_rew(prepareobj)
+      
+      #write rew_list_names
+      utils::write.table(rew_list_names,file=fpath,quote=F,sep='\t',
+                         row.names = FALSE,col.names=FALSE)
+      message(paste0('Rewired modules list generated in ',fpath))
+    }else{
+      message('Fast rewiring file found to use reiwired module list')
+    }
     #Read the rewired modules from the 50 bootstraps
-    sigmod <- utils::read.delim(sigmodules_p,header = F)[,1]
+    sigmod <- utils::read.delim(fpath, header = F)[,1]
     # Rewired graphs
+    message('Extracting regulons from rewired modules')
     graph_objs <- lapply(sigmod,function(x) prepareobj$datasets[[1]]$rundata$graphs$VBSR[[x]])
     #Get the bootstraps of the rewired graphs
     bootst_rewired_mods <- sapply(sigmod,function(x) prepareobj$datasets[[1]]$rundata$modules$VBSR[[x]]$bootstrap_idx)
@@ -110,7 +167,7 @@ rewiring_single_module <- function(ObjectList,module,mymod=1){
   modregs <- intersect(ObjectList$datasets[[i]]$allregs,genes)
   modtargs <- intersect(ObjectList$datasets[[i]]$alltargs,genes)
   keepfeats <- unique(c(modregs, modtargs))
-  modmat <- t(norm_expr_mat_keep[keepfeats, phenosamples])
+  modmat <- t(lognorm_est_counts[keepfeats, phenosamples])
   orig_pval <- TraRe::rewiring_test(modmat, pheno + 1, perm = orig_test_perms)
   new_pval <- orig_pval
 
@@ -130,7 +187,7 @@ rewiring_single_module <- function(ObjectList,module,mymod=1){
 ### THIS CAN BE PARALLELIZED
 rewiring_regulon <- function(regulons_all_modules,
                              prepareobj,
-                             final_signif_thresh=final_signif_thresh){
+                             final_signif_thresh){
 
   #Unlist the regulons
   graphs_regulons <- lapply(regulons_all_modules, function(x) x$regulons)

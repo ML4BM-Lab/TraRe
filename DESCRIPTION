@@ -57,7 +57,7 @@ Imports:
     viridis
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
+LazyData: False
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.2
 biocViews: GeneRegulation, RNASeq, GraphAndNetwork, Bayesian, GeneTarget, Classification
@@ -70,3 +70,25 @@ Suggests:
     BiocStyle
 VignetteBuilder: knitr
 PackageStatus: Deprecated
+Collate: 
+    'cliques_generatecliques.R'
+    'compute_KL.R'
+    'html_from_graph.R'
+    'linker_html_summary.R'
+    'linker_html_summary_functions.R'
+    'linker_runlinker.R'
+    'linker_runlinkernet.R'
+    'linker_runphaseone.R'
+    'linker_runphasetwo.R'
+    'plot_functions.R'
+    'preprocessing.R'
+    'rewiring_create_module_summary.R'
+    'rewiring_gene_level.R'
+    'rewiring_html_summary.R'
+    'rewiring_html_summary_functions.R'
+    'rewiring_preparerewiring.R'
+    'rewiring_regulon_level.R'
+    'rewiring_runrewiring.R'
+    'rewiring_stats_functions.R'
+    'vbsr.R'
+    'zzz.R'

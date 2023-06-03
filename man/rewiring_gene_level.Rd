@@ -21,7 +21,7 @@ rewiring_gene_level(
 
 \item{TraReObj}{the TrareObj generated during preprocessing step before GRN inference.}
 
-\item{fpath}{Desired path for the rewiring file to be generated.}
+\item{fpath}{Desired path for the rewiring file to be generated. If fpath not provided, it will create a rewiring module list file in the current directory with the name "rewiring_gene_level_fs_<final_signif_thresh>.txt". If file already exists it will skip the fast rewiring step.}
 
 \item{final_signif_thresh}{Significance threshold for the rewiring method. The lower the threshold, the restrictive the method. Default set to 0.05.}
 
@@ -32,6 +32,8 @@ rewiring_gene_level(
 \item{cliquesTH}{Correlation threshold if include_cliques is set to TRUE. Default set to 0.8.}
 
 \item{nrcores}{Number of cores to run the parallelization within the rewiring test (default: 3).}
+
+\item{outdir}{Directory for the output folder to be located (default: tempdir()).}
 }
 \value{
 Return a matrix containing, for each gene (or genes if include_cliques is set to TRUE) the pvalue and odds ratio
@@ -39,4 +41,31 @@ from the hypergeometric test within three categories.
 }
 \description{
 Perform the rewiring test to check if regulators are enriched in rewiring modules using a hypergeometric test.
+}
+\examples{
+## We will be using an output file we generated with LINKER_run and the 
+## same expression datainput  object.
+
+## linker_output <- readRDS(paste0(system.file('extdata',package='TraRe'),
+##                                     'linkeroutput_rewiring_example.rds'))
+
+## TraReObj <- readRDS(paste0(system.file('extdata',package='TraRe'),
+## 
+## Add the phenotype to TraReObj if it was not before.
+## TraReObj <- rewiring_add_phenotype(TraReObj, phenotype)
+
+## Select directory for output file
+## outdir <- system.file('extdata',package='TraRe')
+
+## Run rewiring at the gene level.' 
+## impgenes <-  rewiring_gene_level(linker_output = linkeroutput2,
+##                                                   TraReObj = TraReObj,
+##                                                   fpath = fpath,
+##                                                   final_signif_thresh = 0.05,
+##                                                   ImpTH = 0.05,
+##                                                   include_cliques=TRUE,
+##                                                   cliquesTH=0.8,
+##                                                   nrcores = 1)
+
+                                                   
 }

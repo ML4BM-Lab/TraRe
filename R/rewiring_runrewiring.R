@@ -295,7 +295,7 @@ runrewiring <- function(ObjectList) {
 
             # Write tables for refinedsumm
             sortidxs <- sort(as.numeric(refinedsumm$nodesumm[, "t-pval"]), decreasing = FALSE, index.return = TRUE)$ix
-            write_tables_all(refinedsumm$nTraReObjodesumm[sortidxs, ], tabletype = paste0(modmeth, "_refined_nodesumm"), filestr = "data",
+            write_tables_all(refinedsumm$nodesumm[sortidxs, ], tabletype = paste0(modmeth, "_refined_nodesumm"), filestr = "data",
                 html_idxs = seq_len(nrow(refinedsumm$nodesumm)), htmlinfo = indexpageinfo, extradir = paste0(foldername_p, "/"))
 
             sortidxs <- sort(as.numeric(refinedsumm$fulledgesumm[, "all.weights"]), decreasing = FALSE, index.return = TRUE)$ix

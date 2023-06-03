@@ -2,19 +2,45 @@
 #'
 #' Perform the rewiring test to check if regulators are enriched in rewiring modules using a hypergeometric test.
 #'
-#' @param fpath Desired path for the rewiring file to be generated.
 #' @param linker_output Output from LINKER_run function (recommended with 50 bootstraps).
 #' @param TraReObj the TrareObj generated during preprocessing step before GRN inference.
+#' @param fpath Desired path for the rewiring file to be generated. If fpath not provided, it will create a rewiring module list file in the current directory with the name "rewiring_gene_level_fs_<final_signif_thresh>.txt". If file already exists it will skip the fast rewiring step.
 #' @param final_signif_thresh Significance threshold for the rewiring method. The lower the threshold, the restrictive the method. Default set to 0.05.
-#' @param include_cliques Boolean specifying to include cliques in the returned score matrix. Default set to FALSE.
 #' @param ImpTH Threshold for the refinement of the returned list. Default set to 0.05.
+#' @param include_cliques Boolean specifying to include cliques in the returned score matrix. Default set to FALSE.
 #' @param cliquesTH Correlation threshold if include_cliques is set to TRUE. Default set to 0.8.
 #' @param nrcores Number of cores to run the parallelization within the rewiring test (default: 3).
-#' @param outdir Directory for the output folder to be located (default: tempdir())
+#' @param outdir Directory for the output folder to be located (default: tempdir()).
 #'
 #' @return Return a matrix containing, for each gene (or genes if include_cliques is set to TRUE) the pvalue and odds ratio
 #' from the hypergeometric test within three categories.
 #'
+#' @examples 
+#' ## We will be using an output file we generated with LINKER_run and the 
+#' ## same expression datainput  object.
+#' 
+#' ## linker_output <- readRDS(paste0(system.file('extdata',package='TraRe'),
+#' ##                                     'linkeroutput_rewiring_example.rds'))
+#'
+#' ## TraReObj <- readRDS(paste0(system.file('extdata',package='TraRe'),
+#' ## 
+#' ## Add the phenotype to TraReObj if it was not before.
+#' ## TraReObj <- rewiring_add_phenotype(TraReObj, phenotype)
+#' 
+#' ## Select directory for output file
+#' ## outdir <- system.file('extdata',package='TraRe')
+#' 
+#' ## Run rewiring at the gene level.' 
+#' ## impgenes <-  rewiring_gene_level(linker_output = linkeroutput2,
+#' ##                                                   TraReObj = TraReObj,
+#' ##                                                   fpath = fpath,
+#' ##                                                   final_signif_thresh = 0.05,
+#' ##                                                   ImpTH = 0.05,
+#' ##                                                   include_cliques=TRUE,
+#' ##                                                   cliquesTH=0.8,
+#' ##                                                   nrcores = 1)
+#' 
+#'                                                    
 #' @export
 rewiring_gene_level <- function(linker_output,
                                 TraReObj,
@@ -25,137 +51,7 @@ rewiring_gene_level <- function(linker_output,
                                 cliquesTH=0.8,
                                 nrcores=3,
                                 outdir= tempdir()){
-  # #Do fast rewiring
-  fast_rew <- function(ObjectList){
-
-    #initialize common parameters
-    regulator_info_col_name<-ObjectList$regulator_info_col_name
-    phenotype_class_vals<-ObjectList$phenotype_class_vals
-    phenotype_class_vals_label<-ObjectList$phenotype_class_vals_label
-    outdir<-ObjectList$outdir
-    orig_test_perms<-ObjectList$orig_test_perms
-    retest_thresh<-ObjectList$retest_thresh
-    retest_perms<-ObjectList$retest_perms
-    logfile <- ObjectList$logfile
-
-    #set.seed(1)
-    dqrng::dqset.seed(1)
-
-    #we create rundata and combine the modules of both parsers.
-    #Lets generate the dupla (dataset's method - dataset's number)
-
-    duplas <- unlist(lapply(seq_along(ObjectList$datasets),
-                            function(i) paste(names(ObjectList$datasets[[i]]$rundata$modules),i)))
-
-    #Initialize c_allstats and statsnames variables
-    c_allstats <- c() #This is for the combined heatmap
-    c_module_membership_list <- c() #This is for the combined heatmap
-
-    statsnames <- c("module-method", "module-index", "orig-pval",
-                    "revised-pvalue", "num-targets", "num-regulators",
-                    "regulator-names","target-names", "num-samples", "num-genes",
-                    "num-class1", "num-class2")
-
-    for (dupla in duplas) {
-
-
-      #Initialize rewired module's hash table
-      module_membership_list <- hash::hash()
-
-      #Initialize allstats array
-      allstats <- NULL
-
-      #For instance: 'VBSR X' to 'VBSR' and 'X'
-      modmeth_i <- unlist(strsplit(dupla,' '))
-
-      modmeth <- modmeth_i[1]
-      i <- as.numeric(modmeth_i[2])
-
-      #Output to the user which dupla we are working with
-      message(modmeth,' ',i)
-
-      
-      # keepsamps<-ObjectList$'datasets'[[i]]$keepsamps
-      # keeplabels<-ObjectList$'datasets'[[i]]$keeplabels
-      # gene_info_df_keep<-ObjectList$'datasets'[[i]]$gene_info_df_keep
-
-      rundata <- ObjectList$datasets[[i]]$rundata
-      lognorm_est_counts <- ObjectList$datasets[[i]]$lognorm_est_counts
-      final_signif_thresh <- ObjectList$datasets[[i]]$final_signif_thresh
-      name2idx <- ObjectList$datasets[[i]]$name2idx
-      regs <- ObjectList$datasets[[i]]$regs
-      targs <- ObjectList$datasets[[i]]$targs
-      class_counts <- ObjectList$datasets[[i]]$class_counts
-      pheno <- ObjectList$datasets[[i]]$pheno
-      phenosamples <- ObjectList$datasets[[i]]$phenosamples
-
-      # This will register nr of cores/threads, keep this here
-      # so the user can decide how many cores based on
-      # their hardware.
-
-      parallClass <- BiocParallel::bpparam()
-      parallClass$workers <- ObjectList$NrCores
-
-      GenerateStats <- function(mymod){
-
-        signify <- NULL
-        modregs <- unique(rundata$modules[[modmeth]][[mymod]]$regulators)
-        modtargs <- unique(rundata$modules[[modmeth]][[mymod]]$target_genes)
-        regnames <- paste(collapse = ", ", modregs)
-        targnames <- paste(collapse = ", ", modtargs)
-        keepfeats <- unique(c(modregs, modtargs))
-        modmat <- t(lognorm_est_counts[keepfeats, phenosamples])
-        modmeth_i_c <- paste(modmeth_i,collapse=' ')
-
-        orig_pval <- TraRe::rewiring_test(modmat, pheno + 1, perm = orig_test_perms)
-        new_pval <- orig_pval
-        stats <- c(modmeth_i_c, mymod, signif(orig_pval, 3), signif(new_pval, 3),
-                   length(modtargs), length(modregs), regnames,targnames, dim(modmat),
-                   class_counts)
-        if (orig_pval < retest_thresh | orig_pval == 1 | mymod %% 300 == 0) {
-          #methods::show(paste(c("ModNum and NumGenes", mymod, length(keepfeats))))
-          result <- TraRe::rewiring_test_pair_detail(modmat, pheno + 1,perm = retest_perms)
-          new_pval <- result$pval
-          stats <- c(modmeth_i_c, mymod, signif(orig_pval, 3),
-                     signif(new_pval, 3), length(modtargs),
-                     length(modregs), regnames,targnames, dim(modmat), class_counts)
-
-          if (new_pval <= final_signif_thresh | new_pval == 1) {
-            # save as list
-            modname <- paste0(modmeth,'.',i, ".mod.", mymod)
-            #module_membership_list[[modname]] <- keepfeats
-            signify <- list(modname,keepfeats)
-          }
-
-        }
-        return(list(stats,signify))
-
-      }
-      foreach_allstats <-BiocParallel::bplapply(seq_along(rundata$modules[[modmeth]]),
-                                                GenerateStats, BPPARAM = parallClass)
-
-      for (elements in foreach_allstats){
-
-        #now we recover first allstats matrix
-        foreach_stats <- elements[[1]]
-        allstats<-rbind(allstats,foreach_stats)
-
-        #and then update the module_membership dictionary
-        hashtable <- elements[[2]]
-
-        if (!is.null(hashtable)){
-
-          module_membership_list[[hashtable[[1]]]] <- hashtable[[2]]
-
-        }
-      }
-
-    }
-
-    return(module_membership_list)
-
-  }
-
+  
   #generate dataframe with driver scores
   score_driv <- function(driver,linker_output,rew_list_names,showmess=FALSE){
 
@@ -325,7 +221,7 @@ rewiring_gene_level <- function(linker_output,
   add_cliques <- function(regs_mrm,score_matrix,cliquesTH){
 
     #Generate cliques
-    gcliques <- TraRe::generatecliques(utils::read.delim(lognorm_est_counts_p)[regs_mrm,],
+    gcliques <- TraRe::generatecliques(TraReObj@lognorm_counts[regs_mrm,],
                                 correlationth=cliquesTH)
 
     #retrieve gene-level drivers
@@ -371,8 +267,7 @@ rewiring_gene_level <- function(linker_output,
 
     message('Performing fast rewiring')
     #Do the fast rewiring
-    rew_list <- fast_rew(preparedrewiring)
-    rew_list_names <- sub('[a-zA-Z]+.[0-9].mod.','',ls(rew_list))
+    rew_list_names <- fast_rew(preparedrewiring)
 
     #write rew_list_names
     utils::write.table(rew_list_names,file=fpath,quote=F,sep='\t',
@@ -431,5 +326,146 @@ rewiring_gene_level <- function(linker_output,
 
   return(score_matrix_refined)
 
+}
+
+
+#' Fast function for the rewiring test in modules. Helper function for `rewiring_gene_level` and `rewiring_regulon_level`
+#'
+#' @param ObjectList Output object from `preparerewiring()`
+#' @return Character vector with the numbers of the regulatory modules that are rewired.
+#' @noRd
+
+
+# #Do fast rewiring
+fast_rew <- function(ObjectList){
+  
+  #initialize common parameters
+  regulator_info_col_name<-ObjectList$regulator_info_col_name
+  phenotype_class_vals<-ObjectList$phenotype_class_vals
+  phenotype_class_vals_label<-ObjectList$phenotype_class_vals_label
+  outdir<-ObjectList$outdir
+  orig_test_perms<-ObjectList$orig_test_perms
+  retest_thresh<-ObjectList$retest_thresh
+  retest_perms<-ObjectList$retest_perms
+  logfile <- ObjectList$logfile
+  
+  #set.seed(1)
+  dqrng::dqset.seed(1)
+  
+  #we create rundata and combine the modules of both parsers.
+  #Lets generate the dupla (dataset's method - dataset's number)
+  
+  duplas <- unlist(lapply(seq_along(ObjectList$datasets),
+                          function(i) paste(names(ObjectList$datasets[[i]]$rundata$modules),i)))
+  
+  #Initialize c_allstats and statsnames variables
+  c_allstats <- c() #This is for the combined heatmap
+  c_module_membership_list <- c() #This is for the combined heatmap
+  
+  statsnames <- c("module-method", "module-index", "orig-pval",
+                  "revised-pvalue", "num-targets", "num-regulators",
+                  "regulator-names","target-names", "num-samples", "num-genes",
+                  "num-class1", "num-class2")
+  
+  for (dupla in duplas) {
+    
+    
+    #Initialize rewired module's hash table
+    module_membership_list <- hash::hash()
+    
+    #Initialize allstats array
+    allstats <- NULL
+    
+    #For instance: 'VBSR X' to 'VBSR' and 'X'
+    modmeth_i <- unlist(strsplit(dupla,' '))
+    
+    modmeth <- modmeth_i[1]
+    i <- as.numeric(modmeth_i[2])
+    
+    #Output to the user which dupla we are working with
+    message(modmeth,' ',i)
+    
+    
+    # keepsamps<-ObjectList$'datasets'[[i]]$keepsamps
+    # keeplabels<-ObjectList$'datasets'[[i]]$keeplabels
+    # gene_info_df_keep<-ObjectList$'datasets'[[i]]$gene_info_df_keep
+    
+    rundata <- ObjectList$datasets[[i]]$rundata
+    lognorm_est_counts <- ObjectList$datasets[[i]]$lognorm_est_counts
+    final_signif_thresh <- ObjectList$datasets[[i]]$final_signif_thresh
+    name2idx <- ObjectList$datasets[[i]]$name2idx
+    regs <- ObjectList$datasets[[i]]$regs
+    targs <- ObjectList$datasets[[i]]$targs
+    class_counts <- ObjectList$datasets[[i]]$class_counts
+    pheno <- ObjectList$datasets[[i]]$pheno
+    phenosamples <- ObjectList$datasets[[i]]$phenosamples
+    
+    # This will register nr of cores/threads, keep this here
+    # so the user can decide how many cores based on
+    # their hardware.
+    
+    parallClass <- BiocParallel::bpparam()
+    parallClass$workers <- ObjectList$NrCores
+    
+    GenerateStats <- function(mymod){
+      
+      signify <- NULL
+      modregs <- unique(rundata$modules[[modmeth]][[mymod]]$regulators)
+      modtargs <- unique(rundata$modules[[modmeth]][[mymod]]$target_genes)
+      regnames <- paste(collapse = ", ", modregs)
+      targnames <- paste(collapse = ", ", modtargs)
+      keepfeats <- unique(c(modregs, modtargs))
+      modmat <- t(lognorm_est_counts[keepfeats, phenosamples])
+      modmeth_i_c <- paste(modmeth_i,collapse=' ')
+      
+      orig_pval <- TraRe::rewiring_test(modmat, pheno + 1, perm = orig_test_perms)
+      new_pval <- orig_pval
+      stats <- c(modmeth_i_c, mymod, signif(orig_pval, 3), signif(new_pval, 3),
+                 length(modtargs), length(modregs), regnames,targnames, dim(modmat),
+                 class_counts)
+      if (orig_pval < retest_thresh | orig_pval == 1 | mymod %% 300 == 0) {
+        #methods::show(paste(c("ModNum and NumGenes", mymod, length(keepfeats))))
+        result <- TraRe::rewiring_test_pair_detail(modmat, pheno + 1,perm = retest_perms)
+        new_pval <- result$pval
+        stats <- c(modmeth_i_c, mymod, signif(orig_pval, 3),
+                   signif(new_pval, 3), length(modtargs),
+                   length(modregs), regnames,targnames, dim(modmat), class_counts)
+        
+        if (new_pval <= final_signif_thresh | new_pval == 1) {
+          # save as list
+          modname <- paste0(modmeth,'.',i, ".mod.", mymod)
+          #module_membership_list[[modname]] <- keepfeats
+          signify <- list(modname,keepfeats)
+        }
+        
+      }
+      return(list(stats,signify))
+      
+    }
+    foreach_allstats <-BiocParallel::bplapply(seq_along(rundata$modules[[modmeth]]),
+                                              GenerateStats, BPPARAM = parallClass)
+    
+    for (elements in foreach_allstats){
+      
+      #now we recover first allstats matrix
+      foreach_stats <- elements[[1]]
+      allstats<-rbind(allstats,foreach_stats)
+      
+      #and then update the module_membership dictionary
+      hashtable <- elements[[2]]
+      
+      if (!is.null(hashtable)){
+        
+        module_membership_list[[hashtable[[1]]]] <- hashtable[[2]]
+        
+      }
+    }
+    
+  }
+  
+  rew_list_names <- sub('[a-zA-Z]+.[0-9].mod.','',ls(module_membership_list))
+  
+  return(rew_list_names)
+  
 }
 

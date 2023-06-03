@@ -3,7 +3,7 @@
 #' Preprocess data prior to GRN inference process.  Help them for more information.
 #'
 #' @param data_matrix Matrix of log-normalized estimated counts of the gene expression
-#' data (Nr Genes x Nr samples) or SummarizedExperiment object.
+#' data (Nr Genes x Nr samples) or SummarizedExperiment object (with or without the sample phenotype information).
 #' @param geneinfo array of the regulator gene names that are in the specified data matrix.
 #' @param nassay If SummarizedExperiment object is passed as input to lognorm_est_counts, name of the
 #' assay containing the desired matrix. Default: 1 (first item in assay's list).
@@ -13,7 +13,19 @@
 #' @return TraReObj containing preprocessed input matrix
 #'
 #' @examples
-#'    ##
+#' #For this example, we are going to load a example matrix
+#' lognorm_est_counts_p <- paste0(system.file('extdata',package='TraRe'),
+#'                                  '/expression_rewiring_example.txt')
+#' lognorm_est_counts <- as.matrix(read.delim(lognorm_est_counts_p, header=TRUE,row.names=1))
+#' 
+#' # Load gene info, its an array of regulators' names.
+#' gene_info_p <- paste0(system.file('extdata',package='TraRe'),
+#'                          '/geneinfo_rewiring_example.txt')
+#' gene_info <- read.delim(gene_info_p,header=TRUE)
+#' geneinfo <- gene_info[gene_info[,'regulator'] == 1,'uniq_isos']
+#'
+#' #TraReObj <- trare_preprocessing(data_matrix = lognorm_est_counts,
+#'   ##                                  geneinfo = geneinfo, verbose = FALSE)
 #'
 #' @export trare_preprocessing
 trare_preprocessing <- function(data_matrix, geneinfo = NULL, nassay = 1, low_var_genes_th = 0.25, low_var_samples_th = 1, verbose = TRUE){
@@ -70,7 +82,7 @@ trare_preprocessing <- function(data_matrix, geneinfo = NULL, nassay = 1, low_va
     if (dim(SummarizedExperiment::colData(data_matrix))[2]){
         phenotype_df <- SummarizedExperiment::colData(data_matrix)
         if ('phenotype'%in%colnames(phenotype_df)){
-            message('Also including phenotype for rewiring future uses')
+            message('Also including phenotype for rewiring future use')
             phenotype <- as.numeric(factor(phenotype_df[colnames(lognorm_est_counts), 'phenotype'], labels = c(0,1))) - 1
         }
     }
@@ -80,15 +92,29 @@ trare_preprocessing <- function(data_matrix, geneinfo = NULL, nassay = 1, low_va
   # TraReClass <- methods::setClass("TraReClass", slots=list(lognorm_counts="matrix", target_idx="numeric", 
   #                                             regulator_idx="numeric", pheno = "numeric"))
 
-  TraReObj <- methods::new("TraReClass", lognorm_counts = lognorm_est_counts,
-                                           target_idx = target_filtered_idx,
-                                           regulator_idx = regulator_filtered_idx,
-                                           pheno = phenotype)
+  # TraReObj <- methods::new("TraReClass", lognorm_counts = lognorm_est_counts,
+  #                                          target_idx = target_filtered_idx,
+  #                                          regulator_idx = regulator_filtered_idx,
+  #                                          pheno = phenotype)
+  
+  TraReObj <- TraReClass(lognorm_counts = lognorm_est_counts,
+                           target_idx = target_filtered_idx,
+                           regulator_idx = regulator_filtered_idx,
+                           pheno = phenotype)
 
   return(TraReObj)
 }
-
 #' @export TraReClass
+#' @importFrom methods new
+#' @rdname trare_preprocessing
+#' @slot lognorm_counts Matrix of log-normalized estimated counts of the gene expression data (Nr Genes x Nr samples),
+#' @slot target_idx Index array of the target genes on the lognorm_counts matrix.
+#' @slot regulator_idx Index array of the regulatory genes on the lognorm_counts matrix.
+#' @slot pheno When provided dataframe containing samples as rownames and a column named 'phenotype' containing the binary phenotype labels (character of numeric). By default 0.
+#' 
+#' @include preprocessing.R
+#' @return class generator function for class "TraReClass"
+ 
 ##Create TraReObj and save lognorm, target and regulator
 TraReClass <- methods::setClass("TraReClass", 
                                 slots=list(lognorm_counts="matrix", 
@@ -100,7 +126,7 @@ TraReClass <- methods::setClass("TraReClass",
 #' @export
 #' @rdname trare_preprocessing
 #' @param TraReObj TraReObj from trare_preprocesing
-#' @param phenotype_f file containing samples as rownames and a column call 'phenotype' containing the labels
+#' @param phenotype_f dataframe containing samples as rownames and a column named 'phenotype' containing the binary phenotype labels (character of numeric)
 rewiring_add_phenotype <- function(TraReObj, phenotype_f){
 
   TraReObj@lognorm_counts <- TraReObj@lognorm_counts[,rownames(phenotype_f)]

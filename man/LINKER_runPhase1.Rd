@@ -130,40 +130,45 @@ only the test samples.}
 \item{RegulatorData_TestSet}{Expression matrix containing only the regulators of the test samples.}
 }
 \value{
-igraph object containing the modules containing the related drivers and targets within bootstraps.
+list object containing the modules generated with the selected parameters and the stats associated to them.
 }
 \description{
 Run first phase of the linker method where K modules of similarly expressed target genes and
 relate them to a linear combination of very few regulators, according to the selected model. \code{LINKER_init()}
 evaluate kmeans on a train set to generate a initial set of clusters containing drivers and target genes.
 \code{LINKER_ReassignGenesToClusters()} reassigning genes based on closed match to new regulatory programs.
-This functions takes place inside the linkerrun function, so it is not recommended to run it on its own.
+This functions are run inside the \code{LINKER_run} function, so it is not recommended to run it on its own.
 \code{LINKER_corrClust()} go through two steps within a loop, learning regulatory program of modules and reassigning
-genes. \code{LINKER_extract_modules()} extract all the modules, genes and relevant information. \code{LINKER_EvaluateTestSet()}
+genes. \code{LINKER_extract_modules()} extracts all the modules, genes and relevant information. \code{LINKER_EvaluateTestSet()}
 fits the selected model with the test data. \code{LINKER_LearnRegulatoryPrograms()} learns the regulatory program of the modules.
 }
 \examples{
 
    ## This example is very similar to the `LINKER_run()` function.
-   ## Again, we are going to join drivers and targets genes to create the working dataset.
-
-   drivers <- readRDS(paste0(system.file('extdata',package='TraRe'),'/tfs_linker_example.rds'))
-   targets <- readRDS(paste0(system.file('extdata',package='TraRe'),'/targets_linker_example.rds'))
-
-   lognorm_est_counts <- rbind(drivers,targets)
-   ## We create the index for drivers and targets in the log-normalized gene expression matrix.
-
-   R<-60
-   T<-200
-
-   regulator_filtered_idx <- seq_len(R)
-   target_filtered_idx <- R+c(seq_len(T))
+   ## Again, we are going to load the expression matrix dataset
+   lognorm_est_counts_p <- paste0(system.file('extdata', package='TraRe'),
+                                 '/expression_rewiring_example.txt')
+   lognorm_est_counts <- as.matrix(read.delim(lognorm_est_counts_p,
+                                         header=TRUE,row.names=1))
+                                         
+   ## Load gene info, its an array of regulators' names.
+   gene_info_p <- paste0(system.file('extdata',package='TraRe'),
+                                '/geneinfo_rewiring_example.txt')
+   gene_info <- read.delim(gene_info_p,header=TRUE)
+   regulators <- gene_info[gene_info[,'regulator'] == 1,'uniq_isos']
+  
+   regulator_filtered_idx <- which(rownames(lognorm_est_counts)\%in\%regulators)
+   target_filtered_idx <- which(!rownames(lognorm_est_counts)\%in\%regulators)
 
    ## We recommend to use the default values of the function.
    ## For the sake of time, we will select faster (and worse) ones.
 
-   linkeroutput <- LINKER_runPhase1(lognorm_est_counts,target_filtered_idx=target_filtered_idx,
-                                    regulator_filtered_idx=regulator_filtered_idx, NrModules=2,
-                                    mode='LASSOmin', corrClustNrIter=10,Nr_bootstraps=1)
+   linkerphase1 <- TraRe::LINKER_runPhase1(lognorm_est_counts,
+                                    target_filtered_idx=target_filtered_idx,
+                                    regulator_filtered_idx=regulator_filtered_idx, 
+                                    NrModules=10,mode='LASSOmin',used_method = "MEAN",
+                                    corrClustNrIter=10,Nr_bootstraps=1)
+ #  saveRDS(linkerphase1,paste0(system.file('extdata',package='TraRe'), 
+ #  '/linker_phase_one.example.rds'))
 
 }
