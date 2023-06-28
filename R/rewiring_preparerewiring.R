@@ -83,7 +83,7 @@ preparerewiring <- function(name = "defaultname", linker_output = NULL, TraReObj
     for (i in seq_along(linker_files)) {
 
         rewobject <- list()
-
+        rundata <- linker_output
         # retrieve data from TraRe object
         lognorm_est_counts <- TraReObj@lognorm_counts
         geneinfo <- rownames(lognorm_est_counts)[TraReObj@regulator_idx]
