@@ -143,6 +143,7 @@ runrewiring <- function(ObjectList) {
 
             # now we recover first allstats matrix
             foreach_stats <- elements[[1]]
+            
             allstats <- rbind(allstats, foreach_stats)
 
             # and then update the module_membership dictionary
@@ -156,6 +157,7 @@ runrewiring <- function(ObjectList) {
         }
 
         # generate txt file with pvals
+      
         colnames(allstats) <- statsnames
         rownames(allstats) <- allstats[, "module-index"]
         allstats[, "orig-pval"] <- signif(as.numeric(allstats[, "orig-pval"]), 3)

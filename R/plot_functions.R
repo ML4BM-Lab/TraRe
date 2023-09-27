@@ -235,22 +235,22 @@ orderGraphWeights <- function(graph, edgelist) {
 #' @param cvec vector of colors for the palette of the plot.
 #' @param showRows boolean specifying the option of showing row names.
 heatmapplot <- function(heatm, plotname = "", myzlim = c(min(heatm), max(heatm)), cvec = c("red", "white", "blue"), showRows = TRUE) {
-    colramp <- (grDevices::colorRampPalette(cvec))(21)
-    heatm[heatm < myzlim[1]] <- myzlim[1]
-    heatm[heatm > myzlim[2]] <- myzlim[2]
-    graphics::image(seq(ncol(heatm)), seq(nrow(heatm)), t(heatm), col = colramp, zlim = myzlim, axes = FALSE, xlab = "", ylab = "")
-
-    graphics::title(main = plotname)
-    if (showRows) {
-        if (ncol(heatm) > 10) {
-            #idxs <- which(1:dim(heatm)[1]%%round(dim(heatm)[1]/10, 0) == 0)
-            idxs <- which(seq(nrow(heatm))%%round(seq(nrow(heatm))/10, 0) == 0)
-            graphics::axis(2, at = idxs, labels = rownames(heatm)[idxs], las = 2, cex.axis = 0.8, tick = FALSE, col.axis = "black")
-        } else {
-            #graphics::axis(2, at = 1:dim(heatm)[1], labels = rownames(heatm), las = 2, cex.axis = 0.8, tick = FALSE, col.axis = "black")
-            graphics::axis(2, at = seq(nrow(heatm)), labels = rownames(heatm), las = 2, cex.axis = 0.8, tick = FALSE, col.axis = "black")
-        }
+  colramp <- (grDevices::colorRampPalette(cvec))(21)
+  heatm[heatm < myzlim[1]] <- myzlim[1]
+  heatm[heatm > myzlim[2]] <- myzlim[2]
+  graphics::image(seq(ncol(heatm)), seq(nrow(heatm)), t(heatm), col = colramp, zlim = myzlim, axes = FALSE, xlab = "", ylab = "")
+  
+  graphics::title(main = plotname)
+  if (showRows) {
+    if (ncol(heatm) > 20) {
+      #idxs <- which(1:dim(heatm)[1]%%round(dim(heatm)[1]/10, 0) == 0)
+      idxs <- which(seq(nrow(heatm))%%round(seq(nrow(heatm))/10, 0) == 0)
+      graphics::axis(2, at = idxs, labels = rownames(heatm)[idxs], las = 2, cex.axis = 0.8, tick = FALSE, col.axis = "black")
+    } else {
+      #graphics::axis(2, at = 1:dim(heatm)[1], labels = rownames(heatm), las = 2, cex.axis = 0.8, tick = FALSE, col.axis = "black")
+      graphics::axis(2, at = seq(nrow(heatm)), labels = rownames(heatm), las = 2, cex.axis = 0.8, tick = FALSE, col.axis = "black")
     }
+  }
 }
 #' @export
 #' @rdname plot_igraph
@@ -267,20 +267,20 @@ heatmapplot <- function(heatm, plotname = "", myzlim = c(min(heatm), max(heatm))
 #' @param mycvec vector of colors for the palette of the plot.
 #' @param plotzlim the range of z values for which colors should be plotted.
 plot_expression_row <- function(mymat = NULL, rowdesc = "Regulators", plotheight = 200, myshowrows = TRUE, samps2pheno = NULL, phenostrs = c("nonrespond",
-    "responder"), htmlfile = "./", imgdir = "imgs/", modnum = 1, plotwidth = 800, mycvec = c("darkorange", "gray100", "darkblue"),
-    plotzlim = c(-10, 10)) {
-    write(paste0("<tr>"), htmlfile, append = TRUE)
-    for (respstr in phenostrs) {
-        myplotname <- paste0("expr", ".mod", modnum, ".", respstr, ".", rowdesc)
-        titlename <- paste0(respstr, ".", rowdesc)
-        grDevices::png(paste0(imgdir, myplotname, ".png"), width = plotwidth, height = plotheight)
-        heatmapplot(mymat[, names(which(samps2pheno == respstr)), drop = FALSE], plotname = titlename, myzlim = plotzlim, cvec = mycvec,
-            showRows = myshowrows)
-        grDevices::dev.off()
-        write(paste0("<td> <img src='", "imgs/", myplotname, ".png", "' alt='", myplotname, "' height='", plotheight, "' width='",
-            plotwidth, "'> </td>\n"), htmlfile, append = TRUE)
-    }
-    write(paste0("</tr>\n"), htmlfile, append = TRUE)
+                                                                                                                                             "responder"), htmlfile = "./", imgdir = "imgs/", modnum = 1, plotwidth = 800, mycvec = c("darkorange", "gray100", "darkblue"),
+                                plotzlim = c(-10, 10)) {
+  write(paste0("<tr>"), htmlfile, append = TRUE)
+  for (respstr in phenostrs) {
+    myplotname <- paste0("expr", ".mod", modnum, ".", respstr, ".", rowdesc)
+    titlename <- paste0(respstr, ".", rowdesc)
+    grDevices::png(paste0(imgdir, myplotname, ".png"), width = plotwidth, height = plotheight)
+    heatmapplot(mymat[, which(samps2pheno == respstr), drop = FALSE], plotname = titlename, myzlim = plotzlim, cvec = mycvec,
+                showRows = myshowrows)
+    grDevices::dev.off()
+    write(paste0("<td> <img src='", "imgs/", myplotname, ".png", "' alt='", myplotname, "' height='", plotheight, "' width='",
+                 plotwidth, "'> </td>\n"), htmlfile, append = TRUE)
+  }
+  write(paste0("</tr>\n"), htmlfile, append = TRUE)
 }
 #' @export
 #' @rdname plot_igraph

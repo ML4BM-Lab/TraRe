@@ -71,12 +71,12 @@ table2html <- function(resultstable) {
 }
 
 
-write_html_table_page <- function(resultstable, htmlpagefile, resultsrelpath, indexpath = "index.html", glossarypath = "glossary.html",
+write_html_table_page <- function(resultstable, htmlpagefile, resultsrelpath, indexpath = "index.html", glossarypath = "glossary.txt",
     htmlinfo) {
 
-    write(paste0("<table border = 1 width = '100%'><tr bgcolor = ", "'#AAAAAA'><th><a href = '", "../", indexpath, "' target='_blank'>",
-        "Index</a></th><th><a href = '", htmlinfo$htmldir, glossarypath, "' target=", "'_blank'>Glossary</a></th><th><a href = '",
-        "../", resultsrelpath, "' target='_blank'>Download</a></th></tr></table><br><br>"), file = htmlpagefile)
+    write(paste0("<table border = 1 width = '100%'><tr bgcolor = ", "'#AAAAAA'><th><a href = '", "../", indexpath, "'>",
+        "Index</a></th><th><a href = '", "../",htmlinfo$glossarypath, "' >Glossary</a></th><th><a href = '",
+        "../", resultsrelpath, "' >Download</a></th></tr></table><br><br>"), file = htmlpagefile)
     htmlstr <- table2html(resultstable)
     write(htmlstr, file = htmlpagefile, append = TRUE)
 
@@ -94,7 +94,7 @@ write_tables_all <- function(mytab, tabletype = "table", html_idxs = seq_len(nro
     utils::write.table(mytab, paste0(htmlinfo$htmldir, extradir, resultspath), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
     # Write hyperlink in index file
-    write(paste0("<a href = \"", htmlpath, "\" target=\"_blank\">", tabletype, "</a><br>"), file = paste0(htmlinfo$htmldir, extradir,
+    write(paste0("<a href = \"", htmlpath, "\">", tabletype, "</a><br>"), file = paste0(htmlinfo$htmldir, extradir,
         htmlinfo$indexpath), append = TRUE)
 
     # Write the table in .html format
@@ -102,7 +102,7 @@ write_tables_all <- function(mytab, tabletype = "table", html_idxs = seq_len(nro
         resultsrelpath = resultspath, indexpath = htmlinfo$indexpath, glossarypath = glossarypath, htmlinfo = htmlinfo)
 }
 
-create_index_page <- function(outdir = "./", runtag = "run", codedir = "code/", indexpath = "index.html", glossarypath = "glossary.html",
+create_index_page <- function(outdir = "./", runtag = "run", codedir = "code/", indexpath = "index.html", glossarypath = "glossary.txt",
     imgstr = "imgs/", txtstr = "txts/", htmlstr = "htmls/") {
 
     htmldir <- paste0(outdir, runtag, "/")
@@ -128,12 +128,12 @@ create_index_page <- function(outdir = "./", runtag = "run", codedir = "code/", 
     return(list(htmldir = htmldir, indexpath = indexpath, imgstr = imgstr, txtstr = txtstr, glossarypath = glossarypath, abspath = abspath))
 }
 
-violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edgesumm, objtargs, htmlinfo) {
+violinPlots <- function(norm_expr_mat_keep, phenosamples, pheno, nodesumm, edgesumm, objtargs, htmlinfo) {
 
     modhtmlfile <- paste0(htmlinfo$htmldir, htmlinfo$indexpath)
     imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
 
-    normexpmat <- norm_expr_mat_keep[, keepsamps]
+    normexpmat <- norm_expr_mat_keep[, phenosamples]
     nodesumm2 <- utils::type.convert(as.data.frame(nodesumm, stringsAsFactors = FALSE))
     colnames(nodesumm2) <- make.names(colnames(nodesumm2))
 
@@ -148,9 +148,9 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
     respond_plotlist <- list()
     nonresp_plotlist <- list()
     for (reg in reg_vec) {
-        respond_plotlist[[reg]] <- as.numeric(normexpmat[reg, keeplabels == 1])
-        nonresp_plotlist[[reg]] <- as.numeric(normexpmat[reg, keeplabels == 0])
-        methods::show(c(reg, signif(mean(respond_plotlist[[reg]])), signif(mean(nonresp_plotlist[[reg]]))))
+        respond_plotlist[[reg]] <- as.numeric(normexpmat[reg, pheno == 1])
+        nonresp_plotlist[[reg]] <- as.numeric(normexpmat[reg, pheno == 0])
+        # methods::show(c(reg, signif(mean(respond_plotlist[[reg]])), signif(mean(nonresp_plotlist[[reg]]))))
     }
 
     plotwidth <- 500
@@ -192,7 +192,7 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
             # targets <- as.character(nonzeroedges[nonzeroedges$reg == reg, "target"])
             targets <- intersect(as.character(nonzeroedges[nonzeroedges$reg == reg, "target"]), objtargs)
             plotlist[[reg]] <- as.numeric(nodesumm2[targets, "t.stat"])
-            methods::show(c(reg, length(targets), signif(mean(plotlist[[reg]]))))
+            # methods::show(c(reg, length(targets), signif(mean(plotlist[[reg]]))))
         }
         plotlist <- plotlist[names(sort(unlist(lapply(plotlist, mean)), decreasing = TRUE))]
         plotlist[["supmod"]] <- as.numeric(nodesumm2[, "t.stat"])
@@ -233,8 +233,8 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
     # calculate module correlation
     modmat <- t(normexpmat[rownames(nodesumm2), ])
     corall <- stats::cor(modmat)
-    corR <- stats::cor(modmat[keeplabels == 1, ])
-    corNR <- stats::cor(modmat[keeplabels == 0, ])
+    corR <- stats::cor(modmat[pheno == 1, ])
+    corNR <- stats::cor(modmat[pheno == 0, ])
     corR[is.na(corR)] <- 0
     corNR[is.na(corNR)] <- 0
     cordiff <- corNR - corR
@@ -270,8 +270,8 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
                 tres <- stats::t.test(respond_plotlist[[reg]], nonresp_plotlist[[reg]])
                 mypvals[reg] <- signif(tres$p.value, 1)
             }
-            methods::show(c(reg, length(respondtars), length(nonresptars), signif(mean(respond_plotlist[[reg]])), signif(mean(nonresp_plotlist[[reg]])),
-                as.numeric(mypvals[reg])))
+            # methods::show(c(reg, length(respondtars), length(nonresptars), signif(mean(respond_plotlist[[reg]])), signif(mean(nonresp_plotlist[[reg]])),
+            # as.numeric(mypvals[reg])))
         }
         respond_plotlist <- respond_plotlist[names(sort(mypvals, decreasing = TRUE))]
         nonresp_plotlist <- nonresp_plotlist[names(sort(mypvals, decreasing = TRUE))]
@@ -313,80 +313,80 @@ violinPlots <- function(norm_expr_mat_keep, keepsamps, keeplabels, nodesumm, edg
 }
 
 bipartiteGraphsSumm <- function(numclus, nodesumm, edgesumm, numdataset, modmeth, htmlinfo) {
-    modhtmlfile <- paste0(htmlinfo$htmldir, htmlinfo$indexpath)
-    imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
-
-    write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Modules Summary", "</h1></td></tr></table><br>\n"), modhtmlfile,
+  modhtmlfile <- paste0(htmlinfo$htmldir, htmlinfo$indexpath)
+  imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
+  
+  write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Modules Summary", "</h1></td></tr></table><br>\n"), modhtmlfile,
         append = TRUE)
-
-    pname <- paste(sep = ".", "igraphs.refined.graphs")
-    # write plot to index page
-    write(paste0("<img src='", "../../supermodule", numdataset, ".", modmeth, ".", numclus, "/imgs/", pname, ".png", "' alt='", pname,
-        "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"), modhtmlfile, append = TRUE)
-
-    sortidxs <- sort(as.numeric(nodesumm[, "t-pval"]), decreasing = FALSE, index.return = TRUE)$ix
-    #write_tables_all(nodesumm[sortidxs, ], tabletype = paste0(modmeth, "_nodesumm"), filestr = "data", html_idxs = 1:dim(nodesumm)[1],
-    write_tables_all(nodesumm[sortidxs, ], tabletype = paste0(modmeth, "_nodesumm"), filestr = "data", html_idxs = seq(nrow(nodesumm)),
-        htmlinfo = htmlinfo)
-
-    sortidxs <- sort(as.numeric(edgesumm[, "all-pearson"]), decreasing = FALSE, index.return = TRUE)$ix
-    #write_tables_all(edgesumm[sortidxs, ], tabletype = paste0(modmeth, "_edgesumm"), filestr = "data", html_idxs = 1:dim(edgesumm)[1],
-    write_tables_all(edgesumm[sortidxs, ], tabletype = paste0(modmeth, "_edgesumm"), filestr = "data", html_idxs = seq(nrow(edgesumm)),
-        htmlinfo = htmlinfo)
-
+  
+  pname <- paste(sep = ".", "igraphs.refined.graphs")
+  # write plot to index page
+  write(paste0("<embed src='", "../../supermodule", numdataset, ".", modmeth, ".", numclus, "/imgs/", pname, ".pdf", "' alt='", pname,
+               "' height='", 750, "' width='", 1500, "'> &emsp; <br>\n"), modhtmlfile, append = TRUE)
+  
+  sortidxs <- sort(as.numeric(nodesumm[, "t-pval"]), decreasing = FALSE, index.return = TRUE)$ix
+  #write_tables_all(nodesumm[sortidxs, ], tabletype = paste0(modmeth, "_nodesumm"), filestr = "data", html_idxs = 1:dim(nodesumm)[1],
+  write_tables_all(nodesumm[sortidxs, ], tabletype = paste0(modmeth, "_nodesumm"), filestr = "data", html_idxs = seq(nrow(nodesumm)),
+                   htmlinfo = htmlinfo)
+  
+  sortidxs <- sort(as.numeric(edgesumm[, "all-pearson"]), decreasing = FALSE, index.return = TRUE)$ix
+  #write_tables_all(edgesumm[sortidxs, ], tabletype = paste0(modmeth, "_edgesumm"), filestr = "data", html_idxs = 1:dim(edgesumm)[1],
+  write_tables_all(edgesumm[sortidxs, ], tabletype = paste0(modmeth, "_edgesumm"), filestr = "data", html_idxs = seq(nrow(edgesumm)),
+                   htmlinfo = htmlinfo)
+  
 }
 
 geneOrder <- function(modsumm, ObjectList, numdataset) {
-    allregs<- ObjectList$datasets[[numdataset]]$allregs
-    alltargs<- ObjectList$datasets[[numdataset]]$alltargs
-    keepsamps<- ObjectList$datasets[[numdataset]]$keepsamps
-    keeplabels<- ObjectList$datasets[[numdataset]]$keeplabels
-    norm_mat_keep<- ObjectList$datasets[[numdataset]]$norm_expr_mat_keep
-
-    modregs <- intersect(levels(unique(modsumm$fulledgesumm$reg)),allregs)
-    modtargs <- intersect(levels(unique(modsumm$fulledgesumm$target)),alltargs)
-    difftargs <- setdiff(levels(unique(modsumm$fulledgesumm$target)),alltargs)
-    diffregs <- setdiff(levels(unique(modsumm$fulledgesumm$reg)),allregs)
-    if (length(diffregs) != 0) {
-        message('List of regulators changed since ', length(diffregs),' regulators in the dataset that was used to generate runrewiring is missing in dataset ', numdataset, '.')
-    }
-    if (length(difftargs) != 0) {
-        message('List of targets changed since ', length(difftargs),' targets in the dataset that was used to generate runrewiring is missing in dataset ', numdataset, '.')
-    }
-
-
-    keepfeat <- unique(c(modregs, modtargs))
-    mat <- t(norm_mat_keep[keepfeat, keepsamps])
-
-    # calculate correlation matrices
-    corall <- stats::cor(mat)
-    cor1 <- stats::cor(mat[(keeplabels + 1) == 1, seq(ncol(mat))])
-    cor2 <- stats::cor(mat[(keeplabels + 1) == 2, seq(ncol(mat))])
-
-    cor1[is.na(cor1)] <- 0
-    cor2[is.na(cor2)] <- 0
-    cordiff <- cor1 - cor2
-    cormats <- list(corall = corall, cordiff = cordiff, cor1 = cor1, cor2 = cor2)
-
-    # order genes by clustering of corrdiff
-    targetorder <- labels(stats::as.dendrogram(stats::hclust(stats::dist(cordiff[modtargs, modtargs]))))
-    regorder <- modregs
-    if (length(modregs) > 1) {
-        regorder <- labels(stats::as.dendrogram(stats::hclust(stats::dist(cordiff[modregs, modregs]))))
-    }
-
-    return(list(modregs = modregs, modtargs = modtargs, mat = mat, targetorder = targetorder, regorder = regorder, cormats = cormats))
+  allregs<- ObjectList$datasets[[numdataset]]$regs
+  alltargs<- ObjectList$datasets[[numdataset]]$targs
+  pheno <- ObjectList$datasets[[numdataset]]$pheno
+  phenosamples <- ObjectList$datasets[[numdataset]]$phenosamples
+  lognorm_est_counts <- ObjectList$datasets[[numdataset]]$lognorm_est_counts
+  
+  modregs <- intersect(unique(modsumm$fulledgesumm$reg),allregs)
+  modtargs <- intersect(unique(modsumm$fulledgesumm$target),alltargs)
+  difftargs <- setdiff(unique(modsumm$fulledgesumm$target),alltargs)
+  diffregs <- setdiff(unique(modsumm$fulledgesumm$reg),allregs)
+  if (length(diffregs) != 0) {
+    message('List of regulators changed since ', length(diffregs),' regulators in the dataset that was used to generate runrewiring is missing in dataset ', numdataset, '.')
+  }
+  if (length(difftargs) != 0) {
+    message('List of targets changed since ', length(difftargs),' targets in the dataset that was used to generate runrewiring is missing in dataset ', numdataset, '.')
+  }
+  
+  
+  keepfeat <- unique(c(modregs, modtargs))
+  mat <- t(lognorm_est_counts[keepfeat, phenosamples])
+  
+  # calculate correlation matrices
+  corall <- stats::cor(mat)
+  cor1 <- stats::cor(mat[(pheno + 1) == 1, seq(ncol(mat))])
+  cor2 <- stats::cor(mat[(pheno + 1) == 2, seq(ncol(mat))])
+  
+  cor1[is.na(cor1)] <- 0
+  cor2[is.na(cor2)] <- 0
+  cordiff <- cor1 - cor2
+  cormats <- list(corall = corall, cordiff = cordiff, cor1 = cor1, cor2 = cor2)
+  
+  # order genes by clustering of corrdiff
+  targetorder <- labels(stats::as.dendrogram(stats::hclust(stats::dist(cordiff[modtargs, modtargs]))))
+  regorder <- modregs
+  if (length(modregs) > 1) {
+    regorder <- labels(stats::as.dendrogram(stats::hclust(stats::dist(cordiff[modregs, modregs]))))
+  }
+  
+  return(list(modregs = modregs, modtargs = modtargs, mat = mat, targetorder = targetorder, regorder = regorder, cormats = cormats))
 }
 
 
-superModuleStatistics <- function(modregs, modtargs, mat, keeplabels, htmlinfo) {
+superModuleStatistics <- function(modregs, modtargs, mat, pheno, htmlinfo) {
     modhtmlfile <- paste0(htmlinfo$htmldir, htmlinfo$indexpath)
 
     regnames <- paste(collapse = ", ", modregs)
-    split <- as.numeric(table(keeplabels))
+    split <- as.numeric(table(pheno))
     stats <- c(length(modtargs), length(modregs), regnames, dim(mat), split)
 
-    statsnames <- c("num-targets", "num-regulators", "regulator-names", "num-samples", "num-genes", "num-nonresp", "num-respond")
+    statsnames <- c("num-targets", "num-regulators", "regulator-names", "num-samples", "num-genes", "num-pheno0", "num-pheno1")
 
     stattab <- cbind(statsnames, stats)
 
@@ -395,34 +395,41 @@ superModuleStatistics <- function(modregs, modtargs, mat, keeplabels, htmlinfo) 
     write(table2html(stattab), modhtmlfile, append = TRUE)
 }
 
-createLegendPlot <- function(htmlinfo) {
-    imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
-
-    plotwidth <- 450
-    plotheight <- 150
+createLegendPlot <- function(htmlinfo,type, mat) {
+  imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
+  
+  plotwidth <- 450
+  plotheight <- 150
+  if(type==1){
     myplotname <- paste0("correlation_colorscale")
     grDevices::png(paste0(imgdir, myplotname, ".png"), width = plotwidth, height = plotheight)
     ngroups <- 9
     vals <- seq(-1, 1, length.out = ngroups)
-
+    
     colramp <- (grDevices::colorRampPalette(c("darkred", "gray100", "darkgreen")))(ngroups)
     graphics::image(vals, 1, as.matrix(vals, ngroups, 1), col = colramp, axes = FALSE, main = "", xlab = "", ylab = "")
     graphics::axis(1, vals, cex.axis = 2)
     grDevices::dev.off()
-
+  }
+  if (type==2){
     myplotname <- paste0("expression_colorscale")
     grDevices::png(paste0(imgdir, myplotname, ".png"), width = plotwidth, height = plotheight)
-    ngroups <- 9
-    vals <- seq(-10, 10, length.out = ngroups)
-
+    ngroups <- sqrt(length(mat))
+    min_exp_value <- signif(min(mat),2)
+    max_exp_value <- signif(max(mat),2)
+    plotzlim <- c(min_exp_value,max_exp_value)
+    vals <- seq(min_exp_value, max_exp_value, length.out = ngroups)
+    
     colramp <- (grDevices::colorRampPalette(c("darkorange", "gray100", "darkblue")))(ngroups)
     graphics::image(vals, 1, as.matrix(vals, ngroups, 1), col = colramp, axes = FALSE, main = "", xlab = "", ylab = "")
-    graphics::axis(1, vals, cex.axis = 2)
+    graphics::axis(1, signif(seq(min_exp_value,max_exp_value,length.out=9),3), cex.axis = 1, at = signif(seq(min_exp_value,max_exp_value,length.out=9),3))
     grDevices::dev.off()
+    return(plotzlim)
+  }
 }
 
 # plot target correlation
-correlationOfModuleGene <- function(mymod, regorder, targetorder, mat, cormats, keeplabels, htmlinfo, phenotype_class_vals) {
+correlationOfModuleGene <- function(mymod, regorder, targetorder, mat, cormats, htmlinfo, phenotype_class_vals) {
     modhtmlfile <- paste0(htmlinfo$htmldir, htmlinfo$indexpath)
     imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
 
@@ -439,8 +446,8 @@ correlationOfModuleGene <- function(mymod, regorder, targetorder, mat, cormats, 
 
 
     # plot regulator correlation
-    plot_correlation_row(cormats = cormats, rowdesc = "regulators", xnames = regorder, ynames = regorder, plotheight = 200, myshowrows = TRUE,
-        htmlfile = modhtmlfile, imgdir = imgdir, modnum = mymod, plotwidth = 200, mycvec = c("darkred", "gray100", "darkgreen"), plotzlim = c(-1,
+    plot_correlation_row(cormats = cormats, rowdesc = "regulators", xnames = regorder, ynames = regorder, plotheight = 350, myshowrows = TRUE,
+        htmlfile = modhtmlfile, imgdir = imgdir, modnum = mymod, plotwidth = 350, mycvec = c("darkred", "gray100", "darkgreen"), plotzlim = c(-1,
             1), plottitle = phenotype_class_vals)
 
     # plot regulator by target correlation
@@ -469,52 +476,53 @@ expressionTableOfModuleGenes <- function(mymod, nodesumm, htmlinfo) {
         htmlinfo = htmlinfo)
 }
 
-expressionPlotsOfModuleGenes <- function(mymod, regorder, targetorder, mat, samps2pheno, phenostrs, htmlinfo) {
-    modhtmlfile <- paste0(htmlinfo$htmldir, htmlinfo$indexpath)
-    imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
-
-    write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Expression Plots of Module Genes ", "</h1></td></tr></table><br>\n"),
+expressionPlotsOfModuleGenes <- function(mymod, regorder, targetorder, mat, samps2pheno, phenostrs, htmlinfo,plotzlim) {
+  modhtmlfile <- paste0(htmlinfo$htmldir, htmlinfo$indexpath)
+  imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
+  
+  write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Expression Plots of Module Genes ", "</h1></td></tr></table><br>\n"),
         modhtmlfile, append = TRUE)
-
-    write(paste0("<img src='", htmlinfo$imgstr, "expression_colorscale", ".png", "' alt='", "correlation_colorscale", "' height='",
-        150, "' width='", 450, "'><br>\n"), modhtmlfile, append = TRUE)
-
-    write("<table style='width:100%'> ", modhtmlfile, append = TRUE)
-
-    # plot regulator expression
-    plot_expression_row(mymat = t(mat)[regorder, , drop = FALSE], rowdesc = "regulators", plotheight = 200, myshowrows = TRUE, samps2pheno = samps2pheno,
-        phenostrs = phenostrs, htmlfile = modhtmlfile, imgdir = imgdir, modnum = mymod, plotwidth = 800, mycvec = c("darkorange", "gray100",
-            "darkblue"), plotzlim = c(-10, 10))
-
-    # plot target expression
-    plot_expression_row(mymat = t(mat)[targetorder, ], rowdesc = "targets", plotheight = 600, myshowrows = TRUE, samps2pheno = samps2pheno,
-        phenostrs = phenostrs, htmlfile = modhtmlfile, imgdir = imgdir, modnum = mymod, plotwidth = 800, mycvec = c("darkorange", "gray100",
-            "darkblue"), plotzlim = c(-10, 10))
-    write(paste0("</table>"), modhtmlfile, append = TRUE)
+  
+  write(paste0("<img src='", htmlinfo$imgstr, "expression_colorscale", ".png", "' alt='", "correlation_colorscale", "' height='",
+               150, "' width='", 450, "'><br>\n"), modhtmlfile, append = TRUE)
+  
+  write("<table style='width:100%'> ", modhtmlfile, append = TRUE)
+  
+  # plot regulator expression
+  plot_expression_row(mymat = t(mat)[regorder, , drop = FALSE], rowdesc = "regulators", plotheight = 400, myshowrows = TRUE, samps2pheno = samps2pheno,
+                      phenostrs = phenostrs, htmlfile = modhtmlfile, imgdir = imgdir, modnum = mymod, plotwidth = 800, mycvec = c("darkorange", "gray100",
+                                                                                                                                  "darkblue"), plotzlim = plotzlim)
+  
+  # plot target expression
+  plot_expression_row(mymat = t(mat)[targetorder, ], rowdesc = "targets", plotheight = 600, myshowrows = TRUE, samps2pheno = samps2pheno,
+                      phenostrs = phenostrs, htmlfile = modhtmlfile, imgdir = imgdir, modnum = mymod, plotwidth = 800, mycvec = c("darkorange", "gray100",
+                                                                                                                                  "darkblue"), plotzlim = plotzlim)
+  write(paste0("</table>"), modhtmlfile, append = TRUE)
 }
 
-nullDistributionOfRewiringStatistic <- function(mat, keeplabels, modmeth, mymod, htmlinfo) {
-    modhtmlfile <- paste0(htmlinfo$htmldir, htmlinfo$indexpath)
-    imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
-
-    result <- NULL
-    result <- rewiring_test_pair_detail(mat, keeplabels + 1, perm = 1000)
-
-    write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Null Distribution of Rewiring Statistic", "</h1></td></tr></table><br>\n"),
+nullDistributionOfRewiringStatistic <- function(mat, pheno, modmeth, mymod, htmlinfo) {
+  modhtmlfile <- paste0(htmlinfo$htmldir, htmlinfo$indexpath)
+  imgdir <- paste0(htmlinfo$htmldir, htmlinfo$imgstr)
+  
+  result <- NULL
+  result <- rewiring_test_pair_detail(mat, pheno + 1, perm = 1000)
+  
+  write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Null Distribution of Rewiring Statistic", "</h1></td></tr></table><br>\n"),
         modhtmlfile, append = TRUE)
-
-    # plot histogram of dave stats
-    plotwidth <- 400
-    plotheight <- 400
-    myplotname <- paste0("hist.", modmeth, ".mod", mymod)
-    grDevices::png(paste0(imgdir, myplotname, ".png"), width = plotwidth, height = plotheight)
-    rewiring_score <- result$T_star
-    graphics::hist(main = paste0("True Val = ", signif(result$T, 3)), rewiring_score)
-    graphics::abline(v = result$T, col = "red")
-    grDevices::dev.off()
-
-    write(paste0("<img src='", htmlinfo$imgstr, myplotname, ".png", "' alt='", myplotname, "' height='", plotheight, "' width='", plotwidth,
-        "'><br>\n"), modhtmlfile, append = TRUE)
+  
+  # plot histogram of dave stats
+  plotwidth <- 400
+  plotheight <- 400
+  # myplotname <- paste0("hist.", modmeth, ".mod", mymod)
+  myplotname <- "hist.test."
+  grDevices::png(paste0(imgdir, myplotname, ".png"), width = plotwidth, height = plotheight)
+  rewiring_score <- result$T_star
+  graphics::hist(main = paste0("True Val = ", signif(result$TS, 3),"\n (p value = " , signif(result$pval,3),")"), outer = F,rewiring_score)
+  graphics::abline(v = result$TS, col = "red")
+  grDevices::dev.off()
+  
+  write(paste0("<img src='", htmlinfo$imgstr, myplotname, ".png", "' alt='", myplotname, "' height='", plotheight, "' width='", plotwidth,
+               "'><br>\n"), modhtmlfile, append = TRUE)
 }
 
 regulatorSummaryAndRank <- function(rankdf, htmlinfo) {
