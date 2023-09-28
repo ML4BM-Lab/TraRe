@@ -44,13 +44,14 @@ table2html_from_graph <- function(resultstable, numvar = TRUE) {
 
     colheader <- paste(collapse = "</th><th>", c(numvar, colnames(resultstable)))
     theader <- paste0("<thead>\n<tr bgcolor='#AAAAAA';><th>", colheader, "</th></tr>\n</thead>\n<tbody>\n")
-
+    head_str <- paste0("<script src='../../sorttable.js'></script>\n<TABLE class=", "'sortable' border =1 >\n", theader)
+    
     numtable <- cbind(rownames(resultstable), resultstable)
     rowinnerstrs <- apply(numtable, 1, paste, collapse = "</td><td>")
     rowstrs <- paste0("<tr><td>", rowinnerstrs,"</td></tr>")
     rows_str <- paste(collapse = "\n", rowstrs)
 
-    return(paste0(collapse = "\n", theader, rows_str, "\n</tbody></table><br>"))
+    return(paste0(collapse = "\n", head_str, rows_str, "\n</tbody></table><br>"))
 
 
 }
@@ -59,7 +60,7 @@ table2html <- function(resultstable) {
 
     colheader <- paste(collapse = "</th><th>", c("idx", colnames(resultstable)))
     theader <- paste0("<thead>\n<tr bgcolor='#AAAAAA';><th>", colheader, "</th></tr>\n</thead>\n<tbody>\n")
-    head_str <- paste0("<script src='sorttable.js'></script>\n<TABLE class=", "'sortable' border =1 >\n", theader)
+    head_str <- paste0("<script src='../sorttable.js'></script>\n<TABLE class=", "'sortable' border =1 >\n", theader)
 
     numtable <- cbind(seq_len(nrow(resultstable)), resultstable)
     rowinnerstrs <- apply(numtable, 1, paste, collapse = "</td><td>")
@@ -75,7 +76,7 @@ write_html_table_page <- function(resultstable, htmlpagefile, resultsrelpath, in
     htmlinfo) {
 
     write(paste0("<table border = 1 width = '100%'><tr bgcolor = ", "'#AAAAAA'><th><a href = '", "../", indexpath, "'>",
-        "Index</a></th><th><a href = '", "../",htmlinfo$glossarypath, "' >Glossary</a></th><th><a href = '",
+        "Index</a></th><th><a href = '"," ../",glossarypath, "' >", "Glossary</a></th><th><a href = '",
         "../", resultsrelpath, "' >Download</a></th></tr></table><br><br>"), file = htmlpagefile)
     htmlstr <- table2html(resultstable)
     write(htmlstr, file = htmlpagefile, append = TRUE)
@@ -84,7 +85,7 @@ write_html_table_page <- function(resultstable, htmlpagefile, resultsrelpath, in
 
 
 write_tables_all <- function(mytab, tabletype = "table", html_idxs = seq_len(nrow(mytab)), html_cols = colnames(mytab), filestr = "data",
-    htmlinfo = list(htmldir = "htmls/", indexpath = "index.html", txtstr = "txts/"), extradir = "", glossarypath = "glossary.txt") {
+    htmlinfo = list(htmldir = "htmls/", indexpath = "index.html", txtstr = "txts/",abspath="./"), extradir = "", glossarypath = "glossary.txt") {
 
 
     htmlpath <- paste0("htmls/", filestr, "_", tabletype, ".html")
@@ -103,7 +104,7 @@ write_tables_all <- function(mytab, tabletype = "table", html_idxs = seq_len(nro
 }
 
 create_index_page <- function(outdir = "./", runtag = "run", codedir = "code/", indexpath = "index.html", glossarypath = "glossary.txt",
-    imgstr = "imgs/", txtstr = "txts/", htmlstr = "htmls/") {
+    imgstr = "imgs/", txtstr = "txts/", htmlstr = "htmls/", report_name="") {
 
     htmldir <- paste0(outdir, runtag, "/")
     dir.create(file.path(htmldir))
@@ -119,13 +120,13 @@ create_index_page <- function(outdir = "./", runtag = "run", codedir = "code/", 
     # Create folder htmls
     dir.create(file.path(paste0(htmldir, htmlstr)))
 
-    glossary <- as.matrix(utils::read.table(paste0(codedir, "glossary.txt"), header = TRUE, sep = "\t", quote = ""))
+    # glossary <- as.matrix(utils::read.table(paste0(codedir, "glossary.txt"), header = TRUE, sep = "\t", quote = ""))
     file.copy(from = paste0(codedir, "glossary.txt"), to = htmldir)
     abspath <- paste0(htmldir, indexpath)
 
     write(paste0("<br>"), file = abspath)
 
-    return(list(htmldir = htmldir, indexpath = indexpath, imgstr = imgstr, txtstr = txtstr, glossarypath = glossarypath, abspath = abspath))
+    return(list(htmldir = htmldir, indexpath = indexpath, imgstr = imgstr, txtstr = txtstr, glossarypath = glossarypath, abspath = abspath,report_name=report_name))
 }
 
 violinPlots <- function(norm_expr_mat_keep, phenosamples, pheno, nodesumm, edgesumm, objtargs, htmlinfo) {

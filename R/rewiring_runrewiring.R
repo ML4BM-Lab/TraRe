@@ -42,10 +42,10 @@ runrewiring <- function(ObjectList) {
     retest_perms <- ObjectList$retest_perms
     logfile <- ObjectList$logfile
     last_cluster <- ObjectList$last_cluster
-
+    report_name <- strsplit(preparerew$outdir,"/")[[1]][4]
     # set up output html page, we use the first argv.
     dir.create(ObjectList$outdir)
-    indexpageinfo <- create_index_page(outdir = outdir, runtag = "", codedir = codedir)
+    indexpageinfo <- create_index_page(outdir = outdir, runtag = "", codedir = codedir,report_name = report_name)
     imgdir <- paste0(indexpageinfo$htmldir, indexpageinfo$imgstr)
 
 
@@ -224,8 +224,10 @@ runrewiring <- function(ObjectList) {
                 paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
 
             # add reference index to main index page
-            write(paste0("<a href = '../index.html'>Return to Main Rewiring Summary</a><br>"),
-                paste0(indexpageinfo$htmldir, foldername_p, "/", indexpageinfo$indexpath), append = TRUE)
+            # write(paste0("<a href = '../index.html'>Return to Main Rewiring Summary</a><br>"),
+            #     paste0(indexpageinfo$htmldir, foldername_p, "/", indexpageinfo$indexpath), append = TRUE)
+            ref_main_index <- paste0("<button onclick=\"window.location.href='../index.html'\";>\n\tReturn to Main Rewiring Summary\n</button><br><br>")
+            write(ref_main_index, paste0(indexpageinfo$htmldir, foldername_p, "/", indexpageinfo$indexpath), append = TRUE)
 
             for (clusmod in clusters$clusters[[numclus]]) {
 
@@ -311,7 +313,7 @@ runrewiring <- function(ObjectList) {
 
                 # Generate the htmls for every supermodule from the refinedsumm.rds
                 html_from_graph(gpath = paste0(outdir, "/", foldername_p, "/refinedsumm.rds"), wpath = paste0(outdir, "/", foldername_p),
-                  user_mode = FALSE, dataset = lognorm_est_counts[regs, ])
+                                report_name = indexpageinfo$report_name, user_mode = FALSE, dataset = lognorm_est_counts[regs, ])
 
             }, error = function(x) {
                 message("HTML summary could not be generated for this supermodule")
@@ -361,6 +363,9 @@ runrewiring <- function(ObjectList) {
         utils::write.table(cmb_txt,paste0(outdir,'/txts/sigmodules_combined.txt'),
                     sep='\t',quote=FALSE,row.names=FALSE)
     }
+    # Closing line
+    write(paste0("<p style=\"text-align:center;font-family:courier;color:grey;\">",indexpageinfo$report_name,"</p>"),
+          paste0(indexpageinfo$htmldir, foldername_p, "/", indexpageinfo$indexpath),append = TRUE)
 }
 
 
@@ -524,7 +529,7 @@ gen_heatmap <- function(ObjectList, module_membership_list, allstats, imgdir, ou
         grDevices::dev.off()
 
         # write plots to index page
-        write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", paste0("Rewiring Summary for Dataset", i, " using ", modmeth), "</h1></td></tr></table><br>\n"),
+        write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", paste0("Rewiring Summary for",indexpageinfo$report_name, "Dataset", i, " using ", modmeth), "</h1></td></tr></table><br>\n"),
             paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
         write(paste0("<embed src='", indexpageinfo$imgstr, myplotname, ".dendro.pdf", "' alt='", myplotname, "' height='", 750,
                      "' width='", 1500, "'> &emsp; <br>\n"), paste0(indexpageinfo$htmldir, indexpageinfo$indexpath), append = TRUE)
@@ -591,12 +596,12 @@ rawsummary <- function(indexpageinfo, rawrunmoddata,rawsumm, lognorm_est_counts,
     # Write tables for rawsumm
     sortidxs <- sort(as.numeric(rawsumm$nodesumm[, "t-pval"]), decreasing = FALSE, index.return = TRUE)$ix
     write_tables_all(rawsumm$nodesumm[sortidxs, ], tabletype = paste0(modmeth, "_raw_nodesumm"), filestr = "data", html_idxs = seq_len(nrow(rawsumm$nodesumm)),
-                     htmlinfo = indexpageinfo, extradir = paste0(foldername_p, "/"), glossarypath = "../glossary.html")
+                     htmlinfo = indexpageinfo, extradir = paste0(foldername_p, "/"), glossarypath = indexpageinfo$glossarypath)
 
     sortidxs <- sort(as.numeric(rawsumm$fulledgesumm[, "all.weights"]), decreasing = FALSE, index.return = TRUE)$ix
     write_tables_all(rawsumm$fulledgesumm[sortidxs, ], tabletype = paste0(modmeth, "_raw_edgesumm"), filestr = "data",
                      html_idxs = seq_len(nrow(rawsumm$fulledgesumm)), htmlinfo = indexpageinfo, extradir = paste0(foldername_p, "/"),
-                     glossarypath = "../glossary.html")
+                     glossarypath = "../glossary.txt")
 
     # Write raw and refined r object nodesumm, fulledgesumm, full_graph, respond_graph, nonresp_graph
     if (!exception)

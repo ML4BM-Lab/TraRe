@@ -37,7 +37,7 @@
 #'
 #' @export
 
-html_from_graph <- function(gpath = NULL, wpath = paste0(tempdir()), user_mode = TRUE, cliquesbool = TRUE, ...) {
+html_from_graph <- function(gpath = NULL, wpath = paste0(tempdir()), report_name ="rewiring", user_mode = TRUE, cliquesbool = TRUE, ...) {
 
     if (is.null(gpath)) {
         stop("Path to the graph object must be specified")
@@ -154,35 +154,39 @@ html_from_graph <- function(gpath = NULL, wpath = paste0(tempdir()), user_mode =
     ## Save as .txt
 
     # Df
-    download_df <- paste0(txts_path, "/refined_supermodule_edges.txt")
+    download_df <- "../txts/refined_supermodule_edges.txt"
     utils::write.table(df, file = download_df, sep = "\t", quote = FALSE)
 
     # SumXOR
-    download_sumXOR <- paste0(txts_path, "/refined_supermodule_summary.txt")
+    download_sumXOR <- "../txts/refined_supermodule_summary.txt"
     utils::write.table(sumXOR, file = download_sumXOR, sep = "\t", quote = FALSE)
 
     # Generate path
     path_html <- paste0(htmls_path, "/refined_edges_table.html")
-
+    # Copy necessary files
+    codedir <- paste0(system.file("extdata", package = "TraRe"), "/RewiringReport/")
+    file.copy(from = paste0(codedir, "glossary.txt"), to = wpath)
+    file.copy(from = paste0(codedir, "sorttable.js"), to = wpath)
     # Generate html from df and sumXOR
-    df_to_html(df, sumXOR, path_html = path_html, download_df = download_df, download_sumXOR = download_sumXOR)
-
+    df_to_html(df, sumXOR, path_html = path_html, report_name = report_name, download_df = download_df, download_sumXOR = download_sumXOR, wpath = wpath)
 }
 
 
 # Helper function
 
-df_to_html <- function(df, sumXOR, path_html = "C:/Users/Jesus/Desktop/refined.html", download_df = "", download_sumXOR = "") {
+df_to_html <- function(df, sumXOR, path_html = "./refined_edges_table.html", report_name = "rewiring", download_df = "", download_sumXOR = "", wpath="../") {
 
 
     # Define containers
     write(paste0("<style>\n.floatLeft { width: 25%; float: left; margin-left: 200px;}", "\n.floatRight { width: 25%; float: right; margin-right: 250px;}",
         "\n.container { overflow: hidden; }\n</style>"), file = path_html)
 
-
+    write(paste0("<table border = 1 width = '100%'><tr bgcolor = ", "'#AAAAAA'><th><a href = '../index.html'>
+               Index</a></th><th><a href = '../glossary.txt' >Glossary</a></th></tr></table><br><br>"), file = path_html,append = TRUE)
+  
     # First the df file
-    write(paste0("<table border = 1 width = '100%'><tr bgcolor = ", "'#AAAAAA'><th><a href = '", download_df, "' target=", "'_blank'>Download Rewiring Edges</a></th><th><a href = '",
-        download_sumXOR, "' target='_blank'>Download Summary</a></th></tr></table><br><br>"), file = path_html, append = TRUE)
+    write(paste0("<table border = 1 width = '100%'><tr bgcolor = ", "'#AAAAAA'><th><a href = '", download_df, "'>Download Rewiring Edges</a></th><th><a href = '",
+        download_sumXOR, "'>Download Summary</a></th></tr></table><br><br>"), file = path_html, append = TRUE)
 
     write(paste0("<div class='container'>\n", "<div class='floatLeft'>\n", "<table border = 1>"), file = path_html, append = TRUE)
 
@@ -198,5 +202,13 @@ df_to_html <- function(df, sumXOR, path_html = "C:/Users/Jesus/Desktop/refined.h
 
     write(htmlstr, file = path_html, append = TRUE)
     write("</div>", file = path_html, append = TRUE)
+    
+    # Closing line
+    write(paste0("<p style=\"text-align:center;font-family:courier;color:grey;\">", report_name,"</p>"),
+          file = path_html, append = TRUE)
+    
+    # Add shortcut button from cluster index to this html
+    button_in_ref_cluster_index <- paste0("<br><button onclick=\"window.location.href = 'htmls/refined_edges_table.html'\";>\n\tRefined Edges Summary Table\n</button><br>")
+    write(button_in_ref_cluster_index, file = paste0(wpath,"/index.html"), append = TRUE)
 
 }

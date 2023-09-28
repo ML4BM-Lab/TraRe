@@ -57,13 +57,17 @@ createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, super
                                                 ".", supertype), runtag = "", codedir = codedir)
   orderobj <- geneOrder(modsumm, ObjectList, numdataset)
   createLegendPlot(htmlinfo,1)
-  ref_cluster_index <- paste0("<a href = '../../supermodule", numdataset,".", modmeth, ".", numclus, "/index.html'>Return to Cluster Summary</a><br>")
-  write(ref_cluster_index, paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
   
-  ref_curr_index <- paste0("<a href = '../rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus, ".", supertype, "/index.html'>Complete Rewiring Module Summary ",supertype,"</a><br>")
+  write(paste0("<table style='width:100%' bgcolor='gray'><tr><td><h1>", "Complete Rewiring Module ",numclus, " Summary", "</h1></td></tr></table><br>\n"),
+        paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
+  # ref_cluster_index <- paste0("<a href = '../../supermodule", numdataset,".", modmeth, ".", numclus, "/index.html'>Return to Cluster Summary</a><br>")
+  ref_cluster_index <- paste0("<button onclick=\"window.location.href='../../supermodule",numdataset,".", modmeth, ".", numclus, "/index.html'\";>\n\tReturn to Cluster Summary\n</button><br><br>")
+
+  write(ref_cluster_index, paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
+  # ref_curr_index <- paste0("<a href = '../rewiring_module_summary/dataset", numdataset, ".", modmeth, ".cluster", numclus, ".", supertype, "/index.html'> Complete Rewiring Module",numclus," Summary ",supertype,"</a><br>")
+  ref_curr_index <- paste0("<button onclick=\"window.location.href='../rewiring_module_summary/dataset",numdataset,".", modmeth, ".cluster", numclus,".",supertype,"/index.html'\";>\n\tComplete Rewiring Module",numclus," Summary ",supertype,"\n</button><br><br>")
   clustersumm_dir <- paste0(ObjectList$outdir, dir_prefix, "/index.html")
   write(ref_curr_index, clustersumm_dir, append = TRUE)
-  
   
   pheno <- ObjectList$datasets[[numdataset]]$pheno
   phenosamples <- ObjectList$datasets[[numdataset]]$phenosamples
@@ -98,6 +102,6 @@ createModuleSummary <- function(ObjectList, modmeth = "VBSR", numclus = 1, super
   rankdf <- violinPlots(norm_expr_mat_keep, phenosamples, pheno,
                         obj_nodesumm, modsumm$fulledgesumm, orderobj$modtargs, htmlinfo)
   regulatorSummaryAndRank(rankdf, htmlinfo)
-  
+  write(ref_cluster_index, paste0(htmlinfo$htmldir, htmlinfo$indexpath), append = TRUE)
   return(htmlinfo)
 }
