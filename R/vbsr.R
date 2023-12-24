@@ -176,7 +176,7 @@ vbsr = function(y,
 	wexc <- which(exclude==1);
 
 	#compute score vector for adaptively reweighted logistic function
-	score_vec <- sort(sma[[11]][-wexc]^2+log(sma[[13]][-wexc]),decreasing=T);
+	score_vec <- sort(sma[[11]][-wexc]^2+log(sma[[13]][-wexc]), decreasing = TRUE);
 	#print(score_vec);
 	#print(c("MAX:",max(score_vec,33)));
 	#determine automatic path based on data
