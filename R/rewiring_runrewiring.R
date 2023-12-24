@@ -42,7 +42,7 @@ runrewiring <- function(ObjectList) {
     retest_perms <- ObjectList$retest_perms
     logfile <- ObjectList$logfile
     last_cluster <- ObjectList$last_cluster
-    report_name <- strsplit(preparerew$outdir,"/")[[1]][4]
+    report_name <- strsplit(ObjectList$outdir,"/")[[1]][4]
     # set up output html page, we use the first argv.
     dir.create(ObjectList$outdir)
     indexpageinfo <- create_index_page(outdir = outdir, runtag = "", codedir = codedir,report_name = report_name)

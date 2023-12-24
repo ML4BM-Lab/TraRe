@@ -12,6 +12,7 @@
 #'
 #' @param gpath path to the graph object ('refinedsumm.rds'). (RDS format)
 #' @param wpath writing path, where the html and txts file will be saved. (Default: temp directory)
+#' @param report_name name of the folder where the rewiring data will be saved. (Default: "rewiring")
 #' @param user_mode boolean indicating if this function is called from user or internaly. (Default: TRUE)
 #' @param cliquesbool indicating if cliques method should be added to the summary table. (Default: TRUE)
 #' @param ... every argument you should pass to generatecliques() in case cliquesbool is TRUE.
@@ -36,7 +37,6 @@
 #'
 #'
 #' @export
-
 html_from_graph <- function(gpath = NULL, wpath = paste0(tempdir()), report_name ="rewiring", user_mode = TRUE, cliquesbool = TRUE, ...) {
 
     if (is.null(gpath)) {
@@ -139,13 +139,13 @@ html_from_graph <- function(gpath = NULL, wpath = paste0(tempdir()), report_name
     ## Export to txt and html
 
     # check if this function is called from runrewiring or from user
-
     if (!user_mode) {
         txts_path <- paste0(wpath, "/txts")
         htmls_path <- paste0(wpath, "/htmls")
     } else {
         # Create directory
         dir.create(wpath)
+      
         # Assign paths
         txts_path <- wpath
         htmls_path <- wpath
@@ -154,11 +154,11 @@ html_from_graph <- function(gpath = NULL, wpath = paste0(tempdir()), report_name
     ## Save as .txt
 
     # Df
-    download_df <- "../txts/refined_supermodule_edges.txt"
+    download_df <- paste0(txts_path, "/refined_supermodule_edges.txt")
     utils::write.table(df, file = download_df, sep = "\t", quote = FALSE)
 
     # SumXOR
-    download_sumXOR <- "../txts/refined_supermodule_summary.txt"
+    download_sumXOR <- paste0(txts_path, "/refined_supermodule_summary.txt")
     utils::write.table(sumXOR, file = download_sumXOR, sep = "\t", quote = FALSE)
 
     # Generate path
@@ -167,13 +167,13 @@ html_from_graph <- function(gpath = NULL, wpath = paste0(tempdir()), report_name
     codedir <- paste0(system.file("extdata", package = "TraRe"), "/RewiringReport/")
     file.copy(from = paste0(codedir, "glossary.txt"), to = wpath)
     file.copy(from = paste0(codedir, "sorttable.js"), to = wpath)
+
     # Generate html from df and sumXOR
     df_to_html(df, sumXOR, path_html = path_html, report_name = report_name, download_df = download_df, download_sumXOR = download_sumXOR, wpath = wpath)
 }
 
 
 # Helper function
-
 df_to_html <- function(df, sumXOR, path_html = "./refined_edges_table.html", report_name = "rewiring", download_df = "", download_sumXOR = "", wpath="../") {
 
 

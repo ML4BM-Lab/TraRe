@@ -7,6 +7,7 @@
 html_from_graph(
   gpath = NULL,
   wpath = paste0(tempdir()),
+  report_name = "rewiring",
   user_mode = TRUE,
   cliquesbool = TRUE,
   ...
@@ -16,6 +17,8 @@ html_from_graph(
 \item{gpath}{path to the graph object ('refinedsumm.rds'). (RDS format)}
 
 \item{wpath}{writing path, where the html and txts file will be saved. (Default: temp directory)}
+
+\item{report_name}{name of the folder where the rewiring data will be saved. (Default: "rewiring")}
 
 \item{user_mode}{boolean indicating if this function is called from user or internaly. (Default: TRUE)}
 
