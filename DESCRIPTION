@@ -6,7 +6,7 @@ Authors@R:
     c(person(given = "Jesus",
            family = "de la Fuente Cedeno",
            role = c("aut", "cre","cph"),
-           email = "jdelafuentec@unav.es",
+           email = "jdlfuentec@gmail.com",
            comment = c(ORCID = "0000-0003-1856-2469")),
     person(given = "Mikel",
            family = "Hernaez",

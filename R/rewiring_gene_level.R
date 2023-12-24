@@ -270,14 +270,14 @@ rewiring_gene_level <- function(linker_output,
     rew_list_names <- fast_rew(preparedrewiring)
 
     #write rew_list_names
-    utils::write.table(rew_list_names,file=fpath,quote=F,sep='\t',
-                row.names = FALSE,col.names=FALSE)
+    utils::write.table(rew_list_names, file = fpath, quote = FALSE, sep='\t',
+                row.names = FALSE, col.names = FALSE)
   }else{
     message('File found, reading from there')
   }
 
   #read file
-  rew_list_names <- utils::read.delim(fpath,header=FALSE)[,1]
+  rew_list_names <- utils::read.delim(fpath, header = FALSE)[,1]
 
   #Obtain TFs
   regs_mrm <- rownames(TraReObj@lognorm_counts)[TraReObj@regulator_idx]

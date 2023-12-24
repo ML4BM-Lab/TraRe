@@ -518,7 +518,7 @@ nullDistributionOfRewiringStatistic <- function(mat, pheno, modmeth, mymod, html
   myplotname <- "hist.test."
   grDevices::png(paste0(imgdir, myplotname, ".png"), width = plotwidth, height = plotheight)
   rewiring_score <- result$T_star
-  graphics::hist(main = paste0("True Val = ", signif(result$TS, 3),"\n (p value = " , signif(result$pval,3),")"), outer = F,rewiring_score)
+  graphics::hist(main = paste0("True Val = ", signif(result$TS, 3),"\n (p value = " , signif(result$pval,3),")"), outer = FALSE, rewiring_score)
   graphics::abline(v = result$TS, col = "red")
   grDevices::dev.off()
   

@@ -102,14 +102,14 @@ get_regulons <- function(prepareobj,
       rew_list_names <- fast_rew(prepareobj)
       
       #write rew_list_names
-      utils::write.table(rew_list_names,file=fpath,quote=F,sep='\t',
-                         row.names = FALSE,col.names=FALSE)
+      utils::write.table(rew_list_names, file = fpath, quote = FALSE, sep = '\t',
+                         row.names = FALSE, col.names = FALSE)
       message(paste0('Rewired modules list generated in ',fpath))
     }else{
       message('Fast rewiring file found to use reiwired module list')
     }
     #Read the rewired modules from the 50 bootstraps
-    sigmod <- utils::read.delim(fpath, header = F)[,1]
+    sigmod <- utils::read.delim(fpath, header = FALSE)[,1]
     # Rewired graphs
     message('Extracting regulons from rewired modules')
     graph_objs <- lapply(sigmod,function(x) prepareobj$datasets[[1]]$rundata$graphs$VBSR[[x]])
@@ -191,7 +191,7 @@ rewiring_regulon <- function(regulons_all_modules,
 
   #Unlist the regulons
   graphs_regulons <- lapply(regulons_all_modules, function(x) x$regulons)
-  unlisted_regulons <- unlist(graphs_regulons,recursive = F,use.names = F)
+  unlisted_regulons <- unlist(graphs_regulons, recursive = FALSE, use.names = FALSE)
 
   # Rewiring of regulon (slow)
   message("Calculating the rewiring of the regulons")
@@ -329,7 +329,7 @@ filter_regulons <- function(regulons_uniq){
   })
 
   graphs <- lapply(dfs,function(x){
-    g <- igraph::graph_from_data_frame(x[,1:2],directed = F)
+    g <- igraph::graph_from_data_frame(x[,1:2], directed = FALSE)
     igraph::set_edge_attr(g, "weight",index = igraph::E(g), x$multiplicity)
   })
   return(list(regulons=dfs, graph=graphs))

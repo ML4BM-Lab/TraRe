@@ -209,7 +209,7 @@ vbsr = function(y,
 
 	#compute sma p-values if pre-screening:
 	if(screen <1){
-		sma_p <- exp(stats::pchisq(sma[[11]]^2,1,log.p=T,lower.tail=F));
+		sma_p <- exp(stats::pchisq(sma[[11]]^2,1, log.p= TRUE, lower.tail = FALSE));
 		#print(sma_p);
 		wkeep <- which(sma_p<screen);
 		wkeep <- sort(unique(c(wexc,wkeep)));
