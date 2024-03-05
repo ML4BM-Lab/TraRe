@@ -1,0 +1,73 @@
+type	number	name	description
+modules	1	idx	module identifier
+modules	2	module-identifer	module identifier
+modules	3	bootstrap-number	bootstrap containing module
+modules	4	module-number	module number within bootstrap
+modules	5	number-target-isoforms	number of target isoforms in module
+modules	6	number-target-genes	number of target genes in module
+modules	7	number-regulator-isoforms	number of regulator isoforms in module
+modules	8	number-regulator-genes	number of regulator genes in module
+modules	9	number-graph-isoform-edges	number of isoform graph edges in module graph
+modules	10	number-poss-module-isoform-edges	number of possible isoform graph edges in module
+modules	11	graph-isoform-edge-density	of the possible isoform graph edges, how many were selected in module graph
+modules	12	module-image-link	link to module plot
+targets	1	idx	target rank
+targets	2	target-gene	gene name for target
+targets	3	target-biotypes	biotypes for target isoforms
+targets	4	number-target-isoforms-in-graphs	number of target isoforms that become graph edges
+targets	5	number-target-isoforms-in-modules	number of target isoforms that are included in modules
+targets	6	number-target-isoforms-all	number of target isoforms that are included in the input
+targets	7	best-target-isoforms	target isoforms with the most number of graph edges across all modules ([target isoform name, number of target isoform graph edges across all modules, number of possible target isoform edges that did not become graph edges]
+targets	8	number-graphs-with-target	number of module graphs containing edge with target isoform
+targets	9	number-modules-with-target	number of modules containing a target isoform
+targets	10	best-modules-with-target	modules with the most number of target isoform graph edges ([module name, number of target isoforms in module, number of all regulator isoforms in module, number of target isoform graph edges in module, number of possible target isoform module edges that did not become graph edges ])
+targets	11	num-reg-genes-for-target-in-graphs	number of unique regulator genes connected to target isoforms in all module graphs
+targets	12	num-reg-genes-for-target-in-modules	number of unique regulator genes in same modules as target isoforms across all modules
+targets	13	best-regulator-gene-for-target	regulatory genes with the most number of graph edges connecting to target isoform ([regulator name, number of target isoform graph edges connected to regulator gene across all modules, number of possible target isoform edges with regulator gene that did not become graph edges ])
+targets	14	number-target-iso-graph-edges	number of target isoform graph edges across all modules
+targets	15	number-target-iso-poss-graph-edges	number of possible target isoform graph edges in all modules
+targets	16	target-isoform-edge-density	of the possible target isoform graph edges, how many were selected 
+regulators	1	idx	regulator rank
+regulators	2	regulator-gene	gene name for regulator
+regulators	3	regulator-biotypes	biotypes for regulator isoforms
+regulators	4	num-regulator-isoforms-in-graphs	number of regulator isoforms that become graph edges
+regulators	5	num-regulator-isoforms-in-modules	number of regulator isoforms that are included in modules
+regulators	6	num-regulator-isoforms-all	number of regulator isoforms that are included in the input
+regulators	7	best-regulator-isoforms	regulator isoforms with the most number of graph edges across all modules ([regulator isoform name, number of regulator isoform graph edges across all modules, number of possible regulator isoform edges that did not become graph edges]
+regulators	8	number-graphs-with-regulator	number of module graphs containing edge with regulator isoform
+regulators	9	number-modules-with-regulator	number of modules containing a regulator isoform
+regulators	10	best-modules-with-regulator	modules with the most number of regulator isoform graph edges ([module name, number of all target isoforms in module, number of regulator isoforms in module, number of regulator isoform graph edges in module, number of possible regulator isoform module edges that did not become graph edges ])
+regulators	11	num-target-genes-for-reg-in-graphs	number of unique target genes connected to regulator isoforms in all module graphs
+regulators	12	num-target-genes-for-reg-in-modules	number of unique target genes in same modules as regulator isoforms across all modules
+regulators	13	best-target-gene-for-regulator	target genes with the most number of graph edges connecting to regulator isoform ([target name, number of regulator isoform graph edges connected to target gene across all modules, number of possible regulator isoform edges with target gene that did not become graph edges ])
+regulators	14	num-regulator-iso-graph-edges	number of regulator isoform graph edges across all modules
+regulators	15	num-regulator-iso-poss-graph-edges	number of possible regulator isoform graph edges in all modules
+regulators	16	edge-avg-per-regulator-isoform	number of regulator isoform graph edges across all modules divided by the number of regulator isoforms that are included in the input
+regulators	17	edge-max-per-regulator-isoform	number of regulator isoform graph edges across all modules for best regulator isoform
+edges	1	idx	gene pair edge rank
+edges	2	gene-pair-key	gene pair edge name
+edges	3	evidence-support	chip support (-1: no regulator chip tracks, 0: regulator chip tracks do not overlap target gene body +/- 20KB, 1: regulator chip tracks do overlap target gene body +/- 20KB)
+edges	4	target-gene	gene name for target
+edges	5	target-biotypes	biotypes for target isoforms
+edges	6	num-target-iso-in-graphs-with-pair	number of target isoforms that become graph edges between gene pair
+edges	7	num-target-iso-in-modules-with-pair	number of target isoforms that are included in modules with gene pair
+edges	8	number-target-isoforms-all	number of target isoforms that are included in the input
+edges	9	best-target-isoforms-in-gene-pair	target isoforms with the most number of graph edges for gene pair across all modules ([target isoform name, number of target isoform graph edges for gene pair across all modules, number of possible target isoform edges that did not become graph edges]
+edges	10	regulator-gene	gene name for regulator
+edges	11	regulator-biotypes	biotypes for regulator isoforms
+edges	12	num-reg-iso-in-graphs-with-pair	number of regulator isoforms  that become graph edges between gene pair
+edges	13	num-reg-iso-in-modules-with-pair	number of regulator isoforms that are included in modules between gene pair
+edges	14	num-regulator-isoforms-all	number of regulator isoforms that are included in the input
+edges	15	best-regulator-isoforms-in-gene-pair	regulator isoforms with the most number of graph edges for gene pair across all modules ([regulator isoform name, number of regulator isoform graph edges for gene pair across all modules, number of possible regulator isoform edges that did not become graph edges]
+edges	16	number-graphs-with-gene-pair	number of module graphs containing edge between gene pair
+edges	17	number-modules-with-gene-pair	number of modules containing gene pair
+edges	18	best-modules-with-gene-pair	modules with the most number of isoform graph edges for gene pair  ([module name, number of target isoforms in module, number of target isoforms with at least one regulator edge, number of regulator isoforms with at least one target edge, number of isoform graph edges for gene pair in module, number of possible isoform module edges that did not become graph edges ])
+edges	19	number-pair-isoforms-in-graphs	number of isoform pairs containing graph edge 
+edges	20	number-pair-isoforms-in-modules	number of isoform pairs found in any module
+edges	21	best-pair-isoform-with-gene-pair	isoform pairs with the most number of graph edges for gene pair  ([module name, number of isoform pair graph edges in module, number of possible isoform pair module edges that did not become graph edges ])
+edges	22	num-pair-iso-graph-edges	number of isoform pair graph edges for gene pair across all modules
+edges	23	num-pair-iso-poss-graph-edges	number of possible pair isoform graph edges in all modules
+edges	24	pair-isoform-graph-edge-density	of the possible pair isoform graph edges, how many were selected 
+edges	25	weighted-by-module-targets-score	proportion of target isoforms with at least regulator edge for each module summed across modules
+edges	26	number-modules-best-pair-isoforms	number of modules that the most frequent pair isoform appears in as graph edges
+edges	27	gene-pair-image-link	link to gene pair scatter plot

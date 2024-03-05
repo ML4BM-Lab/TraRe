@@ -132,7 +132,7 @@ LINKER_runPhase2 <- function(modules, Data, mode = "VBSR", alpha = 1 - 1e-06, FD
 
         }
 
-        igraph::graph_from_incidence_matrix(driverMat)
+        igraph::graph_from_incidence_matrix(driverMat, weighted = TRUE)
 
     })
 

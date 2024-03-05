@@ -93,6 +93,29 @@ preparerewiring <- function(name = "defaultname", linker_output = NULL, TraReObj
         phenosamples <- colnames(lognorm_est_counts)[!is.na(TraReObj@pheno)]
 	      phenotype <- as.logical(TraReObj@pheno[!is.na(TraReObj@pheno)])
         
+	      # Pre-filter non variant genes
+	      lognorm_est_counts_pheno <- lognorm_est_counts[,phenosamples]
+	      data_shape <- dim(lognorm_est_counts_pheno)
+	      
+	      
+	      low_var_genes_th <- 0.25
+	     
+	      genes_var_cond <- which(apply(lognorm_est_counts_pheno,1,stats::var) >= low_var_genes_th)
+	      
+	      if (length(genes_var_cond)>0){
+	        drop_genes <- rownames(lognorm_est_counts_pheno)[!apply(lognorm_est_counts_pheno,1,stats::var) >= low_var_genes_th]
+	        lognorm_est_counts_pheno <- lognorm_est_counts_pheno[genes_var_cond,]
+	        methods::show(paste0(data_shape[1] - nrow(lognorm_est_counts_pheno) ,
+	                               ' genes have been dropped out according to variance (across samples) threshold: ',
+	                               low_var_genes_th, ', from: ', data_shape[1], ' to: ', nrow(lognorm_est_counts_pheno)))
+	        
+	        
+	        lognorm_est_counts <- lognorm_est_counts_pheno
+	        
+	        regs <- rownames(lognorm_est_counts)[rownames(lognorm_est_counts)%in%regs]
+	        targs <- rownames(lognorm_est_counts)[rownames(lognorm_est_counts)%in%targs]
+	      }
+	      
         #generate list with name index
         name2idx <- seq_len(nrow(lognorm_est_counts))
         names(name2idx) <- rownames(lognorm_est_counts)
@@ -104,7 +127,7 @@ preparerewiring <- function(name = "defaultname", linker_output = NULL, TraReObj
         if (use_graphs){
             #Format linkeroutput modules to graphs
             message("\nFrom here on, graphs will be taken into account for Rewiring and some of them may be dropped out.\nHence, it is recommended to take preparerewiring object's run data to proceed with further analysis\n")
-            rundata <- graph_to_modules(linker_output, geneinfo)
+            rundata <- graph_to_modules(linker_output, geneinfo, drop_genes)
         }
 
         if (min(klone, klzero)/max(klone, klzero) < 0.8) {
@@ -154,7 +177,7 @@ preparerewiring <- function(name = "defaultname", linker_output = NULL, TraReObj
 }
 
 # Helper function
-graph_to_modules <- function(linkeroutput, geneinfo){
+graph_to_modules <- function(linkeroutput, geneinfo, drop_genes){
 
     ## The structure we want to get is
     ## linkeroutput$modules[[link_mode]][[graph_mode]][[num_module]]$(target or regs)
@@ -179,17 +202,19 @@ graph_to_modules <- function(linkeroutput, geneinfo){
             graph <- linkeroutput$graphs[[x]][[selected]][[y]]
 
             totgenes <- unique(names(igraph::V(graph)))
-            regulators <- intersect(totgenes, geneinfo)
+            # Remove filtered genes
+            totgenes_filtered <- totgenes[!totgenes%in%drop_genes]
+            regulators <- intersect(totgenes_filtered, geneinfo)
 
-            if (identical(regulators,character(0))){
+            if (identical(regulators, character(0))){
 
                 message('Module number ',y,' has been deleted')
                 return(NULL)
 
             }
-
+            
             list(regulators = regulators,
-                 target_genes = setdiff(totgenes, regulators),
+                 target_genes = setdiff(totgenes_filtered, regulators),
                  bootstrap_idx = linkeroutput$modules[[x]][[y]]$bootstrap_idx)
 
         })

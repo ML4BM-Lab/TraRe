@@ -1,0 +1,5 @@
+Normalized XOR Sum	Cliques
+ASCL1	1	
+ELK3	1	
+INSM1	0.714	
+ZBTB12	1	

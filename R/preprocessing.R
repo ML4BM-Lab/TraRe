@@ -127,10 +127,21 @@ TraReClass <- methods::setClass("TraReClass",
 #' @rdname trare_preprocessing
 #' @param TraReObj TraReObj from trare_preprocesing
 #' @param phenotype_f dataframe containing samples as rownames and a column named 'phenotype' containing the binary phenotype labels (character of numeric)
-rewiring_add_phenotype <- function(TraReObj, phenotype_f){
+# rewiring_add_phenotype <- function(TraReObj, phenotype_f){
+#   
+#   TraReObj@lognorm_counts <- TraReObj@lognorm_counts[,rownames(phenotype_f)]
+#   TraReObj@pheno <- as.numeric(factor(phenotype_f[,'phenotype'],labels = c(0,1))) - 1
+#   
+#   return(TraReObj)
+# }
 
-  TraReObj@lognorm_counts <- TraReObj@lognorm_counts[,rownames(phenotype_f)]
-  TraReObj@pheno <- as.numeric(factor(phenotype_f[,'phenotype'],labels = c(0,1))) - 1
+rewiring_add_phenotype <- function(TraReObj, phenotype_f){
+  TraReObj_out <- TraRe::TraReClass(lognorm_counts = TraReObj@lognorm_counts[,rownames(phenotype_f)],
+                         target_idx = TraReObj@target_idx,
+                         regulator_idx = TraReObj@regulator_idx,
+                         pheno = as.numeric(factor(phenotype_f[,'phenotype'],labels = c(0,1))) - 1)
+  # TraReObj@lognorm_counts <- TraReObj@lognorm_counts[,rownames(phenotype_f)]
+  # TraReObj@pheno <- as.numeric(factor(phenotype_f[,'phenotype'],labels = c(0,1))) - 1
   
-  return(TraReObj)
+  return(TraReObj_out)
 }
