@@ -60,7 +60,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Jesus de la Fuente Cedeno \email{jdelafuentec@unav.es} (\href{https://orcid.org/0000-0003-1856-2469}{ORCID}) [copyright holder]
+\strong{Maintainer}: Jesus de la Fuente Cedeno \email{jdlfuentec@gmail.com} (\href{https://orcid.org/0000-0003-1856-2469}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{

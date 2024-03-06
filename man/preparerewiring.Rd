@@ -12,7 +12,7 @@ preparerewiring(
   orig_test_perms = 100,
   retest_thresh = 0.08,
   retest_perms = 1000,
-  use_graphs = TRUE,
+  low_var_genes_th = 0.25,
   outdir = tempdir(),
   nrcores = 3,
   last_cluster = FALSE
@@ -34,7 +34,7 @@ threshold will be \code{paste()} to the folder's name.}
 
 \item{retest_perms}{Permutations if a second test is performed (default: 1000) .}
 
-\item{use_graphs}{Boolean specifying the use of graphs as linkeroutput modules. (TRUE by default).}
+\item{low_var_genes_th}{Perform a filtering to drop out low variance (<th) genes across phenotype samples. Default: 0.25}
 
 \item{outdir}{Directory for the output folder to be located (default: tempdir())}
 

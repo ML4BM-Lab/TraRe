@@ -1,6 +1,6 @@
 # MIT License
 
-Copyright (c) 2020 Mikel Hernaez ; Charles Blatti ; Jesus de la Fuente
+Copyright (c) 2020 Mikel Hernaez ; Charles Blatti ; Jesus de la Fuente; Irene Marín-Goñi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

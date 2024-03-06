@@ -10,7 +10,7 @@
 #' @param orig_test_perms Initial permutations for first test (default: 100) .
 #' @param retest_thresh Threshold if a second test is performed (default: 0.08) .
 #' @param retest_perms Permutations if a second test is performed (default: 1000) .
-#' @param use_graphs Boolean specifying the use of graphs as linkeroutput modules. (TRUE by default).
+#' @param low_var_genes_th Perform a filtering to drop out low variance (<th) genes across phenotype samples. Default: 0.25
 #' @param outdir Directory for the output folder to be located (default: tempdir())
 #' @param nrcores Number of cores to run the parallelization within the rewiring test (default: 3).
 #' @param last_cluster Boolean specifying whether to include the last_cluster in the rewiring or not. (default: FALSE)
@@ -45,9 +45,9 @@
 #' 
 #' @export
 preparerewiring <- function(name = "defaultname", linker_output = NULL, TraReObj = NULL, 
-                            final_signif_thresh = 0.001,
+                            final_signif_thresh = 0.001, 
                             orig_test_perms = 100, retest_thresh = 0.08, retest_perms = 1000,
-                            use_graphs = TRUE, outdir = tempdir(), nrcores = 3, last_cluster = FALSE) {
+                            low_var_genes_th = 0.25, outdir = tempdir(), nrcores = 3, last_cluster = FALSE) {
 
     # checks
     if (is.null(linker_output)) {
@@ -84,36 +84,30 @@ preparerewiring <- function(name = "defaultname", linker_output = NULL, TraReObj
 
         rewobject <- list()
         rundata <- linker_output
-        # retrieve data from TraRe object
+        
+        # Retrieve data from TraRe object
         lognorm_est_counts <- TraReObj@lognorm_counts
         geneinfo <- rownames(lognorm_est_counts)[TraReObj@regulator_idx]
+        
         # phenotype <- TraReObj@pheno
         regs <- geneinfo
         targs <- rownames(lognorm_est_counts)[TraReObj@target_idx]
         phenosamples <- colnames(lognorm_est_counts)[!is.na(TraReObj@pheno)]
-	      phenotype <- as.logical(TraReObj@pheno[!is.na(TraReObj@pheno)])
+        phenotype <- as.logical(TraReObj@pheno[!is.na(TraReObj@pheno)])
         
-	      # Pre-filter non variant genes
-	      lognorm_est_counts_pheno <- lognorm_est_counts[,phenosamples]
-	      data_shape <- dim(lognorm_est_counts_pheno)
-	      
-	      
-	      low_var_genes_th <- 0.25
-	     
-	      genes_var_cond <- which(apply(lognorm_est_counts_pheno,1,stats::var) >= low_var_genes_th)
-	      
-	      if (length(genes_var_cond)>0){
-	        drop_genes <- rownames(lognorm_est_counts_pheno)[!apply(lognorm_est_counts_pheno,1,stats::var) >= low_var_genes_th]
-	        lognorm_est_counts_pheno <- lognorm_est_counts_pheno[genes_var_cond,]
-	        methods::show(paste0(data_shape[1] - nrow(lognorm_est_counts_pheno) ,
+        # Pre-filter non variant genes 
+        lognorm_est_counts_pheno <- lognorm_est_counts[,phenosamples]
+        data_shape <- dim(lognorm_est_counts_pheno)
+        genes_var_cond <- which(apply(lognorm_est_counts_pheno,1,stats::var) >= low_var_genes_th)
+        if (length(genes_var_cond)>0){
+          drop_genes <- rownames(lognorm_est_counts_pheno)[!apply(lognorm_est_counts_pheno,1,stats::var) >= low_var_genes_th]
+          lognorm_est_counts_pheno <- lognorm_est_counts_pheno[genes_var_cond,]
+          methods::show(paste0(data_shape[1] - nrow(lognorm_est_counts_pheno) ,
 	                               ' genes have been dropped out according to variance (across samples) threshold: ',
 	                               low_var_genes_th, ', from: ', data_shape[1], ' to: ', nrow(lognorm_est_counts_pheno)))
-	        
-	        
-	        lognorm_est_counts <- lognorm_est_counts_pheno
-	        
-	        regs <- rownames(lognorm_est_counts)[rownames(lognorm_est_counts)%in%regs]
-	        targs <- rownames(lognorm_est_counts)[rownames(lognorm_est_counts)%in%targs]
+          lognorm_est_counts <- lognorm_est_counts_pheno
+          regs <- rownames(lognorm_est_counts)[rownames(lognorm_est_counts)%in%regs]
+          targs <- rownames(lognorm_est_counts)[rownames(lognorm_est_counts)%in%targs]
 	      }
 	      
         #generate list with name index
@@ -123,12 +117,10 @@ preparerewiring <- function(name = "defaultname", linker_output = NULL, TraReObj
         # check if NR/R proportions are similar to ensure property functioning of the method.
         klzero <- sum(phenotype == 0, na.rm = TRUE)
         klone <- sum(phenotype == 1, na.rm = TRUE)
-
-        if (use_graphs){
-            #Format linkeroutput modules to graphs
-            message("\nFrom here on, graphs will be taken into account for Rewiring and some of them may be dropped out.\nHence, it is recommended to take preparerewiring object's run data to proceed with further analysis\n")
-            rundata <- graph_to_modules(linker_output, geneinfo, drop_genes)
-        }
+        
+        #Format linkeroutput modules to graphs
+        message("\nFrom here on, graphs from LINKER_run output will be taken into account for Rewiring and some of them may be dropped out.\nHence, it is recommended to take preparerewiring object's run data to proceed with further analysis\n")
+        rundata <- graph_to_modules(linker_output, geneinfo, drop_genes)
 
         if (min(klone, klzero)/max(klone, klzero) < 0.8) {
             warning(paste0("phenotype samples proportions imbalance ", toString(c(klzero, klone)), " (<80%)."))

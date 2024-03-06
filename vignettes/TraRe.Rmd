@@ -110,7 +110,7 @@ We will use a *SummarizedExperiment* object with the gene expression matrix in t
 If you plan to do the differential network analysis (i.e. full workflow with rewiring test), then phenotype info should be stored in the SummarizedExperiment::colData().
 ```{r, eval = TRUE}
 #  Expression matrix path
-lognorm_est_counts_p <- paste0(system.file("extdata",package="TraRe"),
+lognorm_est_counts_p <- paste0(system.file("extdata", package = "TraRe"),
                '/VignetteFiles/1_expression_quickexample_vignette.txt')
 
 # Gene info dataframe path
@@ -120,13 +120,6 @@ gene_info_p <- paste0(system.file("extdata",package="TraRe"),
 # # Sample phenotype dataframe path
 phenotype_p <- paste0(system.file("extdata",package="TraRe"),
                '/VignetteFiles/1_phenotype_rewiring_quickexample_vignette.txt')
-
-lognorm_est_counts_p <- paste0(system.file("extdata",package="TraRe"),
-               '/expression_rewiring_example.txt') # 35 samples
-# phenotype_p <- paste0(system.file("extdata",package="TraRe"),
-#                '/phenotype_rewiring_example.txt')# 35 samples
- 
-# linker_output <- readRDS(linker_output_p) 
 
 # REWIRING output path
 outdir <- system.file('extdata', package='TraRe')
@@ -468,12 +461,12 @@ It will create a directory on the specified output path with an html report and 
 
 ```{r eval = TRUE,ref-cluster, include=TRUE, echo = FALSE, message=FALSE, fig.align='center', fig.cap='Rewiring Dendogram'}
 knitr::include_graphics(path=paste0(outdir,"/VignetteFiles/mod_sim.VBSR.1.dendro.png"))
-# knitr::include_graphics(path="./mod_sim.VBSR.1.dendro.png")
+
 ```
 
 ```{r eval = TRUE,ref-heatm,include=TRUE, echo = FALSE, message=FALSE, fig.align='center', fig.cap='Rewiring Heatmap'}
 knitr::include_graphics(path=paste0(outdir,"/VignetteFiles/mod_sim.VBSR.1.heatm.png"))
-# knitr::include_graphics(path="./mod_sim.VBSR.1.heatm.png")
+
 ```
 
 In Figure \@ref(fig:ref-cluster) above is the Hierarchical Clustering representation of the transcriptional modules. The current implementation of the *Rewiring*
@@ -484,7 +477,7 @@ As shown in Figures \@ref(fig:ref-cluster) and \@ref(fig:ref-heatm), there are 5
 
 ```{r eval = TRUE, ref-rawgraph,include = TRUE, echo = FALSE,  message=FALSE, fig.align='center', fig.cap='Raw Full Graph'}
 knitr::include_graphics(path=paste0(outdir,"/VignetteFiles/igraphs.raw.full_graph.png"))
-# knitr::include_graphics(path="./igraphs.raw.full_graph.png")
+
 ```
 
 In Figure \@ref(fig:ref-rawgraph) is the raw graph for the transcriptional module mentioned above. Targets are sorted based on a Z-score derived from a t-test with null hypothesis if samples separated by the selected condition are not deferentially expressed.
